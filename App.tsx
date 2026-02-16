@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Funkce pro načítání dat z DB
   const fetchData = async () => {
     if (!supabase) {
       setIsLoading(false);
@@ -91,10 +90,8 @@ const App: React.FC = () => {
 
   const handleBookingComplete = async (data: any) => {
     setIsLoading(true);
-    
     if (supabase) {
       try {
-        // 1. Uložit zákazníka
         const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
           first_name: data.firstName,
           last_name: data.lastName,
@@ -106,7 +103,6 @@ const App: React.FC = () => {
         if (cErr) throw cErr;
 
         if (newCustomerData) {
-          // Přidat zákazníka do lokálního stavu
           const mappedCustomer: Customer = {
             id: newCustomerData.id,
             firstName: newCustomerData.first_name,
@@ -118,7 +114,6 @@ const App: React.FC = () => {
           };
           setCustomers(prev => [...prev, mappedCustomer]);
 
-          // 2. Uložit rezervaci
           const { data: newResData, error: rErr } = await supabase.from('reservations').insert({
             vehicle_id: data.vehicleId,
             customer_id: newCustomerData.id,
@@ -133,7 +128,6 @@ const App: React.FC = () => {
           if (rErr) throw rErr;
 
           if (newResData) {
-            // Přidat rezervaci do lokálního stavu
             const mappedRes: Reservation = {
               id: newResData.id,
               vehicleId: newResData.vehicle_id,
@@ -149,30 +143,12 @@ const App: React.FC = () => {
             setReservations(prev => [mappedRes, ...prev]);
           }
         }
-        
         alert(`Rezervace byla úspěšně odeslána.`);
       } catch (err) {
         console.error("Chyba při ukládání:", err);
         alert("Chyba při odesílání rezervace.");
       }
-    } else {
-      // Demo režim fallback
-      const tempId = `c${Date.now()}`;
-      setCustomers(prev => [...prev, { id: tempId, firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone, address: data.address, idNumber: '' }]);
-      setReservations(prev => [{ 
-        id: `r${Date.now()}`, 
-        vehicleId: data.vehicleId, 
-        customerId: tempId, 
-        startDate: data.startDate, 
-        endDate: data.endDate, 
-        totalPrice: data.totalPrice, 
-        deposit: 25000, 
-        status: ReservationStatus.PENDING, 
-        createdAt: data.createdAt 
-      }, ...prev]);
-      alert(`DEMO: Rezervace byla uložena lokálně.`);
     }
-    
     setIsLoading(false);
     setView('home');
   };
@@ -182,6 +158,38 @@ const App: React.FC = () => {
       await supabase.from('reservations').update({ status }).eq('id', id);
     }
     setReservations(prev => prev.map(res => res.id === id ? { ...res, status } : res));
+  };
+
+  const handleDeleteReservation = async (id: string) => {
+    if (!confirm('Opravdu chcete tuto rezervaci trvale smazat?')) return;
+    
+    if (supabase) {
+      const { error } = await supabase.from('reservations').delete().eq('id', id);
+      if (error) {
+        alert("Chyba při mazání z databáze.");
+        return;
+      }
+    }
+    setReservations(prev => prev.filter(res => res.id !== id));
+  };
+
+  const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
+    if (supabase) {
+      const { error } = await supabase.from('vehicles').update({
+        name: updatedVehicle.name,
+        description: updatedVehicle.description,
+        base_price: updatedVehicle.basePrice,
+        seasonal_pricing: updatedVehicle.seasonalPricing,
+        license_plate: updatedVehicle.licensePlate
+      }).eq('id', updatedVehicle.id);
+
+      if (error) {
+        alert("Chyba při ukládání vozidla do DB.");
+        return;
+      }
+    }
+    setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+    alert("Změny u vozidla byly uloženy.");
   };
 
   const handleBookNow = (vehicleId: string) => {
@@ -223,7 +231,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Aktualizuji data...</p>
+          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Načítám...</p>
         </div>
       </div>
     );
@@ -269,7 +277,8 @@ const App: React.FC = () => {
             savedContracts={savedContracts}
             onSaveContract={(c) => setSavedContracts(prev => [...prev, c])}
             onUpdateStatus={handleUpdateStatus}
-            onUpdateVehicle={(uv) => setVehicles(prev => prev.map(v => v.id === uv.id ? uv : v))}
+            onDeleteReservation={handleDeleteReservation}
+            onUpdateVehicle={handleUpdateVehicle}
           />
         )}
       </main>
