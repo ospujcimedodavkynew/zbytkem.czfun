@@ -15,6 +15,11 @@ export const formatDate = (dateString: string): string => {
   });
 };
 
+export const getMonthName = (monthIndex: number): string => {
+  const months = ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer', 'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'];
+  return months[monthIndex];
+};
+
 export const calculateDays = (start: string, end: string): number => {
   const s = new Date(start);
   const e = new Date(end);

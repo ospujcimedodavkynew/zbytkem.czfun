@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Vehicle, Reservation, ReservationStatus } from '../types';
 import { formatCurrency } from '../utils/format';
 
@@ -11,7 +11,8 @@ interface PublicHomeProps {
 }
 
 const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo }) => {
-  
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
   const renderMiniCalendar = () => {
     const today = new Date();
     const displayDate = today.getFullYear() < 2026 ? new Date(2026, 6, 1) : today;
@@ -107,7 +108,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           <div className="lg:col-span-2 space-y-12">
             {vehicles.map(vehicle => (
               <div key={vehicle.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 group">
-                <div className="relative h-[450px] overflow-hidden">
+                <div className="relative h-[450px] overflow-hidden cursor-zoom-in" onClick={() => setSelectedImage(vehicle.images[0])}>
                   <img 
                     src={vehicle.images[0]} 
                     alt={vehicle.name}
@@ -118,8 +119,18 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                     <span className="px-4 py-2 bg-slate-900 text-white rounded-full text-xs font-bold shadow-sm">Model 2016</span>
                   </div>
                 </div>
+                
+                {/* Image Thumbnails Gallery */}
+                <div className="flex gap-4 p-4 bg-slate-50 border-b border-slate-100 overflow-x-auto">
+                   {vehicle.images.map((img, idx) => (
+                      <button key={idx} onClick={() => setSelectedImage(img)} className="w-24 h-16 rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-500 transition-all flex-shrink-0">
+                         <img src={img} className="w-full h-full object-cover" />
+                      </button>
+                   ))}
+                </div>
+
                 <div className="p-10">
-                  <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4 text-center md:text-left">
                     <div>
                       <h3 className="text-3xl font-black text-slate-900">{vehicle.name}</h3>
                       <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Podvozek AL-KO | Motor Fiat Ducato 180 HP</p>
@@ -153,9 +164,21 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                     <p>
                       <strong>Laika Kreos 7010</strong> je postaven na prémiovém podvozku AL-KO s rozšířeným rozchodem kol. Dvojitá podlaha nabízí špičkovou tepelnou izolaci pro zimní kempování a nadstandardní úložné prostory přístupné z obou stran.
                     </p>
-                    <p className="mt-2">
-                      Vůz je vybaven velkou garáží pro kola či motocykl, prostorným sezením a plnohodnotnou kuchyní. Ideální pro ty, kteří preferují poctivý nábytek a prověřenou konstrukci.
-                    </p>
+                  </div>
+
+                  {/* Premium Equipment Section */}
+                  <div className="mb-10">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Prémiová výbava vozu</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {vehicle.equipment.map((item, i) => (
+                        <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-orange-200 transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-600 shadow-sm">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                          </div>
+                          <span className="text-sm font-bold text-slate-700">{item}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <button 
@@ -188,15 +211,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden">
-              <h4 className="text-2xl font-black mb-4">Máte dotaz?</h4>
-              <p className="text-slate-400 mb-8 leading-relaxed text-sm">
-                Vůz vám rádi předvedeme na parkovišti v Bohunicích. Stačí zavolat a domluvit si termín.
-              </p>
-              <a href="tel:+420776333301" className="block w-full py-4 bg-orange-600 rounded-2xl text-center font-bold hover:bg-orange-700 transition-colors">
-                +420 776 333 301
-              </a>
             </div>
           </div>
         </div>
@@ -238,40 +252,13 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         </div>
       </section>
 
-      {/* Map Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200">
-          <div className="grid md:grid-cols-2">
-            <div className="p-12">
-              <h2 className="text-3xl font-black text-slate-900 mb-6">Předání v Brně</h2>
-              <p className="text-slate-500 mb-8 leading-relaxed">
-                Vůz předáváme na strategickém místě v **Brně - Bohunicích (parkoviště Teslova)**. 
-                Lokalita je skvěle dostupná z dálnice D1 i městskou hromadnou dopravou.
-              </p>
-              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
-                  </div>
-                  <div>
-                    <span className="block font-black text-slate-900">Parkoviště Teslova</span>
-                    <span className="text-sm text-slate-500">625 00 Brno - Bohunice</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="h-[450px] grayscale contrast-125 opacity-90">
-              <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2615.158523315754!2d16.5744883!3d49.1764627!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4712946c0d64353f%3A0xc6657c963e620353!2sTeslova%2C%20625%2000%20Brno-Bohunice!5e0!3m2!1scs!2scz!4v1715000000000!5m2!1scs!2scz" 
-                className="w-full h-full border-0"
-                allowFullScreen={true}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
-            </div>
-          </div>
+      {/* Lightbox for Gallery */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setSelectedImage(null)}>
+           <button className="absolute top-8 right-8 text-white hover:scale-110 transition-transform"><svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+           <img src={selectedImage} className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300" />
         </div>
-      </section>
+      )}
     </div>
   );
 };

@@ -21,6 +21,16 @@ export const MOCK_VEHICLES: Vehicle[] = [
       { id: 's2026-1', name: 'Hlavní letní sezóna 2026', startDate: '2026-06-01', endDate: '2026-08-31', pricePerDay: 4600 },
       { id: 's2026-2', name: 'Zářijové babí léto', startDate: '2026-09-01', endDate: '2026-09-30', pricePerDay: 3800 },
       { id: 's2026-3', name: 'Jarní expedice', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 3500 }
+    ],
+    equipment: [
+      'Teplovodní topení ALDE (vhodné pro zimu)',
+      'Solární panely 175W pro nezávislost',
+      'Měnič napětí 12V / 230V (600W)',
+      'Nádrž na čistou vodu 120L',
+      'Vyhřívaná nádrž na odpadní vodu',
+      'Prostorná lednice s mrazákem (160L)',
+      'Plynová trouba a 3-plotýnkový vařič',
+      'Markýza Thule 4.5m s LED osvětlením'
     ]
   }
 ];

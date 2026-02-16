@@ -37,6 +37,7 @@ export interface Vehicle {
   images: string[];
   isActive: boolean;
   seasonalPricing: SeasonPrice[];
+  equipment: string[]; // Nové pole pro seznam výbavy
 }
 
 export interface Reservation {
