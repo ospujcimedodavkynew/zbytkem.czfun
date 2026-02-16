@@ -4,7 +4,6 @@ import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract } from
 import { formatCurrency, formatDate } from '../utils/format';
 import { generateContractTemplate, analyzeReservationTrends, isAiConfigured } from '../services/geminiService';
 import { supabase } from '../lib/supabase';
-import Logo from './Logo';
 
 interface AdminDashboardProps {
   reservations: Reservation[];
@@ -25,7 +24,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateStatus,
   onUpdateVehicle
 }) => {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'contracts' | 'advisor' | 'vehicles' | 'assets' | 'system'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'contracts' | 'advisor' | 'system'>('reservations');
   const [generatingContract, setGeneratingContract] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
@@ -125,9 +124,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <p className="text-xs text-slate-500">Ukládání rezervací v cloudu</p>
                 </div>
                 {supabase ? (
-                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-black uppercase">Připojeno ✅</span>
+                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-black uppercase">Připojeno</span>
                 ) : (
-                  <span className="px-4 py-2 bg-red-100 text-red-700 rounded-full text-xs font-black uppercase">DEMO REŽIM ❌</span>
+                  <span className="px-4 py-2 bg-red-100 text-red-700 rounded-full text-xs font-black uppercase">Demo režim</span>
                 )}
               </div>
               <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
@@ -136,7 +135,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <p className="text-xs text-slate-500">Generování smluv a analýzy</p>
                 </div>
                 {isAiConfigured() ? (
-                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-black uppercase">Aktivní ✅</span>
+                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs font-black uppercase">Aktivní</span>
                 ) : (
                   <span className="px-4 py-2 bg-slate-200 text-slate-500 rounded-full text-xs font-black uppercase">Neaktivní</span>
                 )}
@@ -145,33 +144,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             <div className="mt-10 grid md:grid-cols-2 gap-6">
               <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100">
-                <h4 className="font-black text-blue-900 text-sm uppercase mb-3">Kde najdu Supabase klíče?</h4>
-                <ol className="text-xs text-blue-800 space-y-2 list-decimal ml-4">
-                  <li>Otevřete projekt na <strong>supabase.com</strong></li>
-                  <li>Klikněte na ikonu ⚙️ <strong>Settings</strong> dole vlevo</li>
-                  <li>Vyberte <strong>API</strong></li>
-                  <li>Zkopírujte <strong>Project URL</strong> a <strong>anon public</strong> key</li>
-                </ol>
+                <h4 className="font-black text-blue-900 text-sm uppercase mb-3">Nastavení Supabase</h4>
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  Získejte <strong>Project URL</strong> a <strong>anon key</strong> v nastavení projektu Supabase (Settings &rarr; API) a vložte je do Vercelu.
+                </p>
               </div>
               <div className="p-6 bg-orange-50 rounded-2xl border border-orange-100">
-                <h4 className="font-black text-orange-900 text-sm uppercase mb-3">Kde najdu Google AI klíč?</h4>
-                <ol className="text-xs text-orange-800 space-y-2 list-decimal ml-4">
-                  <li>Jděte na <strong>aistudio.google.com</strong></li>
-                  <li>Klikněte na 🔑 <strong>Get API key</strong></li>
-                  <li>Vytvořte nový klíč (Create API key)</li>
-                  <li>Zkopírujte kód začínající na <code>AIza...</code></li>
-                </ol>
+                <h4 className="font-black text-orange-900 text-sm uppercase mb-3">Nastavení Google AI</h4>
+                <p className="text-xs text-orange-800 leading-relaxed">
+                  Vytvořte si klíč na <strong>aistudio.google.com</strong> a vložte jej do Vercelu jako proměnnou <code>API_KEY</code>.
+                </p>
               </div>
-            </div>
-            
-            <div className="mt-8 p-6 bg-slate-900 text-white rounded-2xl">
-              <h4 className="font-black text-xs uppercase mb-2 text-slate-400">Jak to vložit na Vercel?</h4>
-              <p className="text-sm">V administraci Vercelu jděte do <strong>Settings -> Environment Variables</strong> a přidejte proměnné: <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code> a <code>API_KEY</code>.</p>
             </div>
           </div>
         )}
 
-        {/* ... zbytek dashboardu zůstává stejný ... */}
         {activeTab === 'reservations' && (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -208,7 +195,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           disabled={generatingContract === res.id}
                           className="px-4 py-2 bg-slate-900 text-white text-xs rounded-xl font-bold hover:bg-orange-600 transition-colors disabled:opacity-50"
                         >
-                          {generatingContract === res.id ? 'Generuji...' : 'Smlouva 📄'}
+                          {generatingContract === res.id ? 'Generuji...' : 'Smlouva'}
                         </button>
                       </td>
                     </tr>
