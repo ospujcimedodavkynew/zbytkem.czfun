@@ -23,72 +23,69 @@ const App: React.FC = () => {
   const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Funkce pro načítání dat z DB
+  const fetchData = async () => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data: vData } = await supabase.from('vehicles').select('*');
+      const { data: rData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+      const { data: cData } = await supabase.from('customers').select('*');
+
+      if (vData && vData.length > 0) {
+        setVehicles(vData.map(v => ({
+          id: v.id,
+          name: v.name,
+          description: v.description,
+          licensePlate: v.license_plate,
+          vin: v.vin,
+          basePrice: Number(v.base_price),
+          minDays: v.min_days,
+          deposit: Number(v.deposit),
+          kmLimitPerDay: v.km_limit_per_day,
+          images: v.images || [],
+          isActive: v.is_active,
+          seasonalPricing: v.seasonal_pricing || []
+        })));
+      }
+
+      if (rData) {
+        setReservations(rData.map(r => ({
+          id: r.id,
+          vehicleId: r.vehicle_id,
+          customerId: r.customer_id,
+          startDate: r.start_date,
+          endDate: r.end_date,
+          totalPrice: Number(r.total_price),
+          deposit: Number(r.deposit),
+          status: r.status as ReservationStatus,
+          createdAt: r.created_at,
+          customerNote: r.customer_note
+        })));
+      }
+
+      if (cData) {
+        setCustomers(cData.map(c => ({
+          id: c.id,
+          firstName: c.first_name,
+          lastName: c.last_name,
+          email: c.email,
+          phone: c.phone,
+          address: c.address,
+          idNumber: c.id_number || ''
+        })));
+      }
+    } catch (error) {
+      console.error("Chyba při načítání dat:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!supabase) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data: vData } = await supabase.from('vehicles').select('*');
-        const { data: rData } = await supabase.from('reservations').select('*');
-        const { data: cData } = await supabase.from('customers').select('*');
-
-        if (vData && vData.length > 0) {
-          // Mapování snake_case z DB na camelCase v App
-          const mappedVehicles = vData.map(v => ({
-            id: v.id,
-            name: v.name,
-            description: v.description,
-            licensePlate: v.license_plate,
-            vin: v.vin,
-            basePrice: Number(v.base_price),
-            minDays: v.min_days,
-            deposit: Number(v.deposit),
-            kmLimitPerDay: v.km_limit_per_day,
-            images: v.images || [],
-            isActive: v.is_active,
-            seasonalPricing: v.seasonal_pricing || []
-          }));
-          setVehicles(mappedVehicles);
-        }
-
-        if (rData) {
-          const mappedRes = rData.map(r => ({
-            id: r.id,
-            vehicleId: r.vehicle_id,
-            customerId: r.customer_id,
-            startDate: r.start_date,
-            endDate: r.end_date,
-            totalPrice: Number(r.total_price),
-            deposit: Number(r.deposit),
-            status: r.status as ReservationStatus,
-            createdAt: r.created_at,
-            customerNote: r.customer_note
-          }));
-          setReservations(mappedRes);
-        }
-
-        if (cData) {
-          const mappedCust = cData.map(c => ({
-            id: c.id,
-            firstName: c.first_name,
-            lastName: c.last_name,
-            email: c.email,
-            phone: c.phone,
-            address: c.address,
-            idNumber: c.id_number
-          }));
-          setCustomers(mappedCust);
-        }
-      } catch (error) {
-        console.error("Chyba Supabase:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
@@ -98,7 +95,7 @@ const App: React.FC = () => {
     if (supabase) {
       try {
         // 1. Uložit zákazníka
-        const { data: cData, error: cErr } = await supabase.from('customers').insert({
+        const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
           first_name: data.firstName,
           last_name: data.lastName,
           email: data.email,
@@ -108,31 +105,61 @@ const App: React.FC = () => {
         
         if (cErr) throw cErr;
 
-        if (cData) {
+        if (newCustomerData) {
+          // Přidat zákazníka do lokálního stavu
+          const mappedCustomer: Customer = {
+            id: newCustomerData.id,
+            firstName: newCustomerData.first_name,
+            lastName: newCustomerData.last_name,
+            email: newCustomerData.email,
+            phone: newCustomerData.phone,
+            address: newCustomerData.address,
+            idNumber: ''
+          };
+          setCustomers(prev => [...prev, mappedCustomer]);
+
           // 2. Uložit rezervaci
-          const { error: rErr } = await supabase.from('reservations').insert({
+          const { data: newResData, error: rErr } = await supabase.from('reservations').insert({
             vehicle_id: data.vehicleId,
-            customer_id: cData.id,
+            customer_id: newCustomerData.id,
             start_date: data.startDate,
             end_date: data.endDate,
             total_price: data.totalPrice,
             deposit: 25000,
             status: ReservationStatus.PENDING,
             customer_note: data.note
-          });
+          }).select().single();
+          
           if (rErr) throw rErr;
+
+          if (newResData) {
+            // Přidat rezervaci do lokálního stavu
+            const mappedRes: Reservation = {
+              id: newResData.id,
+              vehicleId: newResData.vehicle_id,
+              customerId: newResData.customer_id,
+              startDate: newResData.start_date,
+              endDate: newResData.end_date,
+              totalPrice: Number(newResData.total_price),
+              deposit: Number(newResData.deposit),
+              status: newResData.status as ReservationStatus,
+              createdAt: newResData.created_at,
+              customerNote: newResData.customer_note
+            };
+            setReservations(prev => [mappedRes, ...prev]);
+          }
         }
         
-        alert(`Rezervace byla úspěšně odeslána do systému.`);
+        alert(`Rezervace byla úspěšně odeslána.`);
       } catch (err) {
         console.error("Chyba při ukládání:", err);
-        alert("Chyba při odesílání rezervace. Zkuste to prosím znovu.");
+        alert("Chyba při odesílání rezervace.");
       }
     } else {
       // Demo režim fallback
       const tempId = `c${Date.now()}`;
       setCustomers(prev => [...prev, { id: tempId, firstName: data.firstName, lastName: data.lastName, email: data.email, phone: data.phone, address: data.address, idNumber: '' }]);
-      setReservations(prev => [...prev, { 
+      setReservations(prev => [{ 
         id: `r${Date.now()}`, 
         vehicleId: data.vehicleId, 
         customerId: tempId, 
@@ -142,7 +169,7 @@ const App: React.FC = () => {
         deposit: 25000, 
         status: ReservationStatus.PENDING, 
         createdAt: data.createdAt 
-      }]);
+      }, ...prev]);
       alert(`DEMO: Rezervace byla uložena lokálně.`);
     }
     
@@ -196,7 +223,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Načítám data z Cloudu...</p>
+          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Aktualizuji data...</p>
         </div>
       </div>
     );
