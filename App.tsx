@@ -25,14 +25,20 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     if (!supabase) {
+      console.warn("Spouštím demo režim - chybí připojení k Supabase.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const { data: vData } = await supabase.from('vehicles').select('*');
-      const { data: rData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
-      const { data: cData } = await supabase.from('customers').select('*');
+      const { data: vData, error: vErr } = await supabase.from('vehicles').select('*');
+      if (vErr) throw vErr;
+
+      const { data: rData, error: rErr } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+      if (rErr) throw rErr;
+
+      const { data: cData, error: cErr } = await supabase.from('customers').select('*');
+      if (cErr) throw cErr;
 
       if (vData && vData.length > 0) {
         setVehicles(vData.map(v => ({
@@ -78,8 +84,9 @@ const App: React.FC = () => {
           idNumber: c.id_number || ''
         })));
       }
-    } catch (error) {
-      console.error("Chyba při načítání dat:", error);
+    } catch (error: any) {
+      console.error("Chyba při načítání dat ze Supabase:", error.message);
+      alert("Chyba databáze: " + error.message + ". Ujistěte se, že jste v Supabase spustili SQL skript.");
     } finally {
       setIsLoading(false);
     }
@@ -90,58 +97,54 @@ const App: React.FC = () => {
   }, []);
 
   const handleBookingComplete = async (data: any) => {
-    setIsLoading(true);
-    const tempId = `temp-${Date.now()}`;
-    const tempCustId = `cust-${Date.now()}`;
-
-    if (supabase) {
-      try {
-        // 1. Vytvoření/získání zákazníka
-        const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
-          first_name: data.firstName,
-          last_name: data.lastName,
-          email: data.email,
-          phone: data.phone,
-          address: data.address
-        }).select().single();
-        
-        if (cErr) throw cErr;
-
-        const customerToUse = newCustomerData || { 
-          id: tempCustId, first_name: data.firstName, last_name: data.lastName,
-          email: data.email, phone: data.phone, address: data.address
-        };
-
-        // 2. Vytvoření rezervace
-        const { data: newResData, error: rErr } = await supabase.from('reservations').insert({
-          vehicle_id: data.vehicleId,
-          customer_id: customerToUse.id,
-          start_date: data.startDate,
-          end_date: data.endDate,
-          total_price: data.totalPrice,
-          deposit: 25000,
-          status: ReservationStatus.PENDING,
-          customer_note: data.note
-        }).select().single();
-        
-        if (rErr) throw rErr;
-
-        // 3. Update lokálního stavu
-        await fetchData(); // Kompletní obnova pro jistotu
-        alert(`Rezervace byla úspěšně odeslána. Brzy vás budeme kontaktovat.`);
-      } catch (err: any) {
-        alert(`Chyba při odesílání: ${err.message}. Zkontrolujte SQL nastavení v Supabase.`);
-      }
-    } else {
-      alert("Rezervace uložena v DEMO režimu.");
+    if (!supabase) {
+      alert("Chyba: Aplikace není napojena na databázi (Demo režim). Rezervaci nelze uložit.");
+      setView('home');
+      return;
     }
-    setIsLoading(false);
-    setView('home');
+
+    setIsLoading(true);
+    try {
+      // 1. Vložení zákazníka
+      const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address
+      }).select().single();
+      
+      if (cErr) throw cErr;
+
+      // 2. Vložení rezervace
+      const { error: rErr } = await supabase.from('reservations').insert({
+        vehicle_id: data.vehicleId,
+        customer_id: newCustomerData.id,
+        start_date: data.startDate,
+        end_date: data.endDate,
+        total_price: data.totalPrice,
+        deposit: 25000,
+        status: ReservationStatus.PENDING,
+        customer_note: data.note
+      });
+      
+      if (rErr) throw rErr;
+
+      // 3. Obnova dat
+      await fetchData();
+      alert(`Rezervace byla úspěšně odeslána. Brzy vás budeme kontaktovat.`);
+      setView('home');
+    } catch (err: any) {
+      alert(`Kritická chyba při ukládání: ${err.message}. \n\nUjistěte se, že jste v Supabase editoru spustili SQL příkaz pro vytvoření tabulek.`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUpdateStatus = async (id: string, status: ReservationStatus) => {
     if (supabase) {
-      await supabase.from('reservations').update({ status }).eq('id', id);
+      const { error } = await supabase.from('reservations').update({ status }).eq('id', id);
+      if (error) alert("Chyba při aktualizaci: " + error.message);
     }
     setReservations(prev => prev.map(res => res.id === id ? { ...res, status } : res));
   };
@@ -149,7 +152,8 @@ const App: React.FC = () => {
   const handleDeleteReservation = async (id: string) => {
     if (!confirm('Opravdu chcete tuto rezervaci trvale smazat?')) return;
     if (supabase) {
-      await supabase.from('reservations').delete().eq('id', id);
+      const { error } = await supabase.from('reservations').delete().eq('id', id);
+      if (error) alert("Chyba při mazání: " + error.message);
     }
     setReservations(prev => prev.filter(res => res.id !== id));
   };
@@ -171,12 +175,8 @@ const App: React.FC = () => {
         return;
       }
       
-      // Po uložení do databáze okamžitě zaktualizujeme lokální seznam
       setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
       alert("Vozidlo bylo úspěšně aktualizováno.");
-    } else {
-       setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
-       alert("Změny uloženy lokálně (DEMO režim).");
     }
   };
 
@@ -211,7 +211,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Připojování k databázi...</p>
+          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Ověřuji spojení...</p>
         </div>
       </div>
     );

@@ -1,46 +1,26 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { ReservationStatus } from "../types";
-
-// Bezpečné získání API klíče
-const getApiKey = () => {
-  try {
-    return typeof process !== 'undefined' ? process.env?.API_KEY : null;
-  } catch (e) {
-    return null;
-  }
-};
-
-// Inicializace AI
-const getAI = () => {
-  const key = getApiKey();
-  if (!key) return null;
-  return new GoogleGenAI({ apiKey: key });
-};
 
 /**
- * Zkontroluje, zda je AI dostupné
+ * Zkontroluje, zda je AI klíč dostupný v prostředí
  */
 export const isAiConfigured = () => {
-  return !!getApiKey();
+  return !!process.env.API_KEY;
 };
 
 /**
- * AI analýza trendů rezervací
+ * AI analýza trendů rezervací s využitím modelu Gemini 3 Flash
  */
 export const analyzeReservationTrends = async (reservations: any[]) => {
-  const key = getApiKey();
-  if (!key) {
+  if (!isAiConfigured()) {
     return {
-      summary: "AI není nakonfigurována.",
+      summary: "AI klíč nebyl nalezen v prostředí (process.env.API_KEY).",
       occupancyRate: "0 %",
-      recommendation: "Pro aktivaci analýzy vložte API klíč."
+      recommendation: "Pro aktivaci analýzy nastavte API klíč."
     };
   }
 
-  const ai = getAI();
-  if (!ai) return null;
-
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const resData = (reservations || []).map(r => ({
     start: r.startDate,
     end: r.endDate,
@@ -61,33 +41,33 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: { responseMimeType: "application/json" }
+      contents: [{ parts: [{ text: prompt }] }],
+      config: { 
+        responseMimeType: "application/json",
+        thinkingConfig: { thinkingBudget: 0 } // Pro rychlou analýzu nepotřebujeme hluboké přemýšlení
+      }
     });
     
-    const text = response.text || "{}";
-    return JSON.parse(text);
+    return JSON.parse(response.text || "{}");
   } catch (error) {
     console.error("AI Analysis error:", error);
     return {
-      summary: "Chyba při komunikaci s AI.",
+      summary: "Chyba při komunikaci s Gemini API.",
       occupancyRate: "N/A",
-      recommendation: "Zkuste to prosím později."
+      recommendation: "Zkontrolujte platnost API klíče v nastavení prostředí."
     };
   }
 };
 
 /**
- * Generování smlouvy na míru přes AI
+ * Generování smlouvy na míru přes AI s modelem Gemini 3 Flash
  */
 export const generateContractTemplate = async (details: any) => {
-  const key = getApiKey();
-  if (!key) {
-    return "AI není nakonfigurována. Smlouvu nelze vygenerovat.";
+  if (!isAiConfigured()) {
+    return "Chyba: process.env.API_KEY není definován. Smlouvu nelze vygenerovat.";
   }
 
-  const ai = getAI();
-  if (!ai) return "AI nelze inicializovat.";
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `Jsi právní asistent pro půjčovnu obytných vozů v ČR. 
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
@@ -111,7 +91,7 @@ export const generateContractTemplate = async (details: any) => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: prompt,
+      contents: [{ parts: [{ text: prompt }] }],
       config: {
         systemInstruction: "Vytvářej pouze text smlouvy bez úvodních řečí. Používej profesionální právní češtinu."
       }
@@ -120,6 +100,6 @@ export const generateContractTemplate = async (details: any) => {
     return response.text || "Nepodařilo se vygenerovat text smlouvy.";
   } catch (error) {
     console.error("AI Contract error:", error);
-    return "Chyba při generování smlouvy přes AI. Zkontrolujte API klíč.";
+    return "Chyba při generování smlouvy přes AI. Ověřte nastavení API_KEY.";
   }
 };
