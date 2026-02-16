@@ -1,10 +1,23 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Funkce pro bezpečné získání klíče
+const getApiKey = () => process.env.API_KEY || '';
+
+export const isAiConfigured = () => {
+  const key = getApiKey();
+  return key.length > 10 && !key.includes('vase_gemini');
+};
 
 export const generateContractTemplate = async (reservationDetails: any) => {
+  const apiKey = getApiKey();
+  
+  if (!isAiConfigured()) {
+    return "CHYBA: Google AI klíč není nastaven. Smlouvu nelze vygenerovat automaticky. Vložte prosím API_KEY do nastavení Vercelu.";
+  }
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Jsi špičkový český právník specializující se na nájemní právo. Vygeneruj PROFESIONÁLNÍ SMLOUVU O NÁJMU DOPRAVNÍHO PROSTŘEDKU (obytného vozu) v češtině.
@@ -22,31 +35,29 @@ export const generateContractTemplate = async (reservationDetails: any) => {
         Místo předání a vrácení: Parkoviště Teslova, Brno - Bohunice.
 
         SMLOUVA MUSÍ OBSAHOVAT TYTO STRIKTNÍ PODMÍNKY:
-        1. ABSOLUTNÍ ZÁKAZ KOUŘENÍ: Ve vozidle je přísně zakázáno kouřit (vč. elektronických cigaret). Porušení se trestá smluvní pokutou 10 000 Kč a úhradou nákladů na ozonové čištění.
-        2. ČISTOTA: Vozidlo musí být vráceno v původním stavu. Za nadměrné znečištění interiéru (skvrny na čalounění, zápach) bude účtován poplatek od 5 000 Kč.
-        3. ZÁKAZ ZVÍŘAT: Bez předchozího písemného souhlasu je zákaz přepravy zvířat.
-        4. ŠKODY A POJIŠTĚNÍ: Nájemce odpovídá za spoluúčast na pojištění a za veškeré škody nehrazené pojišťovnou.
-        5. POHONNÉ HMOTY A PLYN: Pravidla pro vrácení s plnou nádrží.
-        6. REZERVAČNÍ POPLATKY A STORNO: Jasně definované storno podmínky.
-        7. KAUCE: Pravidla pro započtení škod proti složené kauci 25 000 Kč.
+        1. ABSOLUTNÍ ZÁKAZ KOUŘENÍ: Ve vozidle je přísně zakázáno kouřit.
+        2. ČISTOTA: Vozidlo musí být vráceno v původním stavu.
+        3. ZÁKAZ ZVÍŘAT: Bez souhlasu zákaz přepravy zvířat.
+        4. ŠKODY A POJIŠTĚNÍ: Nájemce odpovídá za spoluúčast.
+        5. KAUCE: Kauce 25 000 Kč na krytí škod.
 
-        Formát: Dokument začíná "SMLOUVA O NÁJMU", má jasné očíslované články (I. až X.), na konci jsou podpisová pole pro obě strany. Vygeneruj text dvakrát (jako vyhotovení č. 1 a vyhotovení č. 2 na jeden list pro tisk).`,
-      config: {
-        thinkingConfig: { thinkingBudget: 0 }
-      }
+        Formát: Dokument začíná "SMLOUVA O NÁJMU", má jasné očíslované články. Vygeneruj text dvakrát (vyhotovení 1 a 2).`,
     });
     return response.text;
   } catch (error) {
-    console.error("Gemini contract generation failed:", error);
-    return "Nepodařilo se vygenerovat smlouvu. Kontaktujte prosím správce.";
+    console.error("Gemini failed:", error);
+    return "Nepodařilo se spojit s Google AI. Zkontrolujte platnost API klíče.";
   }
 };
 
 export const analyzeReservationTrends = async (reservations: any[]) => {
+  if (!isAiConfigured()) return null;
+
   try {
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `Analyzuj následující JSON data o rezervacích a napiš stručný souhrn pro majitele půjčovny (v češtině): ${JSON.stringify(reservations)}`,
+      contents: `Analyzuj tyto rezervace a napiš stručný souhrn v češtině: ${JSON.stringify(reservations)}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -62,6 +73,6 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
     });
     return JSON.parse(response.text || '{}');
   } catch (error) {
-    return { summary: "Analýza nedostupná", occupancyRate: "N/A", recommendation: "" };
+    return { summary: "Analýza nedostupná kvůli chybě API.", occupancyRate: "N/A", recommendation: "" };
   }
 }
