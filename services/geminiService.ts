@@ -2,21 +2,35 @@
 import { GoogleGenAI } from "@google/genai";
 import { ReservationStatus } from "../types";
 
-// Inicializace AI - API klíč je brán z prostředí
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Bezpečné získání API klíče
+const getApiKey = () => {
+  try {
+    return typeof process !== 'undefined' ? process.env?.API_KEY : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Inicializace AI
+const getAI = () => {
+  const key = getApiKey();
+  if (!key) return null;
+  return new GoogleGenAI({ apiKey: key });
+};
 
 /**
  * Zkontroluje, zda je AI dostupné
  */
 export const isAiConfigured = () => {
-  return !!process.env.API_KEY;
+  return !!getApiKey();
 };
 
 /**
  * AI analýza trendů rezervací
  */
 export const analyzeReservationTrends = async (reservations: any[]) => {
-  if (!isAiConfigured()) {
+  const key = getApiKey();
+  if (!key) {
     return {
       summary: "AI není nakonfigurována.",
       occupancyRate: "0 %",
@@ -25,7 +39,9 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
   }
 
   const ai = getAI();
-  const resData = reservations.map(r => ({
+  if (!ai) return null;
+
+  const resData = (reservations || []).map(r => ({
     start: r.startDate,
     end: r.endDate,
     price: r.totalPrice,
@@ -65,11 +81,14 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
  * Generování smlouvy na míru přes AI
  */
 export const generateContractTemplate = async (details: any) => {
-  if (!isAiConfigured()) {
+  const key = getApiKey();
+  if (!key) {
     return "AI není nakonfigurována. Smlouvu nelze vygenerovat.";
   }
 
   const ai = getAI();
+  if (!ai) return "AI nelze inicializovat.";
+
   const prompt = `Jsi právní asistent pro půjčovnu obytných vozů v ČR. 
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
     

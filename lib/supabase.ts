@@ -1,8 +1,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+const getEnv = (key: string) => {
+  try {
+    return typeof process !== 'undefined' ? process.env?.[key] : '';
+  } catch (e) {
+    return '';
+  }
+};
+
+const supabaseUrl = getEnv('SUPABASE_URL') || '';
+const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY') || '';
 
 // Inicializace klienta - pokud chybí klíče, vrací null a App.tsx přejde do demo režimu
 export const supabase = (supabaseUrl && supabaseAnonKey) 

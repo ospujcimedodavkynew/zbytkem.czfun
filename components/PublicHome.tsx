@@ -13,6 +13,9 @@ interface PublicHomeProps {
 const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  // Bezpečnostní pojistka pro první vozidlo
+  const mainVehicle = vehicles && vehicles.length > 0 ? vehicles[0] : null;
+
   const renderMiniCalendar = () => {
     const today = new Date();
     const displayDate = today.getFullYear() < 2026 ? new Date(2026, 6, 1) : today;
@@ -27,7 +30,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
     const isReserved = (day: number) => {
-      if (!day) return false;
+      if (!day || !reservations) return false;
       const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       return reservations.some(r => 
         r.status !== ReservationStatus.CANCELLED &&
@@ -39,7 +42,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
           Termíny {displayDate.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
         </h4>
         <div className="grid grid-cols-7 gap-1">
@@ -64,6 +67,10 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     );
   };
 
+  if (!mainVehicle) {
+    return <div className="py-20 text-center font-bold text-slate-400">Načítám vozový park...</div>;
+  }
+
   return (
     <div className="space-y-24 py-12">
       {/* Hero Section */}
@@ -83,7 +90,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         </p>
         <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
           <button 
-            onClick={() => onBookNow(vehicles[0].id)}
+            onClick={() => onBookNow(mainVehicle.id)}
             className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-bold shadow-xl shadow-orange-200 hover:bg-orange-700 hover:-translate-y-1 transition-all"
           >
             Rezervovat na sezónu 2026
@@ -108,9 +115,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           <div className="lg:col-span-2 space-y-12">
             {vehicles.map(vehicle => (
               <div key={vehicle.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 group">
-                <div className="relative h-[450px] overflow-hidden cursor-zoom-in" onClick={() => setSelectedImage(vehicle.images[0])}>
+                <div className="relative h-[450px] overflow-hidden cursor-zoom-in" onClick={() => setSelectedImage(vehicle.images?.[0] || null)}>
                   <img 
-                    src={vehicle.images[0]} 
+                    src={vehicle.images?.[0] || 'https://via.placeholder.com/1200x800?text=Bez+fotografie'} 
                     alt={vehicle.name}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
@@ -121,13 +128,15 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 </div>
                 
                 {/* Image Thumbnails Gallery */}
-                <div className="flex gap-4 p-4 bg-slate-50 border-b border-slate-100 overflow-x-auto">
-                   {vehicle.images.map((img, idx) => (
-                      <button key={idx} onClick={() => setSelectedImage(img)} className="w-24 h-16 rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-500 transition-all flex-shrink-0">
-                         <img src={img} className="w-full h-full object-cover" />
-                      </button>
-                   ))}
-                </div>
+                {vehicle.images && vehicle.images.length > 0 && (
+                  <div className="flex gap-4 p-4 bg-slate-50 border-b border-slate-100 overflow-x-auto">
+                    {vehicle.images.map((img, idx) => (
+                        <button key={idx} onClick={() => setSelectedImage(img)} className="w-24 h-16 rounded-xl overflow-hidden border-2 border-transparent hover:border-orange-500 transition-all flex-shrink-0">
+                          <img src={img} className="w-full h-full object-cover" />
+                        </button>
+                    ))}
+                  </div>
+                )}
 
                 <div className="p-10">
                   <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4 text-center md:text-left">
@@ -161,31 +170,31 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </div>
 
                   <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed mb-8">
-                    <p>
-                      <strong>Laika Kreos 7010</strong> je postaven na prémiovém podvozku AL-KO s rozšířeným rozchodem kol. Dvojitá podlaha nabízí špičkovou tepelnou izolaci pro zimní kempování a nadstandardní úložné prostory přístupné z obou stran.
-                    </p>
+                    <p>{vehicle.description}</p>
                   </div>
 
                   {/* Premium Equipment Section */}
-                  <div className="mb-10">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Prémiová výbava vozu</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {vehicle.equipment.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-orange-200 transition-colors">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-600 shadow-sm">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                  {vehicle.equipment && vehicle.equipment.length > 0 && (
+                    <div className="mb-10">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Prémiová výbava vozu</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {vehicle.equipment.map((item, i) => (
+                          <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-orange-200 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-600 shadow-sm">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <span className="text-sm font-bold text-slate-700">{item}</span>
                           </div>
-                          <span className="text-sm font-bold text-slate-700">{item}</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <button 
                     onClick={() => onBookNow(vehicle.id)}
                     className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-xl hover:-translate-y-1"
                   >
-                    Rezervovat Kreos 7010
+                    Rezervovat {vehicle.name}
                   </button>
                 </div>
               </div>
@@ -232,7 +241,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {vehicles[0].seasonalPricing.map(s => (
+              {mainVehicle.seasonalPricing && mainVehicle.seasonalPricing.map(s => (
                 <tr key={s.id} className="hover:bg-orange-50/30 transition-colors">
                   <td className="px-8 py-6 font-bold text-slate-900">{s.name}</td>
                   <td className="px-8 py-6 text-slate-500 text-sm">{new Date(s.startDate).toLocaleDateString('cs-CZ')} - {new Date(s.endDate).toLocaleDateString('cs-CZ')}</td>
@@ -242,7 +251,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               <tr className="bg-slate-50/50">
                 <td className="px-8 py-6 font-bold text-slate-900">Mimo sezónu / Ostatní</td>
                 <td className="px-8 py-6 text-slate-500 text-sm">Zbytek roku</td>
-                <td className="px-8 py-6 text-right font-black text-orange-600 text-lg">{formatCurrency(vehicles[0].basePrice)}</td>
+                <td className="px-8 py-6 text-right font-black text-orange-600 text-lg">{formatCurrency(mainVehicle.basePrice)}</td>
               </tr>
             </tbody>
           </table>
