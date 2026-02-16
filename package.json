@@ -1,0 +1,12 @@
+
+{
+  "name": "obytkem-cz",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "@supabase/supabase-js": "^2.39.0",
+    "@google/genai": "^1.41.0"
+  }
+}

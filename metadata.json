@@ -1,0 +1,9 @@
+
+{
+  "name": "obytkem.cz - Profesionální Rezervační Systém",
+  "description": "Komplexní rezervační systém pro půjčovnu obytných vozů obytkem.cz.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
