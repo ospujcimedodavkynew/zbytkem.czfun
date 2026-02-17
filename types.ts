@@ -37,7 +37,26 @@ export interface Vehicle {
   images: string[];
   isActive: boolean;
   seasonalPricing: SeasonPrice[];
-  equipment: string[]; // Nové pole pro seznam výbavy
+  equipment: string[];
+}
+
+export interface HandoverProtocol {
+  id: string;
+  reservationId: string;
+  date: string;
+  time: string;
+  mileage: number;
+  fuelLevel: number; // 0-100
+  cleanliness: string;
+  damages: string;
+  notes: string;
+}
+
+export interface ReturnProtocol extends HandoverProtocol {
+  returnMileage: number;
+  returnFuelLevel: number;
+  returnDamages: string;
+  extraKmCharge: number;
 }
 
 export interface Reservation {

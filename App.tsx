@@ -7,7 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ConfirmationPage from './components/ConfirmationPage';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
-import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract } from './types';
+import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
 import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
@@ -25,6 +25,8 @@ const App: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
   const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
   const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
+  const [handoverProtocols, setHandoverProtocols] = useState<HandoverProtocol[]>([]);
+  const [returnProtocols, setReturnProtocols] = useState<ReturnProtocol[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -48,14 +50,11 @@ const App: React.FC = () => {
     }
 
     try {
-      const { data: vData, error: vErr } = await supabase.from('vehicles').select('*');
-      if (vErr) throw vErr;
-
-      const { data: rData, error: rErr } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
-      if (rErr) throw rErr;
-
-      const { data: cData, error: cErr } = await supabase.from('customers').select('*');
-      if (cErr) throw cErr;
+      const { data: vData } = await supabase.from('vehicles').select('*');
+      const { data: rData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
+      const { data: cData } = await supabase.from('customers').select('*');
+      const { data: hData } = await supabase.from('handover_protocols').select('*');
+      const { data: retData } = await supabase.from('return_protocols').select('*');
 
       if (vData && vData.length > 0) {
         setVehicles(vData.map(v => ({
@@ -101,29 +100,93 @@ const App: React.FC = () => {
           idNumber: c.id_number || ''
         })));
       }
+
+      if (hData) {
+        setHandoverProtocols(hData.map(h => ({
+          id: h.id,
+          reservationId: h.reservation_id,
+          date: h.date,
+          time: h.time,
+          mileage: h.mileage,
+          fuelLevel: h.fuel_level,
+          cleanliness: h.cleanliness,
+          damages: h.damages,
+          notes: h.notes
+        })));
+      }
+
+      if (retData) {
+        setReturnProtocols(retData.map(r => ({
+          id: r.id,
+          reservationId: r.reservation_id,
+          date: r.date,
+          time: r.time,
+          mileage: r.mileage,
+          fuelLevel: r.fuel_level,
+          cleanliness: r.cleanliness,
+          damages: r.damages,
+          notes: r.notes,
+          returnMileage: r.return_mileage,
+          returnFuelLevel: r.return_fuel_level,
+          returnDamages: r.return_damages,
+          extraKmCharge: r.extra_km_charge
+        })));
+      }
     } catch (error: any) {
-      console.warn("Vysvětlení: Běžíte v demo režimu nebo Supabase není dostupná.", error.message);
+      console.warn("Demo mód aktivní.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSaveHandover = async (protocol: HandoverProtocol) => {
+    if (supabase) {
+      const { error } = await supabase.from('handover_protocols').insert({
+        reservation_id: protocol.reservationId,
+        date: protocol.date,
+        time: protocol.time,
+        mileage: protocol.mileage,
+        fuel_level: protocol.fuelLevel,
+        cleanliness: protocol.cleanliness,
+        damages: protocol.damages,
+        notes: protocol.notes
+      });
+      if (error) console.error("Chyba při ukládání předání:", error.message);
+    }
+    setHandoverProtocols(prev => [...prev, protocol]);
+  };
+
+  const handleSaveReturn = async (protocol: ReturnProtocol) => {
+    if (supabase) {
+      const { error } = await supabase.from('return_protocols').insert({
+        reservation_id: protocol.reservationId,
+        date: protocol.date,
+        time: protocol.time,
+        mileage: protocol.mileage,
+        fuel_level: protocol.fuelLevel,
+        cleanliness: protocol.cleanliness,
+        damages: protocol.damages,
+        notes: protocol.notes,
+        return_mileage: protocol.returnMileage,
+        return_fuel_level: protocol.returnFuelLevel,
+        return_damages: protocol.returnDamages,
+        extra_km_charge: protocol.extraKmCharge
+      });
+      if (error) console.error("Chyba při ukládání vrácení:", error.message);
+    }
+    setReturnProtocols(prev => [...prev, protocol]);
+  };
+
   const handleBookingComplete = async (data: any) => {
-    // Okamžité uložení do LocalStorage pro pocit "úspěchu" u klienta
     localStorage.setItem('obytkem_last_booking', JSON.stringify({
       name: data.firstName,
       date: new Date().toISOString()
     }));
     setLastBooking({ name: data.firstName, date: new Date().toISOString() });
-
     setIsLoading(true);
 
-    // Pokud nemáme Supabase, simulujeme úspěch a jdeme rovnou na potvrzení
     if (!supabase) {
-      setTimeout(() => {
-        setIsLoading(false);
-        setView('confirmation');
-      }, 1500);
+      setTimeout(() => { setIsLoading(false); setView('confirmation'); }, 1500);
       return;
     }
 
@@ -150,13 +213,10 @@ const App: React.FC = () => {
       });
       
       if (rErr) throw rErr;
-
       await fetchData();
       setView('confirmation');
     } catch (err: any) {
-      // ZDE JE KLÍČOVÁ OPRAVA: I když se nepodaří zapsat do DB (např. chyba sítě), 
-      // uživatele neodmítneme chybou, ale pustíme ho dál a chybu zalogujeme pro správce.
-      console.error("Chyba při zápisu do databáze, ale pokračujeme v UI:", err.message);
+      console.error("DB error:", err.message);
       setView('confirmation');
     } finally {
       setIsLoading(false);
@@ -164,17 +224,13 @@ const App: React.FC = () => {
   };
 
   const handleUpdateStatus = async (id: string, status: ReservationStatus) => {
-    if (supabase) {
-      await supabase.from('reservations').update({ status }).eq('id', id);
-    }
+    if (supabase) await supabase.from('reservations').update({ status }).eq('id', id);
     setReservations(prev => prev.map(res => res.id === id ? { ...res, status } : res));
   };
 
   const handleDeleteReservation = async (id: string) => {
-    if (!confirm('Opravdu chcete tuto rezervaci trvale smazat?')) return;
-    if (supabase) {
-      await supabase.from('reservations').delete().eq('id', id);
-    }
+    if (!confirm('Smazat rezervaci?')) return;
+    if (supabase) await supabase.from('reservations').delete().eq('id', id);
     setReservations(prev => prev.filter(res => res.id !== id));
   };
 
@@ -189,10 +245,8 @@ const App: React.FC = () => {
         license_plate: updatedVehicle.licensePlate,
         images: updatedVehicle.images 
       }).eq('id', updatedVehicle.id);
-      
-      setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
-      alert("Vozidlo bylo úspěšně aktualizováno.");
     }
+    setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
   };
 
   const handleBookNow = (vehicleId: string) => {
@@ -221,21 +275,8 @@ const App: React.FC = () => {
 
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
-  // Loading state pro celý web (pouze při úvodním načítání)
-  if (isLoading && view === 'home' && supabase) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-6">
-          <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Připravujeme expedici...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`min-h-screen flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
-      {/* Welcome Back Bar */}
       {view === 'home' && lastBooking && !isAdmin && (
         <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
           <div className="max-w-7xl mx-auto flex justify-between items-center text-xs font-bold uppercase tracking-widest">
@@ -279,6 +320,10 @@ const App: React.FC = () => {
                 vehicles={vehicles} 
                 customers={customers} 
                 savedContracts={savedContracts} 
+                handoverProtocols={handoverProtocols}
+                returnProtocols={returnProtocols}
+                onSaveHandover={handleSaveHandover}
+                onSaveReturn={handleSaveReturn}
                 onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
                 onUpdateStatus={handleUpdateStatus} 
                 onDeleteReservation={handleDeleteReservation} 
