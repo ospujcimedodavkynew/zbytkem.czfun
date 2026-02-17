@@ -17,11 +17,23 @@ const App: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
+  // Detekce vnoření do Wordpressu
+  const [isEmbedded, setIsEmbedded] = useState(false);
+
   const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
   const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
   const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Kontrola URL parametru ?embedded=true
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('embedded') === 'true') {
+      setIsEmbedded(true);
+    }
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     if (!supabase) {
@@ -86,26 +98,20 @@ const App: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Chyba při načítání dat ze Supabase:", error.message);
-      alert("Chyba databáze: " + error.message + ". Ujistěte se, že jste v Supabase spustili SQL skript.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const handleBookingComplete = async (data: any) => {
     if (!supabase) {
-      alert("Chyba: Aplikace není napojena na databázi (Demo režim). Rezervaci nelze uložit.");
+      alert("Chyba: Aplikace není napojena na databázi (Demo režim).");
       setView('home');
       return;
     }
 
     setIsLoading(true);
     try {
-      // 1. Vložení zákazníka
       const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
         first_name: data.firstName,
         last_name: data.lastName,
@@ -116,7 +122,6 @@ const App: React.FC = () => {
       
       if (cErr) throw cErr;
 
-      // 2. Vložení rezervace
       const { error: rErr } = await supabase.from('reservations').insert({
         vehicle_id: data.vehicleId,
         customer_id: newCustomerData.id,
@@ -130,12 +135,11 @@ const App: React.FC = () => {
       
       if (rErr) throw rErr;
 
-      // 3. Obnova dat
       await fetchData();
       alert(`Rezervace byla úspěšně odeslána. Brzy vás budeme kontaktovat.`);
       setView('home');
     } catch (err: any) {
-      alert(`Kritická chyba při ukládání: ${err.message}. \n\nUjistěte se, že jste v Supabase editoru spustili SQL příkaz pro vytvoření tabulek.`);
+      alert(`Kritická chyba: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +147,7 @@ const App: React.FC = () => {
 
   const handleUpdateStatus = async (id: string, status: ReservationStatus) => {
     if (supabase) {
-      const { error } = await supabase.from('reservations').update({ status }).eq('id', id);
-      if (error) alert("Chyba při aktualizaci: " + error.message);
+      await supabase.from('reservations').update({ status }).eq('id', id);
     }
     setReservations(prev => prev.map(res => res.id === id ? { ...res, status } : res));
   };
@@ -152,15 +155,14 @@ const App: React.FC = () => {
   const handleDeleteReservation = async (id: string) => {
     if (!confirm('Opravdu chcete tuto rezervaci trvale smazat?')) return;
     if (supabase) {
-      const { error } = await supabase.from('reservations').delete().eq('id', id);
-      if (error) alert("Chyba při mazání: " + error.message);
+      await supabase.from('reservations').delete().eq('id', id);
     }
     setReservations(prev => prev.filter(res => res.id !== id));
   };
 
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
     if (supabase) {
-      const { error } = await supabase.from('vehicles').update({
+      await supabase.from('vehicles').update({
         name: updatedVehicle.name,
         description: updatedVehicle.description,
         base_price: updatedVehicle.basePrice,
@@ -169,11 +171,6 @@ const App: React.FC = () => {
         license_plate: updatedVehicle.licensePlate,
         images: updatedVehicle.images 
       }).eq('id', updatedVehicle.id);
-
-      if (error) {
-        alert(`Chyba při ukládání vozidla: ${error.message}`);
-        return;
-      }
       
       setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
       alert("Vozidlo bylo úspěšně aktualizováno.");
@@ -209,17 +206,23 @@ const App: React.FC = () => {
   if (isLoading && view === 'home' && supabase) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-          <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Ověřuji spojení...</p>
-        </div>
+        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation isAdmin={isAdmin} onScrollTo={handleScrollTo} onLogout={() => { setIsAdmin(false); setView('home'); }} onNavigate={(v) => { if (v === 'admin' && !isAdmin) setIsLoginModalOpen(true); else setView(v); }} />
+    <div className={`min-h-screen flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
+      {/* Navigaci zobrazíme pouze pokud NEJSME vnořeni, nebo pokud jsme v ADMIN režimu */}
+      {(!isEmbedded || isAdmin) && (
+        <Navigation 
+          isAdmin={isAdmin} 
+          onScrollTo={handleScrollTo} 
+          onLogout={() => { setIsAdmin(false); setView('home'); }} 
+          onNavigate={(v) => { if (v === 'admin' && !isAdmin) setIsLoginModalOpen(true); else setView(v); }} 
+        />
+      )}
+      
       <main className="flex-grow">
         {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
         {view === 'booking' && selectedVehicle && <BookingFlow vehicle={selectedVehicle} onCancel={() => setView('home')} onComplete={handleBookingComplete} />}
@@ -237,30 +240,32 @@ const App: React.FC = () => {
           />
         )}
       </main>
+
+      {/* Patičku zobrazíme pouze v plném režimu */}
+      {!isEmbedded && (
+        <footer className="bg-slate-900 text-white py-16 border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <Logo light className="justify-center mb-8" />
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">© 2026 obytkem.cz • Milan Gula • Brno</p>
+          </div>
+        </footer>
+      )}
+
       {isLoginModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-10 animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-10">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vstup pro majitele</h2>
               <button onClick={() => setIsLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <form onSubmit={handleAdminLogin} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Administrátorské heslo</label>
-                <input type="password" autoFocus required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 transition-all font-bold" placeholder="••••••••" />
-              </div>
-              {loginError && <p className="text-red-500 text-xs font-bold uppercase tracking-widest text-center">{loginError}</p>}
-              <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-600 transition-all shadow-xl">Ověřit a vstoupit</button>
+              <input type="password" autoFocus required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-bold" placeholder="Heslo" />
+              {loginError && <p className="text-red-500 text-xs font-bold text-center">{loginError}</p>}
+              <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs hover:bg-orange-600 transition-all">Vstoupit</button>
             </form>
           </div>
         </div>
       )}
-      <footer className="bg-slate-900 text-white py-16 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <Logo light className="justify-center mb-8" />
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">© 2026 obytkem.cz • Milan Gula • Brno</p>
-        </div>
-      </footer>
     </div>
   );
 };
