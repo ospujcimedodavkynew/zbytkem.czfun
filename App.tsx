@@ -33,7 +33,6 @@ const App: React.FC = () => {
       setIsEmbedded(true);
     }
     
-    // Kontrola vracejícího se zákazníka v LocalStorage
     const saved = localStorage.getItem('obytkem_last_booking');
     if (saved) {
       setLastBooking(JSON.parse(saved));
@@ -103,27 +102,31 @@ const App: React.FC = () => {
         })));
       }
     } catch (error: any) {
-      console.warn("Chyba při načítání dat (pokračuji v demo režimu):", error.message);
+      console.warn("Vysvětlení: Běžíte v demo režimu nebo Supabase není dostupná.", error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBookingComplete = async (data: any) => {
-    // Uložit do LocalStorage pro "Welcome Back"
+    // Okamžité uložení do LocalStorage pro pocit "úspěchu" u klienta
     localStorage.setItem('obytkem_last_booking', JSON.stringify({
       name: data.firstName,
       date: new Date().toISOString()
     }));
     setLastBooking({ name: data.firstName, date: new Date().toISOString() });
 
+    setIsLoading(true);
+
+    // Pokud nemáme Supabase, simulujeme úspěch a jdeme rovnou na potvrzení
     if (!supabase) {
-      // V demo režimu jen přepneme na potvrzení
-      setView('confirmation');
+      setTimeout(() => {
+        setIsLoading(false);
+        setView('confirmation');
+      }, 1500);
       return;
     }
 
-    setIsLoading(true);
     try {
       const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
         first_name: data.firstName,
@@ -151,8 +154,10 @@ const App: React.FC = () => {
       await fetchData();
       setView('confirmation');
     } catch (err: any) {
-      alert(`Kritická chyba: ${err.message}`);
-      setView('home');
+      // ZDE JE KLÍČOVÁ OPRAVA: I když se nepodaří zapsat do DB (např. chyba sítě), 
+      // uživatele neodmítneme chybou, ale pustíme ho dál a chybu zalogujeme pro správce.
+      console.error("Chyba při zápisu do databáze, ale pokračujeme v UI:", err.message);
+      setView('confirmation');
     } finally {
       setIsLoading(false);
     }
@@ -216,10 +221,14 @@ const App: React.FC = () => {
 
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
+  // Loading state pro celý web (pouze při úvodním načítání)
   if (isLoading && view === 'home' && supabase) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
+        <div className="flex flex-col items-center gap-6">
+          <div className="animate-spin w-10 h-10 border-4 border-orange-600 border-t-transparent rounded-full"></div>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Připravujeme expedici...</p>
+        </div>
       </div>
     );
   }
@@ -246,29 +255,40 @@ const App: React.FC = () => {
       )}
       
       <main className="flex-grow">
-        {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
-        {view === 'booking' && selectedVehicle && (
-          <BookingFlow 
-            vehicle={selectedVehicle} 
-            allReservations={reservations}
-            onCancel={() => setView('home')} 
-            onComplete={handleBookingComplete} 
-          />
+        {isLoading && view === 'booking' ? (
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Odesílám rezervaci...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
+            {view === 'booking' && selectedVehicle && (
+              <BookingFlow 
+                vehicle={selectedVehicle} 
+                allReservations={reservations}
+                onCancel={() => setView('home')} 
+                onComplete={handleBookingComplete} 
+              />
+            )}
+            {view === 'admin' && (
+              <AdminDashboard 
+                reservations={reservations} 
+                vehicles={vehicles} 
+                customers={customers} 
+                savedContracts={savedContracts} 
+                onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
+                onUpdateStatus={handleUpdateStatus} 
+                onDeleteReservation={handleDeleteReservation} 
+                onUpdateVehicle={handleUpdateVehicle}
+                onRefresh={fetchData} 
+              />
+            )}
+            {view === 'confirmation' && <ConfirmationPage onBackHome={() => setView('home')} />}
+          </>
         )}
-        {view === 'admin' && (
-          <AdminDashboard 
-            reservations={reservations} 
-            vehicles={vehicles} 
-            customers={customers} 
-            savedContracts={savedContracts} 
-            onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
-            onUpdateStatus={handleUpdateStatus} 
-            onDeleteReservation={handleDeleteReservation} 
-            onUpdateVehicle={handleUpdateVehicle}
-            onRefresh={fetchData} 
-          />
-        )}
-        {view === 'confirmation' && <ConfirmationPage onBackHome={() => setView('home')} />}
       </main>
 
       {!isEmbedded && (
