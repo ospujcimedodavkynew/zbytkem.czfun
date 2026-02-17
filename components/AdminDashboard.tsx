@@ -71,6 +71,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  const openProtocolModal = (type: 'handover' | 'return', resId: string) => {
+    const res = reservations.find(r => r.id === resId);
+    const hp = handoverProtocols.find(p => p.reservationId === resId);
+    
+    if (type === 'handover') {
+      setProtocolFormData({
+        mileage: hp?.mileage || 124500, // Default nebo existující
+        fuelLevel: hp?.fuelLevel || 100,
+        cleanliness: hp?.cleanliness || 'Výborná',
+        damages: hp?.damages || 'Žádná',
+        notes: hp?.notes || ''
+      });
+    } else {
+      setProtocolFormData({
+        mileage: hp?.mileage || 0,
+        fuelLevel: hp?.fuelLevel || 0,
+        returnMileage: hp?.mileage || 0,
+        returnFuelLevel: 100,
+        returnDamages: 'Žádná',
+        notes: ''
+      });
+    }
+    setActiveProtocolEdit({ type, reservationId: resId });
+  };
+
   const handleGenerateContract = async (res: Reservation) => {
     setGeneratingContractId(res.id);
     const customer = customers.find(c => c.id === res.customerId);
@@ -114,7 +139,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     printWindow.print();
   };
 
-  // Fix: Added missing handlePrintProtocol function
   const handlePrintProtocol = (type: 'handover' | 'return', resId: string) => {
     const res = reservations.find(r => r.id === resId);
     const customer = customers.find(c => c.id === res?.customerId);
@@ -288,7 +312,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           {Object.values(ReservationStatus).map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </td>
-                      <td className="px-8 py-6 text-right space-x-2">
+                      <td className="px-8 py-6 text-right space-x-3">
+                        {res.status === ReservationStatus.CONFIRMED && !hp && (
+                          <button onClick={() => openProtocolModal('handover', res.id)} className="text-[10px] font-black text-green-600 hover:text-green-800 uppercase">Předat vůz</button>
+                        )}
+                        {hp && !rp && (
+                          <button onClick={() => openProtocolModal('return', res.id)} className="text-[10px] font-black text-purple-600 hover:text-purple-800 uppercase">Vrátit vůz</button>
+                        )}
                         <button 
                           disabled={generatingContractId === res.id}
                           onClick={() => handleGenerateContract(res)}
@@ -425,8 +455,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                        </div>
                      </div>
                      <div className="flex gap-2">
-                       {hp && <button onClick={() => handlePrintProtocol('handover', res.id)} className="flex-1 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100">Předání</button>}
-                       {rp && <button onClick={() => handlePrintProtocol('return', res.id)} className="flex-1 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100">Vrácení</button>}
+                       {hp && <button onClick={() => handlePrintProtocol('handover', res.id)} className="flex-1 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100">Tisk Předání</button>}
+                       {rp && <button onClick={() => handlePrintProtocol('return', res.id)} className="flex-1 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100">Tisk Vrácení</button>}
                      </div>
                    </div>
                  );
@@ -470,24 +500,27 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {activeProtocolEdit.type === 'handover' ? (
                 <>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Stav tachometru (km)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Aktuální stav tachometru (km)</label>
                     <input type="number" value={protocolFormData.mileage} onChange={e => setProtocolFormData({...protocolFormData, mileage: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl font-bold focus:border-orange-500 outline-none" placeholder="Např. 124500" />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Palivo (%)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Stav paliva (%)</label>
                     <input type="range" min="0" max="100" value={protocolFormData.fuelLevel} onChange={e => setProtocolFormData({...protocolFormData, fuelLevel: e.target.value})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
                     <div className="text-right text-xs font-black text-orange-600 mt-1">{protocolFormData.fuelLevel} %</div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Čistota a poškození</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Záznam o stavu a poškození</label>
                     <textarea value={protocolFormData.notes} onChange={e => setProtocolFormData({...protocolFormData, notes: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl min-h-[100px] font-medium outline-none focus:border-orange-500" placeholder="Záznam o vnějším i vnitřním stavu..."></textarea>
                   </div>
                 </>
               ) : (
                 <>
+                  <div className="p-4 bg-slate-50 rounded-2xl mb-4 text-[10px] font-bold text-slate-400">
+                    STAV PŘI PŘEDÁNÍ: {protocolFormData.mileage} KM
+                  </div>
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Stav tachometru při VRÁCENÍ (km)</label>
-                    <input type="number" value={protocolFormData.returnMileage} onChange={e => setProtocolFormData({...protocolFormData, returnMileage: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl font-bold outline-none focus:border-purple-500" />
+                    <input type="number" autoFocus value={protocolFormData.returnMileage} onChange={e => setProtocolFormData({...protocolFormData, returnMileage: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl font-bold outline-none focus:border-purple-500" />
                   </div>
                   {calculateExtraKm() > 0 && (
                     <div className="p-6 bg-red-50 border border-red-100 rounded-3xl animate-in slide-in-from-top-2">
