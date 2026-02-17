@@ -44,7 +44,7 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
       contents: [{ parts: [{ text: prompt }] }],
       config: { 
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 } // Pro rychlou analýzu nepotřebujeme hluboké přemýšlení
+        thinkingConfig: { thinkingBudget: 0 } 
       }
     });
     
