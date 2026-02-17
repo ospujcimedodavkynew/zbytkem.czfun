@@ -137,12 +137,18 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
 
                 <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed mb-10">
                   <p>{mainVehicle.description}</p>
-                  <div className="mt-6 p-6 bg-orange-50 border border-orange-100 rounded-2xl text-orange-900 text-sm italic font-medium">
-                    "Tento model je známý svou legendární odolností. Díky dvojité podlaze a topení ALDE je vůz ideální i pro zimní výpravy do Alp."
+                  <div className="mt-6 p-6 bg-slate-900 text-white rounded-2xl text-sm font-medium">
+                    <p className="font-black text-orange-500 uppercase tracking-widest text-[10px] mb-2">Technické unikátnosti:</p>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 list-none p-0">
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Dvojitá vyhřívaná podlaha (25cm)</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Topení ALDE s teplovodním okruhem</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Širokorozchodná zadní náprava</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Garáž s nosností 250kg</li>
+                    </ul>
                   </div>
                 </div>
 
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Vybavení a specifikace</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Prémiové vybavení v ceně</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
                   {mainVehicle.equipment.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -152,7 +158,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   ))}
                 </div>
 
-                <button onClick={() => onBookNow(mainVehicle.id)} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-xl hover:-translate-y-1">Rezervovat {mainVehicle.name}</button>
+                <button onClick={() => onBookNow(mainVehicle.id)} className="w-full py-5 bg-orange-600 text-white rounded-2xl font-bold hover:bg-orange-700 transition-all shadow-xl shadow-orange-100 hover:-translate-y-1">Rezervovat {mainVehicle.name}</button>
               </div>
             </div>
           </div>
