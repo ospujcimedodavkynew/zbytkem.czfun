@@ -4,20 +4,21 @@ import Navigation from './components/Navigation';
 import PublicHome from './components/PublicHome';
 import BookingFlow from './components/BookingFlow';
 import AdminDashboard from './components/AdminDashboard';
+import ConfirmationPage from './components/ConfirmationPage';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract } from './types';
 import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [lastBooking, setLastBooking] = useState<{name: string, date: string} | null>(null);
   
-  // Detekce vnoření do Wordpressu
   const [isEmbedded, setIsEmbedded] = useState(false);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
@@ -27,17 +28,22 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Kontrola URL parametru ?embedded=true
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('embedded') === 'true') {
       setIsEmbedded(true);
     }
+    
+    // Kontrola vracejícího se zákazníka v LocalStorage
+    const saved = localStorage.getItem('obytkem_last_booking');
+    if (saved) {
+      setLastBooking(JSON.parse(saved));
+    }
+
     fetchData();
   }, []);
 
   const fetchData = async () => {
     if (!supabase) {
-      console.warn("Spouštím demo režim - chybí připojení k Supabase.");
       setIsLoading(false);
       return;
     }
@@ -97,16 +103,23 @@ const App: React.FC = () => {
         })));
       }
     } catch (error: any) {
-      console.error("Chyba při načítání dat ze Supabase:", error.message);
+      console.warn("Chyba při načítání dat (pokračuji v demo režimu):", error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleBookingComplete = async (data: any) => {
+    // Uložit do LocalStorage pro "Welcome Back"
+    localStorage.setItem('obytkem_last_booking', JSON.stringify({
+      name: data.firstName,
+      date: new Date().toISOString()
+    }));
+    setLastBooking({ name: data.firstName, date: new Date().toISOString() });
+
     if (!supabase) {
-      alert("Chyba: Aplikace není napojena na databázi (Demo režim).");
-      setView('home');
+      // V demo režimu jen přepneme na potvrzení
+      setView('confirmation');
       return;
     }
 
@@ -136,10 +149,10 @@ const App: React.FC = () => {
       if (rErr) throw rErr;
 
       await fetchData();
-      alert(`Rezervace byla úspěšně odeslána. Brzy vás budeme kontaktovat.`);
-      setView('home');
+      setView('confirmation');
     } catch (err: any) {
       alert(`Kritická chyba: ${err.message}`);
+      setView('home');
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +226,16 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
-      {/* Navigaci zobrazíme pouze pokud NEJSME vnořeni, nebo pokud jsme v ADMIN režimu */}
+      {/* Welcome Back Bar */}
+      {view === 'home' && lastBooking && !isAdmin && (
+        <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
+          <div className="max-w-7xl mx-auto flex justify-between items-center text-xs font-bold uppercase tracking-widest">
+            <span>👋 Vítejte zpět, {lastBooking.name}! Máte u nás rozpracovanou rezervaci.</span>
+            <button onClick={() => setView('confirmation')} className="text-orange-400 hover:text-white transition-colors">Zobrazit stav →</button>
+          </div>
+        </div>
+      )}
+
       {(!isEmbedded || isAdmin) && (
         <Navigation 
           isAdmin={isAdmin} 
@@ -225,7 +247,14 @@ const App: React.FC = () => {
       
       <main className="flex-grow">
         {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
-        {view === 'booking' && selectedVehicle && <BookingFlow vehicle={selectedVehicle} onCancel={() => setView('home')} onComplete={handleBookingComplete} />}
+        {view === 'booking' && selectedVehicle && (
+          <BookingFlow 
+            vehicle={selectedVehicle} 
+            allReservations={reservations}
+            onCancel={() => setView('home')} 
+            onComplete={handleBookingComplete} 
+          />
+        )}
         {view === 'admin' && (
           <AdminDashboard 
             reservations={reservations} 
@@ -239,9 +268,9 @@ const App: React.FC = () => {
             onRefresh={fetchData} 
           />
         )}
+        {view === 'confirmation' && <ConfirmationPage onBackHome={() => setView('home')} />}
       </main>
 
-      {/* Patičku zobrazíme pouze v plném režimu */}
       {!isEmbedded && (
         <footer className="bg-slate-900 text-white py-16 border-t border-slate-800">
           <div className="max-w-7xl mx-auto px-4 text-center">
@@ -253,7 +282,7 @@ const App: React.FC = () => {
 
       {isLoginModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-10">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-md p-10">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vstup pro majitele</h2>
               <button onClick={() => setIsLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>

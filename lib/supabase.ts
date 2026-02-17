@@ -1,15 +1,25 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Explicitně čteme z process.env
+// Bezpečné načtení klíčů s fallbackem na prázdný řetězec
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
 
-// Inicializace klienta
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+// Inicializace klienta pouze pokud jsou klíče přítomny
+// Používáme try-catch pro zachycení nevalidních URL formátů
+let supabaseInstance = null;
 
+if (supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('https://')) {
+  try {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+  } catch (e) {
+    console.warn("Supabase inicializace selhala: Nevalidní konfigurace.");
+  }
+}
+
+export const supabase = supabaseInstance;
+
+// Informování do konzole v neagresivním formátu
 if (!supabase) {
-  console.error("KRITICKÁ CHYBA: Supabase klíče (SUPABASE_URL nebo SUPABASE_ANON_KEY) chybí v prostředí!");
+  console.info("💡 obytkem.cz běží v Demo režimu (bez Supabase). Pro ostrý provoz nastavte SUPABASE_URL a SUPABASE_ANON_KEY.");
 }
