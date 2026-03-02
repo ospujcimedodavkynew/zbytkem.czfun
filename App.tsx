@@ -5,13 +5,14 @@ import PublicHome from './components/PublicHome';
 import BookingFlow from './components/BookingFlow';
 import AdminDashboard from './components/AdminDashboard';
 import ConfirmationPage from './components/ConfirmationPage';
+import AvailabilityCalendar from './components/AvailabilityCalendar';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
 import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
@@ -45,6 +46,8 @@ const App: React.FC = () => {
       if (vehicleIdParam) {
         setSelectedVehicleId(vehicleIdParam);
       }
+    } else if (viewParam === 'calendar') {
+      setView('calendar');
     }
     
     const saved = localStorage.getItem('obytkem_last_booking');
@@ -329,6 +332,15 @@ const App: React.FC = () => {
           <>
             {view === 'widget' && (
               <div className="p-4 md:p-8 animate-in fade-in duration-700">
+                <div className="max-w-4xl mx-auto mb-8 flex justify-end">
+                  <button 
+                    onClick={() => setView('calendar')}
+                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-orange-600 flex items-center gap-2 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
+                    Zobrazit kalendář dostupnosti
+                  </button>
+                </div>
                 {selectedVehicleId ? (
                   <BookingFlow 
                     vehicle={vehicles.find(v => v.id === selectedVehicleId) || vehicles[0]} 
@@ -380,6 +392,21 @@ const App: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+            {view === 'calendar' && (
+              <div className="p-4 md:p-8 animate-in fade-in duration-700">
+                {isEmbedded && (
+                  <div className="max-w-4xl mx-auto mb-8">
+                    <button 
+                      onClick={() => setView('widget')}
+                      className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-orange-600 flex items-center gap-2 transition-colors"
+                    >
+                      ← Zpět na výběr vozů
+                    </button>
+                  </div>
+                )}
+                <AvailabilityCalendar vehicles={vehicles} reservations={reservations} isEmbedded={isEmbedded} />
               </div>
             )}
             {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}

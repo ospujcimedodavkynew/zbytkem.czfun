@@ -1,5 +1,5 @@
 
-# obytkem.cz - Rezervační systém pro Laika Kreos 7010
+# obytkem.cz - Rezervační systém pro Ahorn TU Plus 2021
 
 Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů. Je postavena na technologiích React, Tailwind CSS a využívá Google Gemini API pro inteligentní funkce.
 
@@ -24,7 +24,7 @@ Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů
 
 ## 📍 Předání vozu
 - **Místo**: Parkoviště Teslova, Brno - Bohunice.
-- **Vozidlo**: Laika Kreos 7010, model 2016.
+- **Vozidlo**: Ahorn TU Plus, model 2021.
 
 ## 📧 Automatizace
 Systém simuluje odesílání emailů (potvrzení rezervace, zaslání smlouvy) do konzole prohlížeče. Pro produkční nasazení lze napojit na služby jako SendGrid nebo Mailgun.

@@ -77,11 +77,11 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           Sezóna 2026 Brno
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-tight">
-          Půjčte si poctivou klasiku <br/><span className="text-orange-600">Laika Kreos 7010</span>
+          Půjčte si moderní <br/><span className="text-orange-600">Ahorn TU Plus 2021</span>
         </h1>
         <p className="mt-8 text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
-          Italský styl, robustní konstrukce a maximální pohodlí. 
-          Vlajková loď Laika Kreos připravená na vaše výpravy v roce 2026.
+          Německá preciznost, unikátní zadní sezení a maximální prostor. 
+          Váš ideální společník pro nezapomenutelné výpravy v roce 2026.
         </p>
         <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
           <button onClick={() => onBookNow(mainVehicle.id)} className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-bold shadow-xl shadow-orange-200 hover:bg-orange-700 hover:-translate-y-1 transition-all">Rezervovat na sezónu 2026</button>
@@ -107,7 +107,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
                   <div>
                     <h3 className="text-3xl font-black text-slate-900">{mainVehicle.name}</h3>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Podvozek AL-KO | Motor Fiat Ducato 180 HP</p>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Podvozek Renault Master | Motor 2.3 dCi 145 HP</p>
                   </div>
                   <div className="text-left md:text-right">
                     <div className="text-3xl font-black text-slate-900">{formatCurrency(mainVehicle.basePrice)}</div>
@@ -118,7 +118,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 {/* Technická karta */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-orange-600 font-black text-lg">180 HP</div>
+                    <div className="text-orange-600 font-black text-lg">145 HP</div>
                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Výkon motoru</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
@@ -126,11 +126,11 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Celková váha (sk. B)</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">AL-KO</div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Prémiový podvozek</div>
+                    <div className="text-slate-900 font-black text-lg">Renault</div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Spolehlivý podvozek</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">120 L</div>
+                    <div className="text-slate-900 font-black text-lg">100 L</div>
                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Nádrž na vodu</div>
                   </div>
                 </div>
@@ -140,10 +140,10 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   <div className="mt-6 p-6 bg-slate-900 text-white rounded-2xl text-sm font-medium">
                     <p className="font-black text-orange-500 uppercase tracking-widest text-[10px] mb-2">Technické unikátnosti:</p>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 list-none p-0">
-                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Dvojitá vyhřívaná podlaha (25cm)</li>
-                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Topení ALDE s teplovodním okruhem</li>
-                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Širokorozchodná zadní náprava</li>
-                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Garáž s nosností 250kg</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Zadní sezení "U" pro 6 osob</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Elektrické spouštěcí lůžko</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> LED osvětlení interiéru</li>
+                      <li className="flex items-center gap-2"><span className="text-orange-500">✓</span> Nástavbová klimatizace</li>
                     </ul>
                   </div>
                 </div>

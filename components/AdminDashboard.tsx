@@ -533,6 +533,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 V základním nastavení stačí nastavit pevnou výšku (např. 800px), která pokryje většinu rezervačního procesu.
               </p>
             </div>
+
+            <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Samostatný kalendář dostupnosti</h3>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase">Novinka</span>
+              </div>
+              <p className="text-sm text-slate-500 mb-4">Tento kód vloží pouze kalendář obsazenosti bez možnosti přímé rezervace. Ideální pro informační přehled.</p>
+              <div className="bg-slate-900 rounded-2xl p-6 relative group">
+                <code className="text-blue-400 text-sm font-mono break-all">
+                  {`<iframe src="${window.location.origin}/?view=calendar" width="100%" height="600px" frameborder="0"></iframe>`}
+                </code>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<iframe src="${window.location.origin}/?view=calendar" width="100%" height="600px" frameborder="0"></iframe>`);
+                    alert('Kód kalendáře zkopírován!');
+                  }}
+                  className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
