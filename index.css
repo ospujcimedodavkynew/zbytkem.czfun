@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --primary-orange: #ea580c;
+  --primary-orange-hover: #c2410c;
+  --primary-dark: #0f172a;
+  --text-gray: #64748b;
+  --border-color: #e2e8f0;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
+  --shadow-premium: 0 10px 30px -10px rgba(15, 23, 42, 0.1);
+  --shadow-orange: 0 15px 25px -5px rgba(234, 88, 12, 0.25);
+  --shadow-orange-hover: 0 20px 30px -10px rgba(234, 88, 12, 0.4);
+}
+
+body { 
+  font-family: 'Inter', sans-serif; 
+  background-color: #f8fafc;
+  color: var(--primary-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 900 !important;
+  letter-spacing: -0.03em !important;
+  color: var(--primary-dark);
+  line-height: 1.1 !important;
+}
+
+button, .btn-primary, .bg-orange-600 {
+  background-color: var(--primary-orange) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-xl) !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  padding: 1rem 2.5rem !important;
+  border: none !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow: var(--shadow-orange) !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+button:hover, .btn-primary:hover, .bg-orange-600:hover {
+  background-color: var(--primary-orange-hover) !important;
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: var(--shadow-orange-hover) !important;
+}
+
+button:focus, input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2) !important;
+}
+
+.btn-secondary, .bg-white.border {
+  background-color: #ffffff !important;
+  color: var(--primary-dark) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: var(--shadow-premium) !important;
+  font-weight: 700 !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover, .bg-white.border:hover {
+  border-color: var(--primary-orange) !important;
+  color: var(--primary-orange) !important;
+  background-color: #fff !important;
+  transform: translateY(-3px) !important;
+}
+
+img {
+  border-radius: var(--radius-2xl);
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card, .bg-white.rounded-3xl {
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-premium) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-orange);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-orange-hover);
+}

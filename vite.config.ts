@@ -1,9 +1,13 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
   define: {
     // Definujeme proměnné s fallbackem na prázdný řetězec, aby build neselhal
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || ''),
