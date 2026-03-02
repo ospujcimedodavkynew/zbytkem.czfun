@@ -8,10 +8,10 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
   const colors = {
-    orangePrimary: light ? '#fb923c' : '#ea580c',
+    orangePrimary: light ? '#ffffff' : '#0f172a',
     textPrimary: light ? '#ffffff' : '#0f172a',
-    textSecondary: light ? '#94a3b8' : '#64748b',
-    circleStroke: light ? 'rgba(255,255,255,0.1)' : '#e2e8f0'
+    textSecondary: light ? 'rgba(255,255,255,0.4)' : '#94a3b8',
+    circleStroke: light ? 'rgba(255,255,255,0.1)' : '#f1f5f9'
   };
 
   return (
@@ -39,7 +39,7 @@ const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
       </div>
       <div className="flex flex-col leading-none">
         <span className="text-xl font-[900] tracking-tighter uppercase" style={{ color: colors.textPrimary }}>
-          obytkem<span style={{ color: colors.orangePrimary }}>.cz</span>
+          obytkem.cz
         </span>
         <span className="text-[8px] font-black tracking-[0.3em] uppercase mt-1" style={{ color: colors.textSecondary }}>
           Premium Camper Rental

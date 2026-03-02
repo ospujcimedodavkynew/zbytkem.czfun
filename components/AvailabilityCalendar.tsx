@@ -106,7 +106,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <CalendarIcon className="w-8 h-8 text-orange-600" />
+            <CalendarIcon className="w-8 h-8 text-slate-900" />
             Dostupnost vozů
           </h2>
           <p className="text-slate-500 font-medium mt-1">Podívejte se na volné termíny v sezóně 2026</p>
@@ -117,7 +117,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
           <select 
             value={selectedVehicleId}
             onChange={(e) => setSelectedVehicleId(e.target.value)}
-            className="w-full md:w-64 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-orange-500 transition-all shadow-sm"
+            className="w-full md:w-64 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-900 transition-all shadow-sm"
           >
             {vehicles.map(v => (
               <option key={v.id} value={v.id}>{v.name}</option>
@@ -130,9 +130,9 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
         {renderMonth(currentDate)}
       </div>
 
-      <div className="mt-10 p-6 bg-orange-50 rounded-[2rem] border border-orange-100 flex gap-4 items-start">
-        <Info className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-        <p className="text-sm text-orange-800 font-medium leading-relaxed">
+      <div className="mt-10 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
+        <Info className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
+        <p className="text-sm text-slate-600 font-medium leading-relaxed">
           Zobrazené termíny jsou orientační. Pro závaznou rezervaci klikněte na tlačítko "Rezervovat" v detailu vozu. 
           Minimální doba nájmu jsou 3 dny.
         </p>

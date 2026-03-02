@@ -356,7 +356,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
              <div className="space-y-4">
                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Popis vozidla pro web</label>
-               <textarea value={editingVehicle.description} onChange={e => setEditingVehicle({...editingVehicle, description: e.target.value})} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl min-h-[150px] font-medium focus:border-orange-500 outline-none" />
+               <textarea value={editingVehicle.description} onChange={e => setEditingVehicle({...editingVehicle, description: e.target.value})} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl min-h-[150px] font-medium focus:border-slate-900 outline-none" />
+              </div>
+
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Fotogalerie vozu</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+                  {editingVehicle.images?.map((img, idx) => (
+                    <div key={idx} className="relative aspect-video rounded-xl overflow-hidden group border border-slate-200">
+                      <img src={img} className="w-full h-full object-cover" alt={`Vůz ${idx + 1}`} />
+                      <button 
+                        onClick={() => {
+                          const newImages = [...(editingVehicle.images || [])];
+                          newImages.splice(idx, 1);
+                          setEditingVehicle({...editingVehicle, images: newImages});
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      </button>
+                    </div>
+                  ))}
+                  <label className="aspect-video rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-slate-900 hover:bg-slate-50 transition-all group">
+                    <svg className="w-6 h-6 text-slate-300 group-hover:text-slate-900 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span className="text-[10px] font-black text-slate-400 uppercase group-hover:text-slate-900">Přidat foto</span>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const base64String = reader.result as string;
+                            setEditingVehicle({
+                              ...editingVehicle, 
+                              images: [...(editingVehicle.images || []), base64String]
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
              </div>
 
              <div>
