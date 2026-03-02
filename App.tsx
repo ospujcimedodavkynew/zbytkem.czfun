@@ -302,12 +302,18 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {(!isEmbedded || isAdmin) && (
+      {!isEmbedded && (
         <Navigation 
           isAdmin={isAdmin} 
           onScrollTo={handleScrollTo} 
           onLogout={() => { setIsAdmin(false); setView('home'); }} 
-          onNavigate={(v) => { if (v === 'admin' && !isAdmin) setIsLoginModalOpen(true); else setView(v); }} 
+          onNavigate={(v) => { 
+            if (v === 'admin' && !isAdmin) {
+              setIsLoginModalOpen(true);
+            } else {
+              setView(v);
+            }
+          }} 
         />
       )}
       
@@ -322,35 +328,51 @@ const App: React.FC = () => {
         ) : (
           <>
             {view === 'widget' && (
-              <div className="p-4">
+              <div className="p-4 md:p-8 animate-in fade-in duration-700">
                 {selectedVehicleId ? (
                   <BookingFlow 
                     vehicle={vehicles.find(v => v.id === selectedVehicleId) || vehicles[0]} 
                     allReservations={reservations}
-                    onCancel={() => setView('widget')} 
+                    onCancel={() => setSelectedVehicleId(null)} 
                     onComplete={handleBookingComplete} 
                   />
                 ) : (
-                  <div className="max-w-4xl mx-auto space-y-8">
-                    <div className="text-center py-8">
-                      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Rychlá rezervace</h2>
-                      <p className="text-slate-500 font-bold mt-2">Vyberte si vůz a vyrazte na cestu</p>
+                  <div className="max-w-4xl mx-auto space-y-10">
+                    <div className="text-center py-12">
+                      <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Rezervace vozu</h2>
+                      <p className="text-slate-500 font-medium max-w-md mx-auto">Vyberte si jeden z našich prémiových vozů a vyrazte na cestu za dobrodružstvím.</p>
                     </div>
-                    <div className="grid gap-6">
+                    <div className="grid gap-8">
                       {vehicles.filter(v => v.isActive).map(vehicle => (
-                        <div key={vehicle.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-                          <img src={vehicle.images[0]} alt={vehicle.name} className="w-full md:w-48 h-32 object-cover rounded-2xl" />
-                          <div className="flex-grow text-center md:text-left">
-                            <h3 className="text-xl font-black text-slate-900">{vehicle.name}</h3>
-                            <p className="text-slate-500 text-sm font-medium line-clamp-1">{vehicle.description}</p>
+                        <div key={vehicle.id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium flex flex-col lg:flex-row gap-10 items-center group hover:border-orange-200 transition-all duration-500">
+                          <div className="relative overflow-hidden rounded-3xl w-full lg:w-80 h-48 shrink-0">
+                            <img src={vehicle.images[0]} alt={vehicle.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
-                          <div className="flex flex-col items-center md:items-end gap-2">
-                            <div className="text-xl font-black text-orange-600">{vehicle.basePrice} Kč / den</div>
+                          <div className="flex-grow text-center lg:text-left">
+                            <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+                              <h3 className="text-3xl font-black text-slate-900">{vehicle.name}</h3>
+                              <span className="inline-flex items-center px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-widest rounded-full w-fit mx-auto lg:mx-0">
+                                Skladem
+                              </span>
+                            </div>
+                            <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-2 mb-6">{vehicle.description}</p>
+                            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+                              {vehicle.equipment.slice(0, 3).map(eq => (
+                                <span key={eq} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">{eq}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center lg:items-end gap-4 min-w-[200px] w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                            <div className="text-3xl font-black text-orange-600">
+                              {vehicle.basePrice} Kč
+                              <span className="text-xs text-slate-400 font-bold uppercase tracking-widest ml-2">/ den</span>
+                            </div>
                             <button 
-                              onClick={() => { setSelectedVehicleId(vehicle.id); setView('booking'); }}
-                              className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-orange-600 transition-all"
+                              onClick={() => { setSelectedVehicleId(vehicle.id); }}
+                              className="w-full px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 hover:shadow-orange-200"
                             >
-                              Rezervovat
+                              Rezervovat vůz
                             </button>
                           </div>
                         </div>

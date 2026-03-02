@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { motion } from 'motion/react';
+import { User, LogOut, Menu, X, ChevronRight } from 'lucide-react';
 import Logo from './Logo';
 
 interface NavigationProps {
@@ -10,73 +12,106 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo, onLogout }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const navLinks = [
+    { label: 'Domů', onClick: () => onNavigate('home') },
+    { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
+    { label: 'Ceník', onClick: () => onScrollTo('pricing') },
+    { label: 'Kontakt', onClick: () => onScrollTo('contact') },
+  ];
+
   return (
-    <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div 
+          {/* Logo */}
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="flex-shrink-0 cursor-pointer"
             onClick={() => onNavigate('home')}
           >
             <Logo />
-          </div>
+          </motion.div>
           
-          <div className="hidden md:flex space-x-8 items-center">
-            <button 
-              onClick={() => onNavigate('home')}
-              className="text-slate-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              Domů
-            </button>
-            <button 
-              onClick={() => onScrollTo('fleet')}
-              className="text-slate-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              Naše vozy
-            </button>
-            <button 
-              onClick={() => onScrollTo('pricing')}
-              className="text-slate-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              Ceník
-            </button>
-            <button 
-              onClick={() => onScrollTo('contact')}
-              className="text-slate-600 hover:text-orange-600 font-medium transition-colors"
-            >
-              Kontakt
-            </button>
+          {/* Desktop Links */}
+          <div className="hidden md:flex space-x-10 items-center">
+            {navLinks.map((link) => (
+              <button 
+                key={link.label}
+                onClick={link.onClick}
+                className="text-slate-500 hover:text-orange-600 font-medium text-sm tracking-wide transition-all relative group"
+              >
+                {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-600 transition-all group-hover:w-full" />
+              </button>
+            ))}
           </div>
 
-          <div className="flex items-center space-x-3">
-            <button
-              type="button"
+          {/* Actions */}
+          <div className="flex items-center space-x-4">
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => onNavigate('admin')}
-              className={`inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl transition-all shadow-sm
+              className={`hidden sm:flex items-center px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-full transition-all shadow-sm
                 ${isAdmin 
-                  ? 'text-white bg-slate-800 hover:bg-slate-900' 
-                  : 'text-orange-700 bg-orange-50 border border-orange-100 hover:bg-orange-100'}`}
+                  ? 'text-white bg-slate-900 hover:bg-slate-800' 
+                  : 'text-slate-700 bg-white border border-slate-200 hover:border-orange-200 hover:bg-orange-50/30'}`}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-              {isAdmin ? 'Administrace' : 'Vstup pro majitele'}
-            </button>
+              <User className="w-3.5 h-3.5 mr-2" />
+              {isAdmin ? 'Dashboard' : 'Pro majitele'}
+            </motion.button>
 
             {isAdmin && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={onLogout}
-                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                className="p-2.5 text-slate-400 hover:text-red-600 transition-colors"
                 title="Odhlásit se"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-              </button>
+                <LogOut className="w-5 h-5" />
+              </motion.button>
             )}
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden p-2 text-slate-600"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="md:hidden bg-white border-b border-slate-100 px-4 py-6 space-y-4 shadow-xl"
+        >
+          {navLinks.map((link) => (
+            <button 
+              key={link.label}
+              onClick={() => { link.onClick(); setIsMobileMenuOpen(false); }}
+              className="block w-full text-left px-4 py-3 text-lg font-bold text-slate-800 hover:bg-orange-50 rounded-2xl transition-all flex justify-between items-center"
+            >
+              {link.label}
+              <ChevronRight className="w-5 h-5 text-slate-300" />
+            </button>
+          ))}
+          <button
+            onClick={() => { onNavigate('admin'); setIsMobileMenuOpen(false); }}
+            className="w-full mt-4 px-4 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-center"
+          >
+            {isAdmin ? 'Administrace' : 'Vstup pro majitele'}
+          </button>
+        </motion.div>
+      )}
     </nav>
   );
 };
