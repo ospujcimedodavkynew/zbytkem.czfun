@@ -36,7 +36,20 @@ const App: React.FC = () => {
     
     if (embedded) {
       setIsEmbedded(true);
+      // Add a class to body for embedded view to handle scrollbars better
+      document.body.classList.add('is-embedded');
     }
+
+    // Report height to parent for iframe resizing
+    const reportHeight = () => {
+      if (embedded) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: 'obytkem-resize', height }, '*');
+      }
+    };
+
+    const resizeObserver = new ResizeObserver(reportHeight);
+    resizeObserver.observe(document.body);
 
     const viewParam = urlParams.get('view');
     const vehicleIdParam = urlParams.get('vehicleId');
@@ -50,6 +63,25 @@ const App: React.FC = () => {
       setView('calendar');
     }
     
+    // Load from localStorage first (for demo mode persistence)
+    const savedVehicles = localStorage.getItem('obytkem_vehicles_v2');
+    if (savedVehicles) {
+      try {
+        setVehicles(JSON.parse(savedVehicles));
+      } catch (e) {
+        console.error("Chyba při načítání vozů z localStorage", e);
+      }
+    }
+
+    const savedReservations = localStorage.getItem('obytkem_reservations_v2');
+    if (savedReservations) {
+      try {
+        setReservations(JSON.parse(savedReservations));
+      } catch (e) {
+        console.error("Chyba při načítání rezervací z localStorage", e);
+      }
+    }
+
     const saved = localStorage.getItem('obytkem_last_booking');
     if (saved) {
       try {
@@ -204,6 +236,24 @@ const App: React.FC = () => {
     setLastBooking({ name: data.firstName, date: new Date().toISOString() });
     setIsLoading(true);
 
+    const newReservation: Reservation = {
+      id: `res-${Date.now()}`,
+      vehicleId: data.vehicleId,
+      customerId: `cust-${Date.now()}`,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      totalPrice: data.totalPrice,
+      deposit: 25000,
+      status: ReservationStatus.PENDING,
+      createdAt: new Date().toISOString(),
+      customerNote: data.note
+    };
+
+    // Update local state and localStorage immediately for demo mode
+    const updatedReservations = [newReservation, ...reservations];
+    setReservations(updatedReservations);
+    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updatedReservations));
+
     if (!supabase) {
       setTimeout(() => { setIsLoading(false); setView('confirmation'); }, 1500);
       return;
@@ -244,13 +294,17 @@ const App: React.FC = () => {
 
   const handleUpdateStatus = async (id: string, status: ReservationStatus) => {
     if (supabase) await supabase.from('reservations').update({ status }).eq('id', id);
-    setReservations(prev => prev.map(res => res.id === id ? { ...res, status } : res));
+    const updated = reservations.map(res => res.id === id ? { ...res, status } : res);
+    setReservations(updated);
+    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updated));
   };
 
   const handleDeleteReservation = async (id: string) => {
     if (!confirm('Smazat rezervaci?')) return;
     if (supabase) await supabase.from('reservations').delete().eq('id', id);
-    setReservations(prev => prev.filter(res => res.id !== id));
+    const updated = reservations.filter(res => res.id !== id);
+    setReservations(updated);
+    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updated));
   };
 
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
@@ -265,7 +319,9 @@ const App: React.FC = () => {
         images: updatedVehicle.images 
       }).eq('id', updatedVehicle.id);
     }
-    setVehicles(prev => prev.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+    const updated = vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
+    setVehicles(updated);
+    localStorage.setItem('obytkem_vehicles_v2', JSON.stringify(updated));
   };
 
   const handleBookNow = (vehicleId: string) => {
@@ -295,7 +351,7 @@ const App: React.FC = () => {
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
+    <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
       {view === 'home' && lastBooking && !isAdmin && (
         <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
           <div className="max-w-7xl mx-auto flex justify-between items-center text-xs font-bold uppercase tracking-widest">
@@ -331,7 +387,7 @@ const App: React.FC = () => {
         ) : (
           <>
             {view === 'widget' && (
-              <div className="p-4 md:p-8 animate-in fade-in duration-700">
+              <div className={`${isEmbedded ? 'p-2' : 'p-4 md:p-8'} animate-in fade-in duration-700`}>
                 <div className="max-w-4xl mx-auto mb-8 flex justify-end">
                   <button 
                     onClick={() => setView('calendar')}
@@ -347,6 +403,7 @@ const App: React.FC = () => {
                     allReservations={reservations}
                     onCancel={() => setSelectedVehicleId(null)} 
                     onComplete={handleBookingComplete} 
+                    isEmbedded={true}
                   />
                 ) : (
                   <div className="max-w-4xl mx-auto space-y-10">
@@ -357,8 +414,12 @@ const App: React.FC = () => {
                     <div className="grid gap-8">
                       {vehicles.filter(v => v.isActive).map(vehicle => (
                         <div key={vehicle.id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium flex flex-col lg:flex-row gap-10 items-center group hover:border-orange-200 transition-all duration-500">
-                          <div className="relative overflow-hidden rounded-3xl w-full lg:w-80 h-48 shrink-0">
-                            <img src={vehicle.images[0]} alt={vehicle.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                          <div className="relative overflow-hidden rounded-3xl w-full lg:w-80 h-48 shrink-0 bg-slate-100">
+                            <img 
+                              src={vehicle.images && vehicle.images.length > 0 ? vehicle.images[0] : 'https://picsum.photos/seed/camper/800/600'} 
+                              alt={vehicle.name} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                            />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                           <div className="flex-grow text-center lg:text-left">
@@ -395,7 +456,7 @@ const App: React.FC = () => {
               </div>
             )}
             {view === 'calendar' && (
-              <div className="p-4 md:p-8 animate-in fade-in duration-700">
+              <div className={`${isEmbedded ? 'p-2' : 'p-4 md:p-8'} animate-in fade-in duration-700`}>
                 {isEmbedded && (
                   <div className="max-w-4xl mx-auto mb-8">
                     <button 
@@ -416,6 +477,7 @@ const App: React.FC = () => {
                 allReservations={reservations}
                 onCancel={() => setView('home')} 
                 onComplete={handleBookingComplete} 
+                isEmbedded={isEmbedded}
               />
             )}
             {view === 'admin' && (

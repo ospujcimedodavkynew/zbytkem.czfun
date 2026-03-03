@@ -2,15 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { Vehicle, Reservation, ReservationStatus } from '../types';
 import { formatCurrency, calculateDays, formatDate } from '../utils/format';
+import AvailabilityCalendar from './AvailabilityCalendar';
 
 interface BookingFlowProps {
   vehicle: Vehicle;
   allReservations: Reservation[];
   onComplete: (data: any) => void;
   onCancel: () => void;
+  isEmbedded?: boolean;
 }
 
-const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onComplete, onCancel }) => {
+const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onComplete, onCancel, isEmbedded }) => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -39,6 +41,11 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
       return (start <= r.endDate) && (end >= r.startDate);
     });
   };
+
+  useEffect(() => {
+    // Scroll to top of the widget when step changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -101,7 +108,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16">
+    <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-16'}`}>
       <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
         <div className="bg-slate-900 px-10 py-8 text-white">
           <div className="flex justify-between items-center mb-6">
@@ -112,7 +119,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
           </div>
           <div className="flex gap-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className={`h-1.5 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-orange-500' : 'bg-slate-800'}`}></div>
+              <div key={i} className={`h-1.5 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-slate-900' : 'bg-slate-200'}`}></div>
             ))}
           </div>
         </div>
@@ -135,7 +142,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.startDate} 
                     onChange={handleChange} 
-                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-orange-500'}`} 
+                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
                   />
                 </div>
                 <div className="space-y-2">
@@ -147,7 +154,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.endDate} 
                     onChange={handleChange} 
-                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-orange-500'}`} 
+                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
                   />
                 </div>
               </div>
@@ -159,34 +166,27 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                 </div>
               )}
 
+              {/* Visual Availability Calendar */}
+              <div className="pt-6 border-t border-slate-100">
+                <AvailabilityCalendar 
+                  vehicles={[vehicle]} 
+                  reservations={allReservations} 
+                  isEmbedded={true} 
+                />
+              </div>
+
               {days > 0 && totalPrice > 0 && !error && (
-                <div className="bg-orange-50 p-8 rounded-3xl border border-orange-100 flex flex-col md:flex-row justify-between items-center gap-4 animate-in zoom-in-95">
+                <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 animate-in zoom-in-95">
                   <div className="text-center md:text-left">
-                    <div className="text-orange-900 font-black text-xl">{days} dní na cestě</div>
-                    <div className="text-orange-600 text-xs font-bold uppercase tracking-widest mt-1">Včetně kauce 25 000 Kč (vratná)</div>
+                    <div className="text-slate-900 font-black text-xl">{days} dní na cestě</div>
+                    <div className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Včetně kauce 25 000 Kč (vratná)</div>
                   </div>
                   <div className="text-center md:text-right">
-                    <div className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1">Celková cena pronájmu</div>
-                    <div className="text-4xl font-black text-orange-900 leading-none">{formatCurrency(totalPrice)}</div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Celková cena pronájmu</div>
+                    <div className="text-4xl font-black text-slate-900 leading-none">{formatCurrency(totalPrice)}</div>
                   </div>
                 </div>
               )}
-
-              {/* Seznam obsazených termínů pro info */}
-              <div className="pt-6 border-t border-slate-100">
-                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Již obsazené termíny pro tento vůz</h4>
-                <div className="flex flex-wrap gap-2">
-                  {activeReservations.length > 0 ? (
-                    activeReservations.map((r, idx) => (
-                      <span key={idx} className="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-bold">
-                        {new Date(r.startDate).toLocaleDateString('cs-CZ')} - {new Date(r.endDate).toLocaleDateString('cs-CZ')}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-[10px] font-bold text-green-600 uppercase">Všechny termíny jsou zatím volné!</span>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 
@@ -194,15 +194,15 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
             <div className="space-y-8 animate-in fade-in duration-500">
               <h3 className="text-2xl font-black text-slate-900">Vaše údaje</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-medium" />
-                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-medium" />
+                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
+                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-medium" />
-                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-medium" />
+                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
+                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
               </div>
-              <input type="text" name="address" placeholder="Adresa bydliště (ulice, město, PSČ)" required value={formData.address} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-medium" />
-              <textarea name="note" placeholder="Poznámka pro nás..." value={formData.note} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 h-32 font-medium"></textarea>
+              <input type="text" name="address" placeholder="Adresa bydliště (ulice, město, PSČ)" required value={formData.address} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
+              <textarea name="note" placeholder="Poznámka pro nás..." value={formData.note} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 h-32 font-medium"></textarea>
             </div>
           )}
 
@@ -224,12 +224,12 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                 </div>
                 <div className="pt-6 border-t border-slate-800 flex justify-between items-end">
                   <div className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Celková cena k úhradě</div>
-                  <div className="text-4xl font-black text-orange-500">{formatCurrency(totalPrice)}</div>
+                  <div className="text-4xl font-black text-slate-900">{formatCurrency(totalPrice)}</div>
                 </div>
               </div>
               
               <div className="flex items-start gap-4 p-6 bg-slate-50 rounded-2xl text-xs text-slate-600 font-bold leading-relaxed border border-slate-100">
-                <input type="checkbox" required className="mt-1 w-5 h-5 rounded border-slate-200 text-orange-600 focus:ring-orange-500" />
+                <input type="checkbox" required className="mt-1 w-5 h-5 rounded border-slate-200 text-slate-900 focus:ring-slate-900" />
                 <label>Potvrzuji, že jsem se seznámil s obchodními podmínkami a souhlasím se zpracováním osobních údajů. Beru na vědomí, že ve voze platí přísný zákaz kouření a manipulace s ohněm.</label>
               </div>
             </div>
@@ -245,7 +245,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
               type="submit" 
               // Fix: Convert error string to boolean using !! to satisfy TypeScript's boolean requirement for the disabled prop
               disabled={step === 1 && (!!error || !formData.startDate || !formData.endDate)}
-              className="px-12 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-orange-200 hover:bg-orange-700 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-30 disabled:hover:translate-y-0"
+              className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-30 disabled:hover:translate-y-0"
             >
               {step === 3 ? 'Odeslat rezervaci' : 'Další krok'}
             </button>

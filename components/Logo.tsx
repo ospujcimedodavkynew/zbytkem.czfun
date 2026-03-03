@@ -8,7 +8,7 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
   const colors = {
-    orangePrimary: light ? '#ffffff' : '#0f172a',
+    slatePrimary: light ? '#ffffff' : '#0f172a',
     textPrimary: light ? '#ffffff' : '#0f172a',
     textSecondary: light ? 'rgba(255,255,255,0.4)' : '#94a3b8',
     circleStroke: light ? 'rgba(255,255,255,0.1)' : '#f1f5f9'
@@ -21,7 +21,7 @@ const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
           <circle cx="50" cy="50" r="48" stroke={colors.circleStroke} strokeWidth="1" />
           <path 
             d="M20 65 L40 45 L55 60 L80 30" 
-            stroke={colors.orangePrimary} 
+            stroke={colors.slatePrimary} 
             strokeWidth="3" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
@@ -33,8 +33,8 @@ const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
             strokeLinecap="round" 
             strokeLinejoin="round" 
           />
-          <circle cx="35" cy="75" r="3" fill={colors.orangePrimary} />
-          <circle cx="65" cy="75" r="3" fill={colors.orangePrimary} />
+          <circle cx="35" cy="75" r="3" fill={colors.slatePrimary} />
+          <circle cx="65" cy="75" r="3" fill={colors.slatePrimary} />
         </svg>
       </div>
       <div className="flex flex-col leading-none">

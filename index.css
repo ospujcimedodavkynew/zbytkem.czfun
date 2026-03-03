@@ -25,6 +25,31 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Embedded widget styles */
+body.is-embedded {
+  background-color: transparent !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.is-embedded::-webkit-scrollbar {
+  width: 4px;
+}
+
+body.is-embedded::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.is-embedded::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 10px;
+}
+
+body.is-embedded #root {
+  padding: 0 !important;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-weight: 900 !important;
   letter-spacing: -0.03em !important;

@@ -42,7 +42,7 @@ const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ onBackHome }) => {
           </div>
         </div>
 
-        <button onClick={onBackHome} className="px-12 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-orange-200 hover:bg-orange-700 hover:-translate-y-1 transition-all">Zpět na úvodní stránku</button>
+        <button onClick={onBackHome} className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 transition-all">Zpět na úvodní stránku</button>
       </div>
     </div>
   );

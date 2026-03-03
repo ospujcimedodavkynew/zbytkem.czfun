@@ -132,7 +132,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!printWindow) return;
     printWindow.document.write(`
       <html><head><title>Smlouva - ${viewingContract.customer}</title>
-      <style>body{font-family:sans-serif;padding:40px;line-height:1.5;font-size:12px;}h1{color:orange;}pre{white-space:pre-wrap;font-family:inherit;}</style></head>
+      <style>body{font-family:sans-serif;padding:40px;line-height:1.5;font-size:12px;}h1{color:#0f172a;}pre{white-space:pre-wrap;font-family:inherit;}</style></head>
       <body><h1>Smlouva o nájmu - obytkem.cz</h1><pre>${viewingContract.content}</pre></body></html>
     `);
     printWindow.document.close();
@@ -182,7 +182,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!printWindow) return;
     printWindow.document.write(`
       <html><head><title>${title} - ${customer?.firstName} ${customer?.lastName}</title>
-      <style>body{font-family:sans-serif;padding:40px;line-height:1.5;font-size:12px;}h1{color:orange;}pre{white-space:pre-wrap;font-family:inherit;}</style></head>
+      <style>body{font-family:sans-serif;padding:40px;line-height:1.5;font-size:12px;}h1{color:#0f172a;}pre{white-space:pre-wrap;font-family:inherit;}</style></head>
       <body>
         <h1>${title} - obytkem.cz</h1>
         <p><strong>Vozidlo:</strong> ${vehicle?.name} (${vehicle?.licensePlate})</p>
@@ -307,7 +307,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onChange={(e) => onUpdateStatus(res.id, e.target.value as ReservationStatus)}
                           className={`text-[10px] font-black px-3 py-1.5 rounded-full border-0 uppercase tracking-wider
                             ${res.status === ReservationStatus.CONFIRMED ? 'bg-green-100 text-green-700' : 
-                              res.status === ReservationStatus.PENDING ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'}`}
+                              res.status === ReservationStatus.PENDING ? 'bg-slate-100 text-slate-700' : 'bg-slate-100 text-slate-500'}`}
                         >
                           {Object.values(ReservationStatus).map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -322,7 +322,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <button 
                           disabled={generatingContractId === res.id}
                           onClick={() => handleGenerateContract(res)}
-                          className="text-[10px] font-black text-orange-600 hover:text-orange-800 uppercase"
+                          className="text-[10px] font-black text-slate-600 hover:text-slate-800 uppercase"
                         >
                           {generatingContractId === res.id ? 'Generuji...' : 'Smlouva AI'}
                         </button>
@@ -340,17 +340,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="p-10 space-y-8 animate-in fade-in duration-500">
              <div className="flex justify-between items-end">
                <h2 className="text-2xl font-black">Správa vozu: {editingVehicle.name}</h2>
-               <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-orange-600 transition-all">Uložit změny</button>
+               <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all">Uložit změny</button>
              </div>
 
              <div className="grid md:grid-cols-2 gap-8">
                <div className="space-y-4">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Základní cena mimo sezónu (Kč/den)</label>
-                 <input type="number" value={editingVehicle.basePrice} onChange={e => setEditingVehicle({...editingVehicle, basePrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-orange-500 outline-none" />
+                 <input type="number" value={editingVehicle.basePrice} onChange={e => setEditingVehicle({...editingVehicle, basePrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
                </div>
                <div className="space-y-4">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">SPZ vozidla</label>
-                 <input type="text" value={editingVehicle.licensePlate} onChange={e => setEditingVehicle({...editingVehicle, licensePlate: e.target.value})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-orange-500 outline-none" />
+                 <input type="text" value={editingVehicle.licensePlate} onChange={e => setEditingVehicle({...editingVehicle, licensePlate: e.target.value})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
                </div>
              </div>
 
@@ -414,7 +414,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
                      }} />
                      <div className="text-sm text-slate-400">{formatDate(s.startDate)} - {formatDate(s.endDate)}</div>
-                     <input type="number" className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 font-black text-orange-600 text-right" value={s.pricePerDay} onChange={e => {
+                     <input type="number" className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 font-black text-slate-900 text-right" value={s.pricePerDay} onChange={e => {
                         const newPricing = [...editingVehicle.seasonalPricing];
                         newPricing[idx].pricePerDay = Number(e.target.value);
                         setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
@@ -439,7 +439,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                    <button 
                      onClick={handleRunAiAnalysis} 
                      disabled={loadingAi}
-                     className="px-8 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-700 transition-all flex items-center gap-3 disabled:opacity-50"
+                     className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all flex items-center gap-3 disabled:opacity-50"
                    >
                      {loadingAi ? (
                        <div className="w-4 h-4 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
@@ -452,15 +452,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                    <div className="space-y-8">
                      <div className="grid md:grid-cols-2 gap-6">
                         <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                          <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Vytíženost</div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Vytíženost</div>
                           <div className="text-4xl font-black">{aiAnalysis.occupancyRate}</div>
                         </div>
                         <div className="p-6 bg-white/5 rounded-3xl border border-white/10">
-                          <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Stav trhu</div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stav trhu</div>
                           <div className="text-sm font-bold mt-2">{aiAnalysis.summary}</div>
                         </div>
                      </div>
-                     <div className="p-8 bg-orange-600 rounded-[2rem] text-white">
+                     <div className="p-8 bg-slate-900 rounded-[2rem] text-white">
                         <h4 className="text-xs font-black uppercase tracking-widest mb-3">Doporučení AI:</h4>
                         <p className="font-medium text-lg leading-relaxed italic">"{aiAnalysis.recommendation}"</p>
                      </div>
@@ -469,7 +469,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                  )}
                </div>
                {/* Dekorace */}
-               <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-orange-600/20 blur-[100px] rounded-full"></div>
+               <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-slate-900/10 blur-[100px] rounded-full"></div>
              </div>
           </div>
         )}
@@ -526,7 +526,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase">Doporučeno</span>
                 </div>
                 <div className="bg-slate-900 rounded-2xl p-6 relative group">
-                  <code className="text-orange-400 text-sm font-mono break-all">
+                  <code className="text-slate-400 text-sm font-mono break-all">
                     {`<iframe src="${window.location.origin}/?view=widget" width="100%" height="800px" frameborder="0"></iframe>`}
                   </code>
                   <button 
@@ -557,7 +557,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           navigator.clipboard.writeText(`<iframe src="${window.location.origin}/?view=widget&vehicleId=${v.id}" width="100%" height="800px" frameborder="0"></iframe>`);
                           alert(`Kód pro ${v.name} zkopírován!`);
                         }}
-                        className="w-full py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-orange-600 transition-all"
+                        className="w-full py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all"
                       >
                         Kopírovat kód
                       </button>
@@ -567,15 +567,51 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
             </div>
 
-            <div className="p-8 bg-orange-50 rounded-[2rem] border border-orange-100">
-              <h4 className="text-xs font-black text-orange-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-200">
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Tip pro integraci
+                Tip pro integraci (Bez druhého posuvníku)
               </h4>
-              <p className="text-sm text-orange-700 font-medium leading-relaxed">
-                Pokud chcete, aby se widget automaticky přizpůsobil výšce obsahu, doporučujeme použít knihovnu <strong>iFrame Resizer</strong>. 
-                V základním nastavení stačí nastavit pevnou výšku (např. 800px), která pokryje většinu rezervačního procesu.
+              <p className="text-sm text-slate-700 font-medium leading-relaxed mb-4">
+                Pro automatické přizpůsobení výšky (aby se na mobilu neobjevoval druhý posuvník), vložte na svůj web pod iframe tento skript:
               </p>
+              <div className="bg-slate-900 rounded-2xl p-6 relative group">
+                <code className="text-slate-400 text-[10px] font-mono whitespace-pre-wrap">
+{`<script>
+  window.addEventListener('message', function(e) {
+    if (e.data.type === 'obytkem-resize') {
+      const iframes = document.getElementsByTagName('iframe');
+      for (let i = 0; i < iframes.length; i++) {
+        if (iframes[i].src.includes(window.location.host) || iframes[i].src.includes('run.app')) {
+          iframes[i].style.height = e.data.height + 'px';
+        }
+      }
+    }
+  });
+</script>`}
+                </code>
+                  <button 
+                    onClick={() => {
+                      const script = `<script>
+  window.addEventListener('message', function(e) {
+    if (e.data.type === 'obytkem-resize') {
+      const iframes = document.getElementsByTagName('iframe');
+      for (let i = 0; i < iframes.length; i++) {
+        if (iframes[i].src.includes(window.location.host) || iframes[i].src.includes('run.app')) {
+          iframes[i].style.height = e.data.height + 'px';
+        }
+      }
+    }
+  });
+</script>`;
+                      navigator.clipboard.writeText(script);
+                      alert('Skript zkopírován!');
+                    }}
+                  className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all opacity-0 group-hover:opacity-100"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                </button>
+              </div>
             </div>
 
             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200">
@@ -618,7 +654,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {viewingContract.content}
             </div>
             <div className="flex gap-4">
-              <button onClick={handlePrintContract} className="flex-1 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-100">Vytisknout Smlouvu</button>
+              <button onClick={handlePrintContract} className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100">Vytisknout Smlouvu</button>
               <button onClick={() => setViewingContract(null)} className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Zavřít</button>
             </div>
           </div>
@@ -638,16 +674,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <>
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Aktuální stav tachometru (km)</label>
-                    <input type="number" value={protocolFormData.mileage} onChange={e => setProtocolFormData({...protocolFormData, mileage: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl font-bold focus:border-orange-500 outline-none" placeholder="Např. 124500" />
+                    <input type="number" value={protocolFormData.mileage} onChange={e => setProtocolFormData({...protocolFormData, mileage: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl font-bold focus:border-slate-900 outline-none" placeholder="Např. 124500" />
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Stav paliva (%)</label>
-                    <input type="range" min="0" max="100" value={protocolFormData.fuelLevel} onChange={e => setProtocolFormData({...protocolFormData, fuelLevel: e.target.value})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
-                    <div className="text-right text-xs font-black text-orange-600 mt-1">{protocolFormData.fuelLevel} %</div>
+                    <input type="range" min="0" max="100" value={protocolFormData.fuelLevel} onChange={e => setProtocolFormData({...protocolFormData, fuelLevel: e.target.value})} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900" />
+                    <div className="text-right text-xs font-black text-slate-900 mt-1">{protocolFormData.fuelLevel} %</div>
                   </div>
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Záznam o stavu a poškození</label>
-                    <textarea value={protocolFormData.notes} onChange={e => setProtocolFormData({...protocolFormData, notes: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl min-h-[100px] font-medium outline-none focus:border-orange-500" placeholder="Záznam o vnějším i vnitřním stavu..."></textarea>
+                    <textarea value={protocolFormData.notes} onChange={e => setProtocolFormData({...protocolFormData, notes: e.target.value})} className="w-full px-4 py-3 border-2 border-slate-50 rounded-xl min-h-[100px] font-medium outline-none focus:border-slate-900" placeholder="Záznam o vnějším i vnitřním stavu..."></textarea>
                   </div>
                 </>
               ) : (
@@ -675,7 +711,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <div className="mt-10 flex gap-4">
-              <button onClick={handleSaveProtocol} className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-600 transition-all">Uložit Protokol</button>
+              <button onClick={handleSaveProtocol} className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all">Uložit Protokol</button>
               <button onClick={() => setActiveProtocolEdit(null)} className="px-6 py-5 bg-slate-100 text-slate-400 rounded-2xl font-black uppercase text-xs">Zrušit</button>
             </div>
           </div>
