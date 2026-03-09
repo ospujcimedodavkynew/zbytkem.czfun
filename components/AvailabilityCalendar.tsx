@@ -48,31 +48,31 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
     };
 
     return (
-      <div className={`bg-white rounded-[1.5rem] ${isEmbedded ? 'p-4' : 'p-6 md:p-8'} border border-slate-100 shadow-premium animate-in fade-in duration-500`}>
+      <div className={`bg-white ${isEmbedded ? 'rounded-none border-none shadow-none' : 'rounded-[2rem] border border-slate-100 shadow-premium'} ${isEmbedded ? 'p-0' : 'p-6 md:p-8'} animate-in fade-in duration-500`}>
         <div className={`flex justify-between items-center ${isEmbedded ? 'mb-4' : 'mb-8'}`}>
-          <h3 className={`${isEmbedded ? 'text-sm' : 'text-xl'} font-black text-slate-900 uppercase tracking-tight`}>
+          <h3 className={`${isEmbedded ? 'text-xs' : 'text-xl'} font-black text-slate-900 uppercase tracking-widest`}>
             {date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
           </h3>
           <div className="flex gap-1">
-            <button onClick={prevMonth} className={`${isEmbedded ? 'p-1' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
-              <ChevronLeft className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-slate-600`} />
+            <button onClick={prevMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+              <ChevronLeft className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-slate-600`} />
             </button>
-            <button onClick={nextMonth} className={`${isEmbedded ? 'p-1' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
-              <ChevronRight className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-slate-600`} />
+            <button onClick={nextMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+              <ChevronRight className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-slate-600`} />
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-7 gap-1">
           {['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map(d => (
-            <div key={d} className="text-[8px] text-center font-black text-slate-400 uppercase py-1 tracking-widest">{d}</div>
+            <div key={d} className="text-[7px] text-center font-black text-slate-400 uppercase py-1 tracking-widest">{d}</div>
           ))}
           {days.map((day, idx) => {
             const status = getDayStatus(day || 0);
             return (
               <div 
                 key={idx} 
-                className={`aspect-square flex items-center justify-center text-[10px] rounded-lg transition-all relative group
+                className={`aspect-square flex items-center justify-center text-[9px] rounded-lg transition-all relative group
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? 'bg-red-50 text-red-600 font-bold border border-red-100' 

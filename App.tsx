@@ -456,8 +456,8 @@ const App: React.FC = () => {
               </div>
             )}
             {view === 'calendar' && (
-              <div className={`${isEmbedded ? 'p-2' : 'p-4 md:p-8'} animate-in fade-in duration-700`}>
-                {isEmbedded && (
+              <div className={`${isEmbedded ? 'p-0' : 'p-4 md:p-8'} animate-in fade-in duration-700`}>
+                {!isEmbedded && (
                   <div className="max-w-4xl mx-auto mb-8">
                     <button 
                       onClick={() => setView('widget')}
