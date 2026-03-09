@@ -8,11 +8,12 @@ interface AvailabilityCalendarProps {
   vehicles: Vehicle[];
   reservations: Reservation[];
   isEmbedded?: boolean;
+  initialVehicleId?: string;
 }
 
-const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, reservations, isEmbedded }) => {
+const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, reservations, isEmbedded, initialVehicleId }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Start with May 2026 for demo
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(vehicles[0]?.id || '');
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialVehicleId || vehicles[0]?.id || '');
 
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));

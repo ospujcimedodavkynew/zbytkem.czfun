@@ -54,6 +54,29 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     }
   ];
 
+  const guides = [
+    {
+      title: "WC a odpadní voda",
+      icon: "🚽",
+      content: "Kazeta WC se nachází v servisním otvoru zvenčí. Po naplnění ji vyjměte, vyprázdněte na určeném místě (v kempu) a doplňte chemii. Šedá voda (z dřezu a sprchy) se vypouští ventilem pod vozem."
+    },
+    {
+      title: "Elektřina a plyn",
+      icon: "⚡",
+      content: "Vůz má vlastní baterii dobíjenou solárem. Pro 230V zásuvky a klimatizaci se musíte připojit kabelem v kempu. Plyn slouží pro vaření, topení a ohřev vody (vždy mějte otevřenou lahev)."
+    },
+    {
+      title: "Voda a doplňování",
+      icon: "💧",
+      content: "Nádrž na čistou vodu (100L) se plní zvenčí hadicí. Stav vody uvidíte na kontrolním panelu nad dveřmi. Vždy používejte pitnou vodu z ověřených zdrojů."
+    },
+    {
+      title: "Jízda a rozměry",
+      icon: "🚐",
+      content: "Vůz je vysoký 3 metry a dlouhý 7 metrů. Pozor na podjezdy a větve! Při couvání vždy využívejte kameru a ideálně i pomocníka venku. Nezapomeňte před jízdou zavřít všechna okna a zajistit skříňky."
+    }
+  ];
+
   const renderMiniCalendar = () => {
     const today = new Date();
     const displayDate = today.getFullYear() < 2026 ? new Date(2026, 6, 1) : today;
@@ -330,6 +353,25 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Guides Section */}
+      <section id="guides" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <div className="mb-12 text-center">
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Návody pro začátečníky</h2>
+          <p className="text-slate-500 mt-4 font-medium">Vše, co potřebujete vědět pro vaši první cestu</p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {guides.map((guide, idx) => (
+            <div key={idx} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+              <div className="text-4xl mb-6">{guide.icon}</div>
+              <h3 className="text-lg font-black text-slate-900 mb-4">{guide.title}</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                {guide.content}
+              </p>
             </div>
           ))}
         </div>

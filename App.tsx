@@ -32,7 +32,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const embedded = urlParams.get('embedded') === 'true' || urlParams.get('view') === 'widget';
+    const initialViewParam = urlParams.get('view');
+    const embedded = urlParams.get('embedded') === 'true' || initialViewParam === 'widget' || initialViewParam === 'calendar';
     
     if (embedded) {
       setIsEmbedded(true);
@@ -51,20 +52,19 @@ const App: React.FC = () => {
     const resizeObserver = new ResizeObserver(reportHeight);
     resizeObserver.observe(document.body);
 
-    const viewParam = urlParams.get('view');
     const vehicleIdParam = urlParams.get('vehicleId');
 
-    if (viewParam === 'widget') {
+    if (initialViewParam === 'widget') {
       setView('widget');
       if (vehicleIdParam) {
         setSelectedVehicleId(vehicleIdParam);
       }
-    } else if (viewParam === 'calendar') {
+    } else if (initialViewParam === 'calendar') {
       setView('calendar');
     }
     
     // Load from localStorage first (for demo mode persistence)
-    const savedVehicles = localStorage.getItem('obytkem_vehicles_v2');
+    const savedVehicles = localStorage.getItem('obytkem_vehicles_v3');
     if (savedVehicles) {
       try {
         setVehicles(JSON.parse(savedVehicles));
@@ -73,7 +73,7 @@ const App: React.FC = () => {
       }
     }
 
-    const savedReservations = localStorage.getItem('obytkem_reservations_v2');
+    const savedReservations = localStorage.getItem('obytkem_reservations_v3');
     if (savedReservations) {
       try {
         setReservations(JSON.parse(savedReservations));
@@ -252,7 +252,7 @@ const App: React.FC = () => {
     // Update local state and localStorage immediately for demo mode
     const updatedReservations = [newReservation, ...reservations];
     setReservations(updatedReservations);
-    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updatedReservations));
+    localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updatedReservations));
 
     if (!supabase) {
       setTimeout(() => { setIsLoading(false); setView('confirmation'); }, 1500);
@@ -296,7 +296,7 @@ const App: React.FC = () => {
     if (supabase) await supabase.from('reservations').update({ status }).eq('id', id);
     const updated = reservations.map(res => res.id === id ? { ...res, status } : res);
     setReservations(updated);
-    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updated));
+    localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updated));
   };
 
   const handleDeleteReservation = async (id: string) => {
@@ -304,7 +304,7 @@ const App: React.FC = () => {
     if (supabase) await supabase.from('reservations').delete().eq('id', id);
     const updated = reservations.filter(res => res.id !== id);
     setReservations(updated);
-    localStorage.setItem('obytkem_reservations_v2', JSON.stringify(updated));
+    localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updated));
   };
 
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
@@ -321,7 +321,7 @@ const App: React.FC = () => {
     }
     const updated = vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
     setVehicles(updated);
-    localStorage.setItem('obytkem_vehicles_v2', JSON.stringify(updated));
+    localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(updated));
   };
 
   const handleBookNow = (vehicleId: string) => {
@@ -348,6 +348,20 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAdminClick = () => {
+    if (!isAdmin) {
+      setIsLoginModalOpen(true);
+    } else {
+      setView('admin');
+    }
+  };
+
+  // Expose admin trigger to window for footer access
+  useEffect(() => {
+    (window as any).openAdmin = handleAdminClick;
+    return () => { delete (window as any).openAdmin; };
+  }, [isAdmin]);
+
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
   return (
@@ -361,20 +375,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {!isEmbedded && (
-        <Navigation 
-          isAdmin={isAdmin} 
-          onScrollTo={handleScrollTo} 
-          onLogout={() => { setIsAdmin(false); setView('home'); }} 
-          onNavigate={(v) => { 
-            if (v === 'admin' && !isAdmin) {
-              setIsLoginModalOpen(true);
-            } else {
-              setView(v);
-            }
-          }} 
-        />
-      )}
+      {/* Navigation removed as per user request */}
       
       <main className="flex-grow">
         {isLoading && view === 'booking' ? (
@@ -467,7 +468,12 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 )}
-                <AvailabilityCalendar vehicles={vehicles} reservations={reservations} isEmbedded={isEmbedded} />
+                <AvailabilityCalendar 
+                  vehicles={vehicles} 
+                  reservations={reservations} 
+                  isEmbedded={isEmbedded} 
+                  initialVehicleId={selectedVehicleId || undefined}
+                />
               </div>
             )}
             {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
@@ -530,6 +536,33 @@ const App: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+      {!isEmbedded && (
+        <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-100 mt-24">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs">O</div>
+              <span className="text-slate-900 font-black text-sm tracking-tight">Obytkem.cz</span>
+            </div>
+            
+            <div className="flex gap-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <button onClick={() => handleScrollTo('fleet')} className="hover:text-slate-900 transition-colors">Naše vozy</button>
+              <button onClick={() => handleScrollTo('pricing')} className="hover:text-slate-900 transition-colors">Ceník</button>
+              <button onClick={() => handleScrollTo('faq')} className="hover:text-slate-900 transition-colors">FAQ</button>
+              <button onClick={() => handleScrollTo('guides')} className="hover:text-slate-900 transition-colors">Návody</button>
+            </div>
+
+            <button 
+              onClick={() => (window as any).openAdmin()} 
+              className="text-[10px] font-black text-slate-300 hover:text-slate-900 transition-colors uppercase tracking-widest"
+            >
+              Administrace
+            </button>
+          </div>
+          <div className="mt-8 text-center text-[10px] text-slate-300 font-medium">
+            © 2026 Obytkem.cz • Půjčovna obytných vozů Brno
+          </div>
+        </footer>
       )}
     </div>
   );

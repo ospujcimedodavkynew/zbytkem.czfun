@@ -23,14 +23,17 @@ export const MOCK_VEHICLES: Vehicle[] = [
       { id: 's2026-3', name: 'Jarní expedice', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 3100 }
     ],
     equipment: [
-      'Zadní sezení ve tvaru "U" (rozložitelné na lůžko)',
-      'Elektrické spouštěcí lůžko v přední části',
-      'Solární panel 140W pro nezávislost',
-      'Nástavbová klimatizace pro horké dny',
-      'Nádrž na čistou vodu 100L / odpadní 100L',
-      'Velká lednice s mrazákem (141L)',
-      'Nosič na 4 jízdní kola',
-      'Markýza Thule s LED osvětlením'
+      'Zadní sezení ve tvaru "U" (unikátní prostor pro 6 osob)',
+      'Elektrické spouštěcí lůžko (pohodlné spaní bez přestavby)',
+      'Solární panel 140W (maximální energetická nezávislost)',
+      'Nástavbová klimatizace (komfort i v největších vedrech)',
+      'Velká lednice 141L s mrazákem (automatický trojkombinační režim)',
+      'Markýza Thule s LED osvětlením (večerní posezení venku)',
+      'Nosič na 4 jízdní kola (ideální pro rodinné výlety)',
+      'Couvací kamera a senzory (snadná manipulace)',
+      'Kompletní kuchyňská výbava (nádobí, příbory, hrnce)',
+      'Kempingový nábytek (stůl + 4 židle)',
+      'Dálniční známka ČR v ceně'
     ]
   }
 ];
