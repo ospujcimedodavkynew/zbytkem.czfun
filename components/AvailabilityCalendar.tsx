@@ -48,95 +48,98 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
     };
 
     return (
-      <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-100 shadow-premium animate-in fade-in duration-500">
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+      <div className={`bg-white rounded-[1.5rem] ${isEmbedded ? 'p-4' : 'p-6 md:p-8'} border border-slate-100 shadow-premium animate-in fade-in duration-500`}>
+        <div className={`flex justify-between items-center ${isEmbedded ? 'mb-4' : 'mb-8'}`}>
+          <h3 className={`${isEmbedded ? 'text-sm' : 'text-xl'} font-black text-slate-900 uppercase tracking-tight`}>
             {date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
           </h3>
-          <div className="flex gap-2">
-            <button onClick={prevMonth} className="p-2 hover:bg-slate-50 rounded-full transition-colors border border-slate-100">
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
+          <div className="flex gap-1">
+            <button onClick={prevMonth} className={`${isEmbedded ? 'p-1' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+              <ChevronLeft className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-slate-600`} />
             </button>
-            <button onClick={nextMonth} className="p-2 hover:bg-slate-50 rounded-full transition-colors border border-slate-100">
-              <ChevronRight className="w-5 h-5 text-slate-600" />
+            <button onClick={nextMonth} className={`${isEmbedded ? 'p-1' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+              <ChevronRight className={`${isEmbedded ? 'w-4 h-4' : 'w-5 h-5'} text-slate-600`} />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 md:gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'].map(d => (
-            <div key={d} className="text-[10px] md:text-xs text-center font-black text-slate-400 uppercase py-2 tracking-widest">{d}</div>
+            <div key={d} className="text-[8px] text-center font-black text-slate-400 uppercase py-1 tracking-widest">{d}</div>
           ))}
           {days.map((day, idx) => {
             const status = getDayStatus(day || 0);
             return (
               <div 
                 key={idx} 
-                className={`aspect-square flex items-center justify-center text-xs md:text-sm rounded-xl md:rounded-2xl transition-all relative group
+                className={`aspect-square flex items-center justify-center text-[10px] rounded-lg transition-all relative group
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? 'bg-red-50 text-red-600 font-bold border border-red-100' 
-                      : 'bg-green-50 text-green-700 font-medium border border-green-100 hover:border-green-300 hover:bg-green-100'}`}
+                      : 'bg-green-50 text-green-700 font-medium border border-green-100'}`}
               >
                 {day}
-                {status === 'reserved' && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm" />
-                )}
               </div>
             );
           })}
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-6 pt-6 border-t border-slate-50">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-100 border border-green-200" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
+        {!isEmbedded && (
+          <div className="mt-8 flex flex-wrap gap-6 pt-6 border-t border-slate-50">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-100 border border-green-200" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-100 border border-red-200" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Obsazeno</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-100 border border-red-200" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Obsazeno</span>
-          </div>
-        </div>
+        )}
       </div>
     );
   };
 
   return (
     <div className={`w-full max-w-4xl mx-auto ${isEmbedded ? 'p-0' : 'p-4 md:p-8'}`}>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <CalendarIcon className="w-8 h-8 text-slate-900" />
-            Dostupnost vozů
-          </h2>
-          <p className="text-slate-500 font-medium mt-1">Podívejte se na volné termíny v sezóně 2026</p>
-        </div>
+      {!isEmbedded && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+              <CalendarIcon className="w-8 h-8 text-slate-900" />
+              Dostupnost vozů
+            </h2>
+            <p className="text-slate-500 font-medium mt-1">Podívejte se na volné termíny v sezóně 2026</p>
+          </div>
 
-        <div className="w-full md:w-auto">
-          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Vyberte vůz</label>
-          <select 
-            value={selectedVehicleId}
-            onChange={(e) => setSelectedVehicleId(e.target.value)}
-            className="w-full md:w-64 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-900 transition-all shadow-sm"
-          >
-            {vehicles.map(v => (
-              <option key={v.id} value={v.id}>{v.name}</option>
-            ))}
-          </select>
+          <div className="w-full md:w-auto">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Vyberte vůz</label>
+            <select 
+              value={selectedVehicleId}
+              onChange={(e) => setSelectedVehicleId(e.target.value)}
+              className="w-full md:w-64 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-900 transition-all shadow-sm"
+            >
+              {vehicles.map(v => (
+                <option key={v.id} value={v.id}>{v.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="grid gap-8">
+      <div className="grid gap-4">
         {renderMonth(currentDate)}
       </div>
 
-      <div className="mt-10 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
-        <Info className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
-        <p className="text-sm text-slate-600 font-medium leading-relaxed">
-          Zobrazené termíny jsou orientační. Pro závaznou rezervaci klikněte na tlačítko "Rezervovat" v detailu vozu. 
-          Minimální doba nájmu jsou 3 dny.
-        </p>
-      </div>
+      {!isEmbedded && (
+        <div className="mt-10 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
+          <Info className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
+          <p className="text-sm text-slate-600 font-medium leading-relaxed">
+            Zobrazené termíny jsou orientační. Pro závaznou rezervaci klikněte na tlačítko "Rezervovat" v detailu vozu. 
+            Minimální doba nájmu jsou 3 dny.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

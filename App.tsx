@@ -497,7 +497,12 @@ const App: React.FC = () => {
                 onRefresh={fetchData} 
               />
             )}
-            {view === 'confirmation' && <ConfirmationPage onBackHome={() => setView('home')} />}
+            {view === 'confirmation' && (
+              <ConfirmationPage 
+                onBackHome={() => setView('home')} 
+                isEmbedded={isEmbedded} 
+              />
+            )}
           </>
         )}
       </main>

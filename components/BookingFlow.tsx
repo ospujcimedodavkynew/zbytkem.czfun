@@ -110,31 +110,30 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
   return (
     <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-16'}`}>
       <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
-        <div className="bg-slate-900 px-10 py-8 text-white">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-black">{vehicle.name}</h2>
-            <button onClick={onCancel} className="p-2 hover:bg-slate-800 rounded-full transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div className="bg-slate-900 px-6 py-4 text-white">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-black">{vehicle.name}</h2>
+            <button onClick={onCancel} className="p-1.5 hover:bg-slate-800 rounded-full transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {[1, 2, 3].map(i => (
-              <div key={i} className={`h-1.5 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-slate-900' : 'bg-slate-200'}`}></div>
+              <div key={i} className={`h-1 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-white' : 'bg-slate-700'}`}></div>
             ))}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-10">
+        <form onSubmit={handleSubmit} className={isEmbedded ? 'p-5' : 'p-10'}>
           {step === 1 && (
-            <div className="space-y-8 animate-in fade-in duration-500">
+            <div className={`space-y-4 animate-in fade-in duration-500`}>
               <div>
-                <h3 className="text-2xl font-black text-slate-900">Vyberte si termín cesty</h3>
-                <p className="text-slate-500 text-sm mt-2">Dostupnost kontrolujeme automaticky v reálném čase.</p>
+                <h3 className="text-lg font-black text-slate-900">Termín cesty</h3>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Datum vyzvednutí</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vyzvednutí</label>
                   <input 
                     type="date" 
                     name="startDate" 
@@ -142,11 +141,11 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.startDate} 
                     onChange={handleChange} 
-                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
+                    className={`w-full px-3 py-2.5 border-2 rounded-xl outline-none transition-all font-bold text-sm ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Datum vrácení</label>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vrácení</label>
                   <input 
                     type="date" 
                     name="endDate" 
@@ -154,7 +153,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.endDate} 
                     onChange={handleChange} 
-                    className={`w-full px-5 py-4 border-2 rounded-2xl outline-none transition-all font-bold ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
+                    className={`w-full px-3 py-2.5 border-2 rounded-xl outline-none transition-all font-bold text-sm ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
                   />
                 </div>
               </div>
@@ -176,14 +175,14 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
               </div>
 
               {days > 0 && totalPrice > 0 && !error && (
-                <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 animate-in zoom-in-95">
-                  <div className="text-center md:text-left">
-                    <div className="text-slate-900 font-black text-xl">{days} dní na cestě</div>
-                    <div className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Včetně kauce 25 000 Kč (vratná)</div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center gap-2 animate-in zoom-in-95">
+                  <div>
+                    <div className="text-slate-900 font-black text-sm">{days} dní</div>
+                    <div className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Kauce 25 000 Kč</div>
                   </div>
-                  <div className="text-center md:text-right">
-                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Celková cena pronájmu</div>
-                    <div className="text-4xl font-black text-slate-900 leading-none">{formatCurrency(totalPrice)}</div>
+                  <div className="text-right">
+                    <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Celkem</div>
+                    <div className="text-xl font-black text-slate-900 leading-none">{formatCurrency(totalPrice)}</div>
                   </div>
                 </div>
               )}
@@ -191,63 +190,58 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
           )}
 
           {step === 2 && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <h3 className="text-2xl font-black text-slate-900">Vaše údaje</h3>
-              <div className="grid md:grid-cols-2 gap-4">
-                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
-                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <h3 className="text-lg font-black text-slate-900">Vaše údaje</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
+                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
-                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
+                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
               </div>
-              <input type="text" name="address" placeholder="Adresa bydliště (ulice, město, PSČ)" required value={formData.address} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 font-medium" />
-              <textarea name="note" placeholder="Poznámka pro nás..." value={formData.note} onChange={handleChange} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-slate-900 h-32 font-medium"></textarea>
+              <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
+              <textarea name="note" placeholder="Poznámka..." value={formData.note} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 h-20 font-medium text-sm"></textarea>
             </div>
           )}
 
           {step === 3 && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-              <h3 className="text-2xl font-black text-slate-900">Shrnutí a potvrzení</h3>
-              <div className="p-10 bg-slate-900 rounded-[2rem] text-white space-y-6">
-                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+            <div className="space-y-4 animate-in fade-in duration-500">
+              <h3 className="text-lg font-black text-slate-900">Shrnutí</h3>
+              <div className="p-6 bg-slate-900 rounded-2xl text-white space-y-3">
+                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Vozidlo</span>
-                  <span className="text-white text-sm">{vehicle.name}</span>
+                  <span className="text-white text-xs">{vehicle.name}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Termín</span>
-                  <span className="text-white text-sm">{formatDate(formData.startDate)} - {formatDate(formData.endDate)}</span>
+                  <span className="text-white text-xs">{formatDate(formData.startDate)} - {formatDate(formData.endDate)}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                  <span>Doba pronájmu</span>
-                  <span className="text-white text-sm">{days} dní</span>
-                </div>
-                <div className="pt-6 border-t border-slate-800 flex justify-between items-end">
-                  <div className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Celková cena k úhradě</div>
-                  <div className="text-4xl font-black text-slate-900">{formatCurrency(totalPrice)}</div>
+                <div className="pt-3 border-t border-slate-800 flex justify-between items-end">
+                  <div className="text-slate-400 font-black uppercase tracking-widest text-[8px]">Celkem</div>
+                  <div className="text-2xl font-black text-white">{formatCurrency(totalPrice)}</div>
                 </div>
               </div>
               
-              <div className="flex items-start gap-4 p-6 bg-slate-50 rounded-2xl text-xs text-slate-600 font-bold leading-relaxed border border-slate-100">
-                <input type="checkbox" required className="mt-1 w-5 h-5 rounded border-slate-200 text-slate-900 focus:ring-slate-900" />
-                <label>Potvrzuji, že jsem se seznámil s obchodními podmínkami a souhlasím se zpracováním osobních údajů. Beru na vědomí, že ve voze platí přísný zákaz kouření a manipulace s ohněm.</label>
+              <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl text-[10px] text-slate-600 font-bold leading-tight border border-slate-100">
+                <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded border-slate-200 text-slate-900 focus:ring-slate-900" />
+                <label>Souhlasím s obchodními podmínkami a zákazem kouření ve voze.</label>
               </div>
             </div>
           )}
 
-          <div className="mt-12 flex justify-between items-center">
+          <div className="mt-6 flex justify-between items-center">
             {step > 1 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="px-8 py-3 text-slate-400 font-black uppercase text-xs hover:text-slate-900 transition-colors">Zpět</button>
+              <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2 text-slate-400 font-black uppercase text-[10px] hover:text-slate-900 transition-colors">Zpět</button>
             ) : (
               <div></div>
             )}
             <button 
               type="submit" 
-              // Fix: Convert error string to boolean using !! to satisfy TypeScript's boolean requirement for the disabled prop
               disabled={step === 1 && (!!error || !formData.startDate || !formData.endDate)}
-              className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-slate-200 hover:bg-slate-800 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-30 disabled:hover:translate-y-0"
+              className="px-8 py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-slate-800 transition-all disabled:opacity-30"
             >
-              {step === 3 ? 'Odeslat rezervaci' : 'Další krok'}
+              {step === 3 ? 'Odeslat' : 'Další'}
             </button>
           </div>
         </form>
