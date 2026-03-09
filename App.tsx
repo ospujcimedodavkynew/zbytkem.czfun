@@ -6,13 +6,16 @@ import BookingFlow from './components/BookingFlow';
 import AdminDashboard from './components/AdminDashboard';
 import ConfirmationPage from './components/ConfirmationPage';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
+import TravelBlog from './components/TravelBlog';
+import VehicleDetail from './components/VehicleDetail';
+import GuidesDetail from './components/GuidesDetail';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
 import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
@@ -370,6 +373,19 @@ const App: React.FC = () => {
     return () => { delete (window as any).openAdmin; };
   }, [isAdmin]);
 
+  // SEO Title and Meta Description
+  useEffect(() => {
+    document.title = "Pronájem obytného vozu Brno | Půjčovna obytných aut Obytkem.cz";
+    
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Hledáte pronájem obytného vozu v Brně? Půjčte si náš plně vybavený Ahorn Canada TU Plus a vyrazte za dobrodružstvím po celé ČR i Evropě. Online rezervace.');
+  }, []);
+
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
   return (
@@ -484,7 +500,16 @@ const App: React.FC = () => {
                 />
               </div>
             )}
-            {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} />}
+            {view === 'blog' && <TravelBlog onBack={() => setView('home')} />}
+            {view === 'vehicle-detail' && selectedVehicle && (
+              <VehicleDetail 
+                vehicle={selectedVehicle} 
+                onBack={() => setView('home')} 
+                onBook={() => setView('booking')} 
+              />
+            )}
+            {view === 'guides' && <GuidesDetail onBack={() => setView('home')} />}
+            {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} onNavigate={setView} />}
             {view === 'booking' && selectedVehicle && (
               <BookingFlow 
                 vehicle={selectedVehicle} 

@@ -10,9 +10,10 @@ interface PublicHomeProps {
   reservations: Reservation[];
   onBookNow: (vehicleId: string) => void;
   onScrollTo: (sectionId: string) => void;
+  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides') => void;
 }
 
-const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo }) => {
+const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo, onNavigate }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -139,22 +140,81 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           Sezóna 2026 Brno
         </div>
         <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tight leading-[0.9]">
-          Ahorn TU Plus <br/><span className="text-slate-400">Model 2021</span>
+          Pronájem obytného vozu Brno <br/><span className="text-slate-400">Vaše svoboda na čtyřech kolech</span>
         </h1>
         <p className="mt-8 text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
-          Německá preciznost, unikátní zadní sezení a maximální prostor. 
-          Váš ideální společník pro nezapomenutelné výpravy v roce 2026.
+          Hledáte <strong>půjčovnu obytných vozů v Brně</strong>, se kterou můžete vyrazit kamkoliv a kdykoliv? 
+          Vítejte na <strong>obytkem.cz</strong> — místě, kde začíná skutečná svoboda cestování. 
+          Nabízíme komfortní a plně vybavený <strong>obytný vůz k pronájmu</strong>, který vám umožní cestovat bez hotelů, bez stresu a bez kompromisů.
         </p>
         <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
           <button onClick={() => onBookNow(mainVehicle.id)} className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-2xl shadow-slate-200">Rezervovat sezónu 2026</button>
-          <button onClick={() => onScrollTo('fleet')} className="px-12 py-5 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Technické parametry</button>
+          <button onClick={() => onNavigate('vehicle-detail')} className="px-12 py-5 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Prohlídka vozu</button>
+          <button onClick={() => onNavigate('blog')} className="px-12 py-5 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-100 transition-all">Cestovatelský blog</button>
+        </div>
+      </section>
+
+      {/* Why Choose Us Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="space-y-4">
+            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Po Brně přivezeme</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">Pokud budete chtít, obytňák vám přivezeme až před dům za 300 Kč. Jednoduché a pohodlné.</p>
+          </div>
+          <div className="space-y-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">GPS a alarm</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">Vůz je chráněn GPS sledováním s dálkovou deaktivací. Vaše bezpečí je naší prioritou.</p>
+          </div>
+          <div className="space-y-4">
+            <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Osobní přístup</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">Vše vám vysvětlíme, poradíme a pomůžeme. Pronájem s lidským přístupem.</p>
+          </div>
+          <div className="space-y-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Dálniční známka</h3>
+            <p className="text-sm text-slate-500 font-medium leading-relaxed">Cestujte bez omezení po českých dálnicích. Havarijní pojištění v ceně.</p>
+          </div>
+        </div>
+
+        <div className="mt-20 p-10 bg-slate-900 rounded-[3rem] text-white">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl font-black mb-6">Co u nás získáváte?</h2>
+            <p className="text-slate-400 font-medium mb-8 leading-relaxed">
+              Působíme v Brně a okolí, ale naše vozy brázdí silnice po celé Evropě. Při pronájmu u nás získáváte:
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                "Dálniční známka pro ČR",
+                "Havarijní pojištění (spoluúčast 25 000 Kč)",
+                "GPS zabezpečení vozidla",
+                "Kompletní kempingová výbava a připravenost na cestu",
+                "Individuální domluva na místě a čase předání"
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-[10px] font-black">✓</div>
+                  <span className="text-sm font-bold">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Fleet Section */}
       <section id="fleet" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-12">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Náš vůz v detailu</h2>
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Náš obytný vůz k pronájmu – Ahorn Canada TU Plus</h2>
           <div className="h-1 w-12 bg-slate-900 mt-4 rounded-full"></div>
         </div>
 
@@ -238,7 +298,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 </div>
 
                 <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed mb-10">
-                  <p>{mainVehicle.description}</p>
+                  <p>Tento <strong>moderní obytný vůz k pronájmu</strong> je navržený pro maximální komfort v každém ročním období. Unikátní zadní sezení ve tvaru "U" nabízí nejvíce prostoru pro relaxaci v této třídě vozů. Ideální pro rodiny i páry, kteří hledají <strong>luxusní kempování</strong> bez omezení.</p>
                   <div className="mt-6 p-6 bg-slate-900 text-white rounded-2xl text-sm font-medium">
                     <p className="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">Technické unikátnosti:</p>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 list-none p-0">
@@ -369,9 +429,49 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
             <div key={idx} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
               <div className="text-4xl mb-6">{guide.icon}</div>
               <h3 className="text-lg font-black text-slate-900 mb-4">{guide.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+              <p className="text-sm text-slate-500 leading-relaxed font-medium mb-6">
                 {guide.content}
               </p>
+              <button 
+                onClick={() => onNavigate('guides')}
+                className="text-[10px] font-black text-orange-600 uppercase tracking-widest hover:text-slate-900 transition-colors"
+              >
+                Zobrazit detail návodu →
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-12 text-center">
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Recenze našich zákazníků</h2>
+          <p className="text-slate-500 mt-4 font-medium">Zkušenosti těch, kteří s námi už vyrazili za dobrodružstvím</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              name: "Patricia",
+              text: "Skvělá zkušenost od začátku do konce. Rezervace byla rychlá, komunikace bez problémů a předání vozu perfektně vysvětlené. Obytný vůz byl čistý, moderní a skvěle vybavený. Cestování bez hotelů je úplně jiná úroveň svobody. Určitě doporučuji a příště půjčujeme znovu."
+            },
+            {
+              name: "Liliana",
+              text: "Perfektní servis a velmi ochotný přístup. Vůz nám dovezli až před dům, vše ukázali a poradili i tipy na cestu. Auto bylo ve výborném stavu a řízení úplně v pohodě i pro někoho, kdo jel s obytným vozem poprvé. Skvělý zážitek, moc děkujeme."
+            },
+            {
+              name: "Dan Líbánek",
+              text: "Naprostá spokojenost. Online rezervace jednoduchá, rychlá domluva a profesionální předání. Obytný vůz byl krásně připravený a plně vybavený, nic nám nechybělo. Ideální způsob, jak cestovat pohodlně a svobodně. Rozhodně doporučuji."
+            }
+          ].map((rev, i) => (
+            <div key={i} className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-4 h-4 text-orange-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                ))}
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed italic mb-6">"{rev.text}"</p>
+              <div className="font-black text-slate-900 text-xs uppercase tracking-widest">— {rev.name}</div>
             </div>
           ))}
         </div>

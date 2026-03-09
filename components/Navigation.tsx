@@ -6,7 +6,7 @@ import Logo from './Logo';
 
 interface NavigationProps {
   isAdmin: boolean;
-  onNavigate: (view: 'home' | 'admin' | 'booking') => void;
+  onNavigate: (view: 'home' | 'admin' | 'booking' | 'blog' | 'vehicle-detail' | 'guides') => void;
   onScrollTo: (sectionId: string) => void;
   onLogout: () => void;
 }
@@ -18,6 +18,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
     { label: 'Domů', onClick: () => onNavigate('home') },
     { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
     { label: 'Ceník', onClick: () => onScrollTo('pricing') },
+    { label: 'Blog', onClick: () => onNavigate('blog') },
     { label: 'FAQ', onClick: () => onScrollTo('faq') },
     { label: 'Kontakt', onClick: () => onScrollTo('contact') },
   ];
