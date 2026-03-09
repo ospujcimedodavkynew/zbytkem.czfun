@@ -1,9 +1,18 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol } from '../types';
 import { formatCurrency, formatDate, getMonthName, calculateDays } from '../utils/format';
 import { generateContractTemplate, analyzeReservationTrends, isAiConfigured } from '../services/geminiService';
 import { supabase } from '../lib/supabase';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, LineChart, Line, Legend 
+} from 'recharts';
+import { 
+  format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, 
+  addMonths, subMonths, isWithinInterval, parseISO, startOfDay 
+} from 'date-fns';
+import { cs } from 'date-fns/locale';
 
 interface AdminDashboardProps {
   reservations: Reservation[];
@@ -36,13 +45,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateVehicle,
   onRefresh
 }) => {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
   
+  // --- Stats Calculations ---
+  const statsData = useMemo(() => {
+    const months = ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer', 'Čec', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'];
+    const revenueByMonth = new Array(12).fill(0);
+    
+    reservations.filter(r => r.status !== ReservationStatus.CANCELLED).forEach(res => {
+      const date = parseISO(res.startDate);
+      revenueByMonth[date.getMonth()] += res.totalPrice;
+    });
+
+    const barData = months.map((name, index) => ({
+      name,
+      revenue: revenueByMonth[index]
+    }));
+
+    const totalPossibleDays = vehicles.length * 30; // Simplified for current month
+    const currentMonth = new Date().getMonth();
+    const bookedDays = reservations
+      .filter(r => r.status !== ReservationStatus.CANCELLED && parseISO(r.startDate).getMonth() === currentMonth)
+      .reduce((acc, res) => acc + calculateDays(res.startDate, res.endDate), 0);
+    
+    const utilizationData = [
+      { name: 'Obsazeno', value: bookedDays },
+      { name: 'Volno', value: Math.max(0, totalPossibleDays - bookedDays) }
+    ];
+
+    return { barData, utilizationData };
+  }, [reservations, vehicles]);
+
+  // --- Calendar Logic ---
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const calendarDays = useMemo(() => {
+    return eachDayOfInterval({
+      start: startOfMonth(calendarDate),
+      end: endOfMonth(calendarDate)
+    });
+  }, [calendarDate]);
+
+  const getReservationForDay = (vehicleId: string, day: Date) => {
+    return reservations.find(res => 
+      res.vehicleId === vehicleId && 
+      res.status !== ReservationStatus.CANCELLED &&
+      isWithinInterval(startOfDay(day), {
+        start: startOfDay(parseISO(res.startDate)),
+        end: startOfDay(parseISO(res.endDate))
+      })
+    );
+  };
+
+  const COLORS = ['#0f172a', '#e2e8f0'];
+
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(vehicles[0] || null);
   const [protocolFormData, setProtocolFormData] = useState<any>({
     mileage: 0,
@@ -268,14 +328,190 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
-        {(['reservations', 'protocols', 'fleet', 'advisor', 'widget'] as const).map((tab) => (
+        {(['reservations', 'calendar', 'stats', 'protocols', 'fleet', 'advisor', 'widget'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-            {tab === 'reservations' ? 'Rezervace' : tab === 'protocols' ? 'Protokoly' : tab === 'fleet' ? 'Vozový park' : tab === 'advisor' ? 'AI Poradce' : 'Widget'}
+            {tab === 'reservations' ? 'Rezervace' : 
+             tab === 'calendar' ? 'Kalendář' :
+             tab === 'stats' ? 'Statistiky' :
+             tab === 'protocols' ? 'Protokoly' : 
+             tab === 'fleet' ? 'Vozový park' : 
+             tab === 'advisor' ? 'AI Poradce' : 'Widget'}
           </button>
         ))}
       </div>
 
       <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+        {activeTab === 'calendar' && (
+          <div className="p-10 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-black">Plán obsazenosti</h2>
+              <div className="flex items-center gap-4 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button onClick={() => setCalendarDate(subMonths(calendarDate, 1))} className="p-2 hover:bg-white rounded-lg transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <span className="px-4 font-black text-sm uppercase tracking-widest">
+                  {format(calendarDate, 'LLLL yyyy', { locale: cs })}
+                </span>
+                <button onClick={() => setCalendarDate(addMonths(calendarDate, 1))} className="p-2 hover:bg-white rounded-lg transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-slate-200 rounded-3xl">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="p-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest sticky left-0 bg-slate-50 z-10 w-48 border-r border-slate-200">Vůz</th>
+                    {calendarDays.map(day => (
+                      <th key={day.toString()} className={`p-2 text-center text-[10px] font-black border-r border-slate-100 min-w-[40px] ${format(day, 'i') === '6' || format(day, 'i') === '7' ? 'bg-slate-100 text-slate-900' : 'text-slate-400'}`}>
+                        {format(day, 'd')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {vehicles.map(vehicle => (
+                    <tr key={vehicle.id} className="border-b border-slate-100 hover:bg-slate-50/30 transition-colors">
+                      <td className="p-4 font-black text-xs text-slate-900 sticky left-0 bg-white z-10 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                        {vehicle.name}
+                        <div className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{vehicle.licensePlate}</div>
+                      </td>
+                      {calendarDays.map(day => {
+                        const res = getReservationForDay(vehicle.id, day);
+                        const isStart = res && isSameDay(parseISO(res.startDate), day);
+                        const isEnd = res && isSameDay(parseISO(res.endDate), day);
+                        
+                        return (
+                          <td key={day.toString()} className={`p-0 border-r border-slate-100 relative h-14 ${format(day, 'i') === '6' || format(day, 'i') === '7' ? 'bg-slate-50/50' : ''}`}>
+                            {res && (
+                              <div className={`absolute inset-y-2 inset-x-0 bg-slate-900 flex items-center justify-center overflow-hidden
+                                ${isStart ? 'rounded-l-lg ml-1' : ''} 
+                                ${isEnd ? 'rounded-r-lg mr-1' : ''}
+                                ${!isStart && !isEnd ? '' : ''}
+                              `}>
+                                {isStart && (
+                                  <span className="text-[8px] font-black text-white uppercase whitespace-nowrap px-2 z-20">
+                                    {customers.find(c => c.id === res.customerId)?.lastName}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="mt-8 flex gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-slate-900 rounded-sm"></div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rezervováno</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-slate-100 border border-slate-200 rounded-sm"></div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'stats' && (
+          <div className="p-10 space-y-10 animate-in fade-in duration-500">
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-slate-50 rounded-[2.5rem] p-10 border border-slate-100">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-8">Měsíční tržby (Kč)</h3>
+                <div className="h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={statsData.barData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 900, fill: '#94a3b8'}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 900, fill: '#94a3b8'}} tickFormatter={(value) => `${value/1000}k`} />
+                      <Tooltip 
+                        cursor={{fill: '#f1f5f9'}} 
+                        contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px'}}
+                        itemStyle={{fontWeight: 900, fontSize: '12px'}}
+                        labelStyle={{fontWeight: 900, fontSize: '10px', textTransform: 'uppercase', color: '#64748b', marginBottom: '4px'}}
+                      />
+                      <Bar dataKey="revenue" fill="#0f172a" radius={[6, 6, 0, 0]} barSize={32} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-[2.5rem] p-10 text-white flex flex-col">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-8">Vytíženost flotily</h3>
+                <div className="h-[250px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statsData.utilizationData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {statsData.utilizationData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-3xl font-black">
+                      {Math.round((statsData.utilizationData[0].value / (statsData.utilizationData[0].value + statsData.utilizationData[1].value)) * 100)}%
+                    </span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aktuálně</span>
+                  </div>
+                </div>
+                <div className="mt-auto space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                      <span className="text-xs font-bold text-slate-300">Obsazené dny</span>
+                    </div>
+                    <span className="font-black">{statsData.utilizationData[0].value}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-slate-700"></div>
+                      <span className="text-xs font-bold text-slate-300">Volné dny</span>
+                    </div>
+                    <span className="font-black">{statsData.utilizationData[1].value}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Celkový obrat</div>
+                <div className="text-3xl font-black text-slate-900">
+                  {formatCurrency(reservations.filter(r => r.status !== ReservationStatus.CANCELLED).reduce((acc, r) => acc + r.totalPrice, 0))}
+                </div>
+              </div>
+              <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Počet rezervací</div>
+                <div className="text-3xl font-black text-slate-900">
+                  {reservations.filter(r => r.status !== ReservationStatus.CANCELLED).length}
+                </div>
+              </div>
+              <div className="p-8 bg-white border border-slate-200 rounded-3xl shadow-sm">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Průměrná cena</div>
+                <div className="text-3xl font-black text-slate-900">
+                  {formatCurrency(reservations.length > 0 ? reservations.reduce((acc, r) => acc + r.totalPrice, 0) / reservations.length : 0)}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'reservations' && (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -339,19 +575,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {activeTab === 'fleet' && editingVehicle && (
           <div className="p-10 space-y-8 animate-in fade-in duration-500">
              <div className="flex justify-between items-end">
-               <h2 className="text-2xl font-black">Správa vozu: {editingVehicle.name}</h2>
+               <h2 className="text-2xl font-black">Správa vozu</h2>
                <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all">Uložit změny</button>
              </div>
 
              <div className="grid md:grid-cols-2 gap-8">
                <div className="space-y-4">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Základní cena mimo sezónu (Kč/den)</label>
-                 <input type="number" value={editingVehicle.basePrice} onChange={e => setEditingVehicle({...editingVehicle, basePrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Název vozidla</label>
+                 <input type="text" value={editingVehicle.name} onChange={e => setEditingVehicle({...editingVehicle, name: e.target.value})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
                </div>
                <div className="space-y-4">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">SPZ vozidla</label>
                  <input type="text" value={editingVehicle.licensePlate} onChange={e => setEditingVehicle({...editingVehicle, licensePlate: e.target.value})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
                </div>
+             </div>
+
+             <div className="space-y-4">
+               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Základní cena mimo sezónu (Kč/den)</label>
+               <input type="number" value={editingVehicle.basePrice} onChange={e => setEditingVehicle({...editingVehicle, basePrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-slate-100 rounded-2xl font-bold focus:border-slate-900 outline-none" />
              </div>
 
              <div className="space-y-4">

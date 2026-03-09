@@ -67,7 +67,13 @@ const App: React.FC = () => {
     const savedVehicles = localStorage.getItem('obytkem_vehicles_v3');
     if (savedVehicles) {
       try {
-        setVehicles(JSON.parse(savedVehicles));
+        const parsed = JSON.parse(savedVehicles);
+        const cleaned = parsed.map((v: any) => ({
+          ...v,
+          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2021)' : v.name,
+          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle.' : v.description,
+        }));
+        setVehicles(cleaned);
       } catch (e) {
         console.error("Chyba při načítání vozů z localStorage", e);
       }
@@ -108,10 +114,10 @@ const App: React.FC = () => {
       const { data: retData } = await supabase.from('return_protocols').select('*');
 
       if (vData && vData.length > 0) {
-        setVehicles(vData.map(v => ({
+        const mappedVehicles = vData.map(v => ({
           id: v.id,
-          name: v.name,
-          description: v.description,
+          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2021)' : v.name,
+          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle.' : v.description,
           licensePlate: v.license_plate,
           vin: v.vin,
           basePrice: Number(v.base_price),
@@ -122,7 +128,9 @@ const App: React.FC = () => {
           isActive: v.is_active,
           seasonalPricing: v.seasonal_pricing || [],
           equipment: v.equipment || []
-        })));
+        }));
+        setVehicles(mappedVehicles);
+        localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(mappedVehicles));
       }
 
       if (rData) {
