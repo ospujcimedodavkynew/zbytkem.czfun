@@ -10,13 +10,14 @@ interface BookingFlowProps {
   onComplete: (data: any) => void;
   onCancel: () => void;
   isEmbedded?: boolean;
+  initialStartDate?: string;
 }
 
-const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onComplete, onCancel, isEmbedded }) => {
+const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onComplete, onCancel, isEmbedded, initialStartDate }) => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    startDate: '',
+    startDate: initialStartDate || '',
     endDate: '',
     firstName: '',
     lastName: '',

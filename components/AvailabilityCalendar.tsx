@@ -9,9 +9,10 @@ interface AvailabilityCalendarProps {
   reservations: Reservation[];
   isEmbedded?: boolean;
   initialVehicleId?: string;
+  onDateClick?: (date: string) => void;
 }
 
-const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, reservations, isEmbedded, initialVehicleId }) => {
+const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, reservations, isEmbedded, initialVehicleId, onDateClick }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Start with May 2026 for demo
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialVehicleId || vehicles[0]?.id || '');
 
@@ -21,6 +22,23 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
 
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleDayClick = (day: number) => {
+    if (!day || !onDateClick) return;
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    // Check if it's available
+    const isReserved = reservations.some(r => 
+      r.vehicleId === selectedVehicleId &&
+      r.status !== ReservationStatus.CANCELLED &&
+      dateStr >= r.startDate && 
+      dateStr <= r.endDate
+    );
+
+    if (!isReserved) {
+      onDateClick(dateStr);
+    }
   };
 
   const renderMonth = (date: Date) => {
@@ -73,11 +91,12 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
             return (
               <div 
                 key={idx} 
+                onClick={() => handleDayClick(day || 0)}
                 className={`aspect-square flex items-center justify-center text-[9px] rounded-lg transition-all relative group
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
-                      ? 'bg-red-50 text-red-600 font-bold border border-red-100' 
-                      : 'bg-green-50 text-green-700 font-medium border border-green-100'}`}
+                      ? 'bg-red-50 text-red-600 font-bold border border-red-100 cursor-not-allowed' 
+                      : 'bg-green-50 text-green-700 font-medium border border-green-100 cursor-pointer hover:bg-green-600 hover:text-white hover:scale-110 shadow-sm'}`}
               >
                 {day}
               </div>

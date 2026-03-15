@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, Plus, Minus, HelpCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Minus, HelpCircle, Calendar as CalendarIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Vehicle, Reservation, ReservationStatus } from '../types';
 import { formatCurrency } from '../utils/format';
+import AvailabilityCalendar from './AvailabilityCalendar';
 
 interface PublicHomeProps {
   vehicles: Vehicle[];
   reservations: Reservation[];
-  onBookNow: (vehicleId: string) => void;
+  onBookNow: (vehicleId: string, startDate?: string) => void;
   onScrollTo: (sectionId: string) => void;
   onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator') => void;
 }
@@ -131,27 +132,90 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
 
   return (
     <div className="space-y-24 py-12">
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-widest mb-6">
-          <span className="relative flex h-2 w-2">
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-900"></span>
-          </span>
-          Sezóna 2026 Brno
-        </div>
-        <h1 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tight leading-[0.9]">
-          Pronájem obytného vozu Brno <br/><span className="text-slate-400">Vaše svoboda na čtyřech kolech</span>
-        </h1>
-        <p className="mt-8 text-xl text-slate-500 max-w-3xl mx-auto leading-relaxed">
-          Hledáte <strong>půjčovnu obytných vozů v Brně</strong>, se kterou můžete vyrazit kamkoliv a kdykoliv? 
-          Vítejte na <strong>obytkem.cz</strong> — místě, kde začíná skutečná svoboda cestování. 
-          Nabízíme komfortní a plně vybavený <strong>obytný vůz k pronájmu</strong>, který vám umožní cestovat bez hotelů, bez stresu a bez kompromisů.
-        </p>
-        <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
-          <button onClick={() => onBookNow(mainVehicle.id)} className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-2xl shadow-slate-200">Rezervovat sezónu 2026</button>
-          <button onClick={() => onNavigate('calculator')} className="px-12 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-700 hover:-translate-y-1 transition-all shadow-xl shadow-orange-200">Plánovač nákladů</button>
-          <button onClick={() => onNavigate('checklist')} className="px-12 py-5 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Checklist před cestou</button>
-          <button onClick={() => onNavigate('blog')} className="px-12 py-5 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-100 transition-all">Cestovatelský blog</button>
+      {/* Hero Section with Integrated Calendar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-widest mb-8">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600"></span>
+              </span>
+              Sezóna 2026 Brno – Volné termíny
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[0.9] mb-8">
+              Půjčte si svobodu <br/>
+              <span className="text-orange-600">v Brně a vyrazte</span>
+            </h1>
+            
+            <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10 max-w-xl">
+              Moderní obytný vůz <strong>Ahorn Canada TU Plus</strong> k pronájmu. Žádné skryté poplatky, kompletní výbava v ceně a lidský přístup. 
+            </p>
+
+            <div className="flex flex-wrap gap-4 mb-12">
+              <button 
+                onClick={() => onBookNow(mainVehicle.id)} 
+                className="px-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-600 hover:-translate-y-1 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+              >
+                Rezervovat vůz
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => onNavigate('calculator')} 
+                className="px-8 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-orange-200 transition-all flex items-center gap-3"
+              >
+                Spočítat cenu
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pojištění v ceně</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bez limitu km</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute -inset-4 bg-orange-100/50 rounded-[3rem] blur-2xl -z-10" />
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6">
+                <div className="bg-orange-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                  Live Dostupnost
+                </div>
+              </div>
+              <AvailabilityCalendar 
+                vehicles={vehicles} 
+                reservations={reservations} 
+                isEmbedded={true} 
+                initialVehicleId={mainVehicle.id}
+                onDateClick={(date) => onBookNow(mainVehicle.id, date)}
+              />
+              <div className="mt-6 pt-6 border-t border-slate-50 flex justify-between items-center">
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-400" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-400" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Obsazeno</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => onScrollTo('fleet')}
+                  className="text-[9px] font-black text-orange-600 uppercase tracking-widest hover:text-slate-900 transition-colors"
+                >
+                  Zobrazit ceník →
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

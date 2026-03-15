@@ -19,6 +19,7 @@ import { supabase } from './lib/supabase';
 const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -337,8 +338,9 @@ const App: React.FC = () => {
     localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(updated));
   };
 
-  const handleBookNow = (vehicleId: string) => {
+  const handleBookNow = (vehicleId: string, startDate?: string) => {
     setSelectedVehicleId(vehicleId);
+    setInitialStartDate(startDate || null);
     setView('booking');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -518,7 +520,8 @@ const App: React.FC = () => {
               <BookingFlow 
                 vehicle={selectedVehicle} 
                 allReservations={reservations}
-                onCancel={() => setView('home')} 
+                initialStartDate={initialStartDate || undefined}
+                onCancel={() => { setView('home'); setInitialStartDate(null); }} 
                 onComplete={handleBookingComplete} 
                 isEmbedded={isEmbedded}
               />
