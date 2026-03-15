@@ -500,7 +500,8 @@ const App: React.FC = () => {
                   vehicles={vehicles} 
                   reservations={reservations} 
                   isEmbedded={isEmbedded} 
-                  initialVehicleId={selectedVehicleId || undefined}
+                  initialVehicleId={selectedVehicleId || vehicles[0]?.id}
+                  onDateClick={(date) => handleBookNow(selectedVehicleId || vehicles[0]?.id, date)}
                 />
               </div>
             )}
