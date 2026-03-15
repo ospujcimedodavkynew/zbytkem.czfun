@@ -9,13 +9,15 @@ import AvailabilityCalendar from './components/AvailabilityCalendar';
 import TravelBlog from './components/TravelBlog';
 import VehicleDetail from './components/VehicleDetail';
 import GuidesDetail from './components/GuidesDetail';
+import Checklist from './components/Checklist';
+import CostCalculator from './components/CostCalculator';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
 import { supabase } from './lib/supabase';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
@@ -501,6 +503,8 @@ const App: React.FC = () => {
               </div>
             )}
             {view === 'blog' && <TravelBlog onBack={() => setView('home')} />}
+            {view === 'checklist' && <Checklist onBack={() => setView('home')} />}
+            {view === 'calculator' && <CostCalculator onBack={() => setView('home')} />}
             {view === 'vehicle-detail' && selectedVehicle && (
               <VehicleDetail 
                 vehicle={selectedVehicle} 

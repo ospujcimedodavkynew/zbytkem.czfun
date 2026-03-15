@@ -10,7 +10,7 @@ interface PublicHomeProps {
   reservations: Reservation[];
   onBookNow: (vehicleId: string) => void;
   onScrollTo: (sectionId: string) => void;
-  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides') => void;
+  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator') => void;
 }
 
 const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo, onNavigate }) => {
@@ -149,7 +149,8 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         </p>
         <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4">
           <button onClick={() => onBookNow(mainVehicle.id)} className="px-12 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-2xl shadow-slate-200">Rezervovat sezónu 2026</button>
-          <button onClick={() => onNavigate('vehicle-detail')} className="px-12 py-5 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Prohlídka vozu</button>
+          <button onClick={() => onNavigate('calculator')} className="px-12 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-700 hover:-translate-y-1 transition-all shadow-xl shadow-orange-200">Plánovač nákladů</button>
+          <button onClick={() => onNavigate('checklist')} className="px-12 py-5 bg-white border border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">Checklist před cestou</button>
           <button onClick={() => onNavigate('blog')} className="px-12 py-5 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-100 transition-all">Cestovatelský blog</button>
         </div>
       </section>
