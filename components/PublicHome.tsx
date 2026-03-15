@@ -136,21 +136,13 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-widest mb-8">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600"></span>
-              </span>
-              Sezóna 2026 Brno – Volné termíny
-            </div>
-            
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[0.9] mb-8">
-              Půjčte si svobodu <br/>
-              <span className="text-orange-600">v Brně a vyrazte</span>
+              Váš domov na cestách <br/>
+              <span className="text-orange-600">přímo z Brna</span>
             </h1>
             
             <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10 max-w-xl">
-              Moderní obytný vůz <strong>Ahorn Canada TU Plus</strong> k pronájmu. Žádné skryté poplatky, kompletní výbava v ceně a lidský přístup. 
+              Půjčte si náš plně vybavený obytný vůz <strong>Ahorn Canada TU Plus</strong>. Žádné skryté poplatky, kompletní výbava v ceně a férový přístup. 
             </p>
 
             <div className="flex flex-wrap gap-4 mb-12">
@@ -166,6 +158,12 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 className="px-8 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-orange-200 transition-all flex items-center gap-3"
               >
                 Spočítat cenu
+              </button>
+              <button 
+                onClick={() => onNavigate('blog')} 
+                className="px-8 py-5 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-100 transition-all"
+              >
+                Tipy na cesty
               </button>
             </div>
 
@@ -183,10 +181,13 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
 
           <div className="relative">
             <div className="absolute -inset-4 bg-orange-100/50 rounded-[3rem] blur-2xl -z-10" />
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-6">
-                <div className="bg-orange-600 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium relative">
+              <div className="flex justify-between items-center mb-6">
+                <div className="bg-orange-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
                   Live Dostupnost
+                </div>
+                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                  Klikněte na volný den
                 </div>
               </div>
               <AvailabilityCalendar 
