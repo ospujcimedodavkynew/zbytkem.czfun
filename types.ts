@@ -24,6 +24,17 @@ export interface SeasonPrice {
   pricePerDay: number;
 }
 
+export interface Message {
+  id: string;
+  createdAt: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read' | 'archived';
+}
+
 export interface Vehicle {
   id: string;
   name: string;

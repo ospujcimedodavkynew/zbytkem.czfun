@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol } from '../types';
+import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol, Message } from '../types';
+import MessageManager from '../src/components/MessageManager';
 import { formatCurrency, formatDate, getMonthName, calculateDays } from '../utils/format';
 import { generateContractTemplate, analyzeReservationTrends, isAiConfigured } from '../services/geminiService';
 import { supabase } from '../lib/supabase';
@@ -21,10 +22,13 @@ interface AdminDashboardProps {
   savedContracts: SavedContract[];
   handoverProtocols: HandoverProtocol[];
   returnProtocols: ReturnProtocol[];
+  messages: Message[];
   onSaveContract: (contract: SavedContract) => void;
   onSaveHandover: (protocol: HandoverProtocol) => void;
   onSaveReturn: (protocol: ReturnProtocol) => void;
   onUpdateStatus: (id: string, status: ReservationStatus) => void;
+  onUpdateMessageStatus: (id: string, status: Message['status']) => void;
+  onDeleteMessage: (id: string) => void;
   onDeleteReservation: (id: string) => void;
   onUpdateVehicle: (vehicle: Vehicle) => void;
   onRefresh?: () => void;
@@ -37,15 +41,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   savedContracts,
   handoverProtocols,
   returnProtocols,
+  messages,
   onSaveContract,
   onSaveHandover,
   onSaveReturn,
   onUpdateStatus,
+  onUpdateMessageStatus,
+  onDeleteMessage,
   onDeleteReservation,
   onUpdateVehicle,
   onRefresh
 }) => {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
@@ -328,11 +335,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
-        {(['reservations', 'calendar', 'stats', 'protocols', 'fleet', 'advisor', 'widget'] as const).map((tab) => (
+        {(['reservations', 'calendar', 'stats', 'messages', 'protocols', 'fleet', 'advisor', 'widget'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
             {tab === 'reservations' ? 'Rezervace' : 
              tab === 'calendar' ? 'Kalendář' :
              tab === 'stats' ? 'Statistiky' :
+             tab === 'messages' ? (
+               <div className="flex items-center gap-2">
+                 Zprávy
+                 {messages.filter(m => m.status === 'new').length > 0 && (
+                   <span className="bg-orange-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                     {messages.filter(m => m.status === 'new').length}
+                   </span>
+                 )}
+               </div>
+             ) :
              tab === 'protocols' ? 'Protokoly' : 
              tab === 'fleet' ? 'Vozový park' : 
              tab === 'advisor' ? 'AI Poradce' : 'Widget'}
@@ -509,6 +526,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'messages' && (
+          <div className="p-10">
+            <MessageManager 
+              messages={messages} 
+              onUpdateStatus={onUpdateMessageStatus} 
+              onDelete={onDeleteMessage} 
+            />
           </div>
         )}
 

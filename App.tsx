@@ -15,6 +15,7 @@ import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
 import { supabase } from './lib/supabase';
+import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
@@ -34,7 +35,29 @@ const App: React.FC = () => {
   const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
   const [handoverProtocols, setHandoverProtocols] = useState<HandoverProtocol[]>([]);
   const [returnProtocols, setReturnProtocols] = useState<ReturnProtocol[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
+    try {
+      const { error } = await supabase.from('messages').update({ status }).eq('id', id);
+      if (error) throw error;
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, status } : m));
+    } catch (e) {
+      console.error('Error updating message status:', e);
+    }
+  };
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!window.confirm('Opravdu chcete tuto zprávu smazat?')) return;
+    try {
+      const { error } = await supabase.from('messages').delete().eq('id', id);
+      if (error) throw error;
+      setMessages(prev => prev.filter(m => m.id !== id));
+    } catch (e) {
+      console.error('Error deleting message:', e);
+    }
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -118,6 +141,20 @@ const App: React.FC = () => {
       const { data: cData } = await supabase.from('customers').select('*');
       const { data: hData } = await supabase.from('handover_protocols').select('*');
       const { data: retData } = await supabase.from('return_protocols').select('*');
+      const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+
+      if (mData) {
+        setMessages(mData.map(m => ({
+          id: m.id,
+          createdAt: m.created_at,
+          name: m.name,
+          email: m.email,
+          phone: m.phone,
+          subject: m.subject,
+          message: m.message,
+          status: m.status
+        })));
+      }
 
       if (vData && vData.length > 0) {
         const mappedVehicles = vData.map(v => ({
@@ -377,23 +414,35 @@ const App: React.FC = () => {
     return () => { delete (window as any).openAdmin; };
   }, [isAdmin]);
 
-  // SEO Title and Meta Description
-  useEffect(() => {
-    document.title = "Pronájem obytného vozu Brno | Půjčovna obytných aut Obytkem.cz";
-    
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', 'Hledáte pronájem obytného vozu v Brně? Půjčte si náš plně vybavený Ahorn Canada TU Plus a vyrazte za dobrodružstvím po celé ČR i Evropě. Online rezervace.');
-  }, []);
-
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
+
+  // SEO Metadata mapping
+  const getSEOMetadata = () => {
+    switch (view) {
+      case 'home':
+        return { title: 'Půjčovna obytných vozů Brno', description: 'Pronájem moderních obytných vozů Ahorn Canada v Brně. Cestujte svobodně a komfortně po celé Evropě. Online rezervace.' };
+      case 'booking':
+        return { title: 'Rezervace vozu', description: 'Zarezervujte si svůj termín pro nezapomenutelnou dovolenou v obytném voze.' };
+      case 'calendar':
+        return { title: 'Kalendář obsazenosti', description: 'Přehled volných termínů pro naše obytné vozy.' };
+      case 'blog':
+        return { title: 'Cestovatelský blog', description: 'Inspirace, tipy na cesty a rady pro život v karavanu.' };
+      case 'vehicle-detail':
+        return { title: selectedVehicle?.name || 'Náš obytný vůz', description: 'Detailní informace o voze Ahorn Canada TU Plus. Vybavení, technické parametry a fotogalerie.' };
+      case 'calculator':
+        return { title: 'Kalkulačka ceny', description: 'Spočítejte si přesnou cenu pronájmu včetně všech doplňků a pojištění.' };
+      case 'checklist':
+        return { title: 'Checklist na cesty', description: 'Seznam věcí, které si nezapomenout vzít s sebou na cestu obytným vozem.' };
+      default:
+        return { title: 'Půjčovna obytných vozů', description: 'Pronájem moderních obytných vozů Ahorn Canada.' };
+    }
+  };
+
+  const seo = getSEOMetadata();
 
   return (
     <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
+      <SEO title={seo.title} description={seo.description} />
       {view === 'home' && lastBooking && !isAdmin && (
         <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
           <div className="max-w-7xl mx-auto flex justify-between items-center text-xs font-bold uppercase tracking-widest">
@@ -535,10 +584,13 @@ const App: React.FC = () => {
                 savedContracts={savedContracts} 
                 handoverProtocols={handoverProtocols}
                 returnProtocols={returnProtocols}
+                messages={messages}
                 onSaveHandover={handleSaveHandover}
                 onSaveReturn={handleSaveReturn}
                 onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
                 onUpdateStatus={handleUpdateStatus} 
+                onUpdateMessageStatus={handleUpdateMessageStatus}
+                onDeleteMessage={handleDeleteMessage}
                 onDeleteReservation={handleDeleteReservation} 
                 onUpdateVehicle={handleUpdateVehicle}
                 onRefresh={fetchData} 
