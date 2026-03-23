@@ -11,7 +11,7 @@ interface PublicHomeProps {
   reservations: Reservation[];
   onBookNow: (vehicleId: string, startDate?: string) => void;
   onScrollTo: (sectionId: string) => void;
-  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator') => void;
+  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'van-preview') => void;
 }
 
 const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo, onNavigate }) => {
@@ -527,13 +527,20 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               Kromě obytných vozů provozujeme také půjčovnu užitkových vozů v Brně. Ať už se stěhujete, nebo potřebujete převézt rozměrný náklad, jsme tu pro vás.
             </p>
             <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => onNavigate('van-preview')}
+                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+              >
+                Zobrazit nový návrh webu
+                <ArrowRight className="w-4 h-4" />
+              </button>
               <a 
                 href="https://www.pujcimedodavky.cz" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+                className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:border-slate-900 transition-all flex items-center gap-3"
               >
-                Přejít na PůjčímeDodávky.cz
+                Původní web PD.cz
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
               </a>
             </div>

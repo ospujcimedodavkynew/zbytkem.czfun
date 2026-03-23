@@ -11,6 +11,7 @@ import VehicleDetail from './components/VehicleDetail';
 import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
+import VanRentalPreview from './components/VanRentalPreview';
 import Logo from './components/Logo';
 import LogoGenerator from './src/components/LogoGenerator';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
@@ -19,7 +20,7 @@ import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'logo-gen'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'logo-gen' | 'van-preview'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -568,6 +569,7 @@ const App: React.FC = () => {
               />
             )}
             {view === 'guides' && <GuidesDetail onBack={() => setView('home')} />}
+            {view === 'van-preview' && <VanRentalPreview onBack={() => setView('home')} />}
             {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} onNavigate={setView} />}
             {view === 'booking' && selectedVehicle && (
               <BookingFlow 
@@ -631,18 +633,16 @@ const App: React.FC = () => {
 
               <div className="flex flex-col items-center md:items-end gap-4">
                 <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Sesterské projekty</div>
-                <a 
-                  href="https://www.pujcimedodavky.cz" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <button 
+                  onClick={() => setView('van-preview')}
                   className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
                 >
                   <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-black text-[10px]">PD</div>
                   <div className="text-left">
                     <div className="text-[9px] font-black text-white uppercase tracking-widest">Půjčíme dodávky</div>
-                    <div className="text-[8px] text-slate-500 font-bold">www.pujcimedodavky.cz</div>
+                    <div className="text-[8px] text-slate-500 font-bold">Zobrazit nový návrh webu</div>
                   </div>
-                </a>
+                </button>
               </div>
             </div>
             
