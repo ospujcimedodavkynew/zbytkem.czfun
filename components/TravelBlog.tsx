@@ -179,7 +179,7 @@ Tipy pro zimu:
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 overflow-x-hidden">
       <button 
         onClick={onBack}
         className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"

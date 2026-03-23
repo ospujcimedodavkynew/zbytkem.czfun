@@ -85,7 +85,7 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 pt-32">
+    <div className="min-h-screen bg-slate-50 pb-20 pt-32 overflow-x-hidden">
       <div className="max-w-2xl mx-auto px-6">
         <button 
           onClick={onBack}

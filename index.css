@@ -18,11 +18,13 @@
   --shadow-orange-hover: 0 20px 30px -10px rgba(234, 88, 12, 0.4);
 }
 
-body { 
+html, body { 
   font-family: 'Inter', sans-serif; 
   background-color: #f8fafc;
   color: var(--primary-dark);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Embedded widget styles */

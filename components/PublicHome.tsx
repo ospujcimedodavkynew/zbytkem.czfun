@@ -131,7 +131,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
   }
 
   return (
-    <div className="space-y-24 py-12">
+    <div className="space-y-24 py-12 overflow-x-hidden">
       {/* Hero Section with Integrated Calendar */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -421,24 +421,26 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           <p className="text-slate-500 mt-4 font-medium">Transparentní ceny bez skrytých poplatků a servisních nákladů</p>
         </div>
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Sezóna</th>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Období</th>
-                <th className="px-8 py-5 text-right text-xs font-black text-slate-400 uppercase tracking-widest">Cena / Den</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {mainVehicle.seasonalPricing.map(s => (
-                <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-8 py-6 font-bold text-slate-900">{s.name}</td>
-                  <td className="px-8 py-6 text-slate-500 text-sm">{new Date(s.startDate).toLocaleDateString('cs-CZ')} - {new Date(s.endDate).toLocaleDateString('cs-CZ')}</td>
-                  <td className="px-8 py-6 text-right font-black text-slate-900 text-lg">{formatCurrency(s.pricePerDay)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[600px] md:min-w-0">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Sezóna</th>
+                  <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Období</th>
+                  <th className="px-8 py-5 text-right text-xs font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Cena / Den</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {mainVehicle.seasonalPricing.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-8 py-6 font-bold text-slate-900 whitespace-nowrap">{s.name}</td>
+                    <td className="px-8 py-6 text-slate-500 text-sm whitespace-nowrap">{new Date(s.startDate).toLocaleDateString('cs-CZ')} - {new Date(s.endDate).toLocaleDateString('cs-CZ')}</td>
+                    <td className="px-8 py-6 text-right font-black text-slate-900 text-lg whitespace-nowrap">{formatCurrency(s.pricePerDay)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div className="p-8 bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-t border-slate-100 text-center">
             * Vratná kauce činí 25 000 Kč • Limit nájezdu 300 km/den • Minimální doba nájmu 3 dny
           </div>
@@ -506,6 +508,47 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               </button>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Sister Company Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-slate-50 rounded-[3rem] p-8 md:p-16 border border-slate-100 flex flex-col lg:flex-row items-center gap-12">
+          <div className="lg:w-1/2 space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-100 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Naše další služby</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              Potřebujete spíše <br/>
+              <span className="text-orange-600">půjčit dodávku?</span>
+            </h2>
+            <p className="text-lg text-slate-500 font-medium leading-relaxed">
+              Kromě obytných vozů provozujeme také půjčovnu užitkových vozů v Brně. Ať už se stěhujete, nebo potřebujete převézt rozměrný náklad, jsme tu pro vás.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <a 
+                href="https://www.pujcimedodavky.cz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+              >
+                Přejít na PůjčímeDodávky.cz
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+              </a>
+            </div>
+          </div>
+          <div className="lg:w-1/2 relative">
+            <div className="absolute -inset-4 bg-orange-200/30 rounded-[3rem] blur-2xl -z-10" />
+            <div className="bg-white p-4 rounded-[2.5rem] shadow-premium border border-slate-100 rotate-2 hover:rotate-0 transition-transform duration-500">
+              <img 
+                src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=1000&auto=format&fit=crop" 
+                alt="Půjčovna dodávek Brno" 
+                className="rounded-[2rem] w-full h-64 object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

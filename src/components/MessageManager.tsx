@@ -1,5 +1,5 @@
 import React from 'react';
-import { Message } from '../types';
+import { Message } from '../../types';
 import { Mail, Phone, Clock, CheckCircle, Trash2, MessageSquare } from 'lucide-react';
 
 interface MessageManagerProps {

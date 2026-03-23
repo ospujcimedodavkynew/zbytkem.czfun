@@ -57,11 +57,21 @@ const SEO: React.FC<SEOProps> = ({ title, description, image, url }) => {
       "description": description,
       "url": siteUrl,
       "logo": defaultImage,
+      "image": image || defaultImage,
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "Česká republika"
+        "streetAddress": "Teslova",
+        "addressLocality": "Brno",
+        "postalCode": "625 00",
+        "addressCountry": "CZ"
       },
-      "priceRange": "1900-3500 CZK"
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "49.1741847",
+        "longitude": "16.5714042"
+      },
+      "priceRange": "CZK",
+      "telephone": "+420XXXXXXXXX"
     });
   }, [fullTitle, description, url, image]);
 

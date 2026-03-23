@@ -12,13 +12,14 @@ import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
 import Logo from './components/Logo';
+import LogoGenerator from './src/components/LogoGenerator';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
-import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol } from './types';
+import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol, Message } from './types';
 import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'logo-gen'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
+    if (!supabase) return;
     try {
       const { error } = await supabase.from('messages').update({ status }).eq('id', id);
       if (error) throw error;
@@ -50,6 +52,7 @@ const App: React.FC = () => {
 
   const handleDeleteMessage = async (id: string) => {
     if (!window.confirm('Opravdu chcete tuto zprávu smazat?')) return;
+    if (!supabase) return;
     try {
       const { error } = await supabase.from('messages').delete().eq('id', id);
       if (error) throw error;
@@ -441,7 +444,7 @@ const App: React.FC = () => {
   const seo = getSEOMetadata();
 
   return (
-    <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'}`}>
+    <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
       <SEO title={seo.title} description={seo.description} />
       {view === 'home' && lastBooking && !isAdmin && (
         <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
@@ -454,7 +457,7 @@ const App: React.FC = () => {
 
       {/* Navigation removed as per user request */}
       
-      <main className="flex-grow">
+      <main className="flex-grow overflow-x-hidden">
         {isLoading && view === 'booking' ? (
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
@@ -576,6 +579,7 @@ const App: React.FC = () => {
                 isEmbedded={isEmbedded}
               />
             )}
+            {view === 'logo-gen' && <LogoGenerator onBack={() => setView('home')} />}
             {view === 'admin' && (
               <AdminDashboard 
                 reservations={reservations} 
@@ -607,55 +611,78 @@ const App: React.FC = () => {
       </main>
 
       {!isEmbedded && (
-        <footer className="bg-slate-900 text-white py-16 border-t border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <Logo light className="justify-center mb-8" />
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">© 2026 obytkem.cz • Milan Gula • Brno</p>
+        <footer className="bg-slate-900 text-white py-16 border-t border-slate-800 mt-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
+              <div className="flex flex-col items-center md:items-start gap-4">
+                <Logo light className="justify-center md:justify-start" />
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest max-w-xs text-center md:text-left">
+                  Půjčovna obytných vozů v Brně. Svoboda na čtyřech kolech.
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap justify-center gap-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <button onClick={() => handleScrollTo('fleet')} className="hover:text-white transition-colors">Naše vozy</button>
+                <button onClick={() => handleScrollTo('pricing')} className="hover:text-white transition-colors">Ceník</button>
+                <button onClick={() => handleScrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
+                <button onClick={() => handleScrollTo('guides')} className="hover:text-white transition-colors">Návody</button>
+                <button onClick={() => setView('admin')} className="hover:text-white transition-colors">Administrace</button>
+              </div>
+
+              <div className="flex flex-col items-center md:items-end gap-4">
+                <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Sesterské projekty</div>
+                <a 
+                  href="https://www.pujcimedodavky.cz" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
+                >
+                  <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-black text-[10px]">PD</div>
+                  <div className="text-left">
+                    <div className="text-[9px] font-black text-white uppercase tracking-widest">Půjčíme dodávky</div>
+                    <div className="text-[8px] text-slate-500 font-bold">www.pujcimedodavky.cz</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+            
+            <div className="pt-8 border-t border-white/5 text-center">
+              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">
+                © 2026 OBYTKEM.CZ • MILAN GULA • BRNO
+              </p>
+            </div>
           </div>
         </footer>
       )}
 
       {isLoginModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-md p-10">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-10">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vstup pro majitele</h2>
-              <button onClick={() => setIsLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+              <button onClick={() => setIsLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
             </div>
             <form onSubmit={handleAdminLogin} className="space-y-6">
-              <input type="password" autoFocus required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-bold" placeholder="Heslo" />
+              <input 
+                type="password" 
+                autoFocus 
+                required 
+                value={loginPassword} 
+                onChange={(e) => setLoginPassword(e.target.value)} 
+                className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-bold" 
+                placeholder="Heslo" 
+              />
               {loginError && <p className="text-red-500 text-xs font-bold text-center">{loginError}</p>}
-              <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs hover:bg-orange-600 transition-all">Vstoupit</button>
+              <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs hover:bg-orange-600 transition-all">
+                Vstoupit
+              </button>
             </form>
           </div>
         </div>
-      )}
-      {!isEmbedded && (
-        <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-100 mt-24">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs">O</div>
-              <span className="text-slate-900 font-black text-sm tracking-tight">Obytkem.cz</span>
-            </div>
-            
-            <div className="flex gap-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <button onClick={() => handleScrollTo('fleet')} className="hover:text-slate-900 transition-colors">Naše vozy</button>
-              <button onClick={() => handleScrollTo('pricing')} className="hover:text-slate-900 transition-colors">Ceník</button>
-              <button onClick={() => handleScrollTo('faq')} className="hover:text-slate-900 transition-colors">FAQ</button>
-              <button onClick={() => handleScrollTo('guides')} className="hover:text-slate-900 transition-colors">Návody</button>
-            </div>
-
-            <button 
-              onClick={() => (window as any).openAdmin()} 
-              className="text-[10px] font-black text-slate-300 hover:text-slate-900 transition-colors uppercase tracking-widest"
-            >
-              Administrace
-            </button>
-          </div>
-          <div className="mt-8 text-center text-[10px] text-slate-300 font-medium">
-            © 2026 Obytkem.cz • Půjčovna obytných vozů Brno
-          </div>
-        </footer>
       )}
     </div>
   );

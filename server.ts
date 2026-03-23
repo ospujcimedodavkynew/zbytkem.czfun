@@ -7,12 +7,17 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(cors({
-    origin: '*', // V produkci zde můžete dát konkrétní doménu vašeho webu
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+  // Maximálně povolit CORS pro propojení s vnějším webem
+  app.use(cors());
+  app.options('*', cors()); 
+  
   app.use(express.json());
+
+  // Logování všech požadavků pro diagnostiku
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
 
   // Testovací endpoint pro ověření funkčnosti API
   app.get("/api/ping", (req, res) => {

@@ -109,7 +109,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
   };
 
   return (
-    <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-16'}`}>
+    <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-16'} overflow-x-hidden`}>
       <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
         <div className="bg-slate-900 px-6 py-4 text-white">
           <div className="flex justify-between items-center mb-4">

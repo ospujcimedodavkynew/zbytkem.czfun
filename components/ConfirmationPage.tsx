@@ -8,7 +8,7 @@ interface ConfirmationPageProps {
 
 const ConfirmationPage: React.FC<ConfirmationPageProps> = ({ onBackHome, isEmbedded }) => {
   return (
-    <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-20'} animate-in fade-in zoom-in-95 duration-1000`}>
+    <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-20'} animate-in fade-in zoom-in-95 duration-1000 overflow-x-hidden`}>
       <div className={`bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 text-center ${isEmbedded ? 'p-8' : 'p-16'}`}>
         <div className={`${isEmbedded ? 'w-16 h-16' : 'w-24 h-24'} bg-green-100 rounded-full flex items-center justify-center text-green-600 mx-auto ${isEmbedded ? 'mb-6' : 'mb-10'} shadow-inner`}>
           <svg className={`${isEmbedded ? 'w-8 h-8' : 'w-12 h-12'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
