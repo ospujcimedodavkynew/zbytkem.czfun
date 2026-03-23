@@ -13,7 +13,11 @@ import {
   Star,
   Info,
   Calendar,
-  Zap
+  Zap,
+  Ruler,
+  LayoutGrid,
+  Weight,
+  Fuel
 } from 'lucide-react';
 
 interface VanRentalPreviewProps {
@@ -51,7 +55,7 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
   const fleetData = [
     {
       name: "Renault Master L1H1 (3x)",
-      tagline: "Malá dodávka, skvělé ovládání.",
+      tagline: "Malá dodávka, skvělé ovládání. Ideální pro městské stěhování.",
       prices: { h4: "800 Kč", h12: "1 300 Kč" },
       specs: {
         pallets: "3 EURO palety",
@@ -59,9 +63,16 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "8 m³",
         load: "1080 kg",
         license: "sk. B",
-        consumption: "8-10 Litrů",
+        consumption: "8-10 l/100km",
         seats: "3",
         euro: "5"
+      },
+      dims: {
+        length: "2583 mm",
+        width: "1765 mm",
+        height: "1700 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "1581 mm"
       },
       image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=800&auto=format&fit=crop"
     },
@@ -75,15 +86,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "14 m³",
         load: "1100 kg",
         license: "sk. B",
-        consumption: "8-10 Litrů",
+        consumption: "8-10 l/100km",
         seats: "3",
         euro: "5"
+      },
+      dims: {
+        length: "3733 mm",
+        width: "1765 mm",
+        height: "1894 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "1780 mm"
       },
       image: "https://images.unsplash.com/photo-1606206591513-adbf9762965a?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Opel Movano L3H3",
-      tagline: "Velká dodávka, parkovací senzory, asistent rozjezdu do kopce.",
+      tagline: "Extra vysoká dodávka pro objemné náklady.",
       prices: { h4: "900 Kč", h12: "1 300 Kč" },
       specs: {
         pallets: "5 EURO palet",
@@ -91,15 +109,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "16 m³",
         load: "1100 kg",
         license: "sk. B",
-        consumption: "8-10 Litrů",
+        consumption: "8-10 l/100km",
         seats: "3",
         euro: "5"
+      },
+      dims: {
+        length: "3733 mm",
+        width: "1765 mm",
+        height: "2144 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "2030 mm"
       },
       image: "https://images.unsplash.com/photo-1549194388-2469d59ec75c?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Renault Master 2022 L2H2",
-      tagline: "Klimatizace, parkovací senzory, vyhřívané sedadlo, parkovací kamera, Bluetooth, dřevěná podlaha.",
+      tagline: "Moderní výbava: Klimatizace, parkovací kamera, Bluetooth, dřevěná podlaha.",
       prices: { h4: "900 Kč", h12: "1 400 Kč" },
       specs: {
         pallets: "4 EURO palety",
@@ -107,15 +132,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "11 m³",
         load: "1080 kg",
         license: "sk. B",
-        consumption: "7-8 Litrů",
+        consumption: "7-8 l/100km",
         seats: "3",
         euro: "6"
+      },
+      dims: {
+        length: "3083 mm",
+        width: "1765 mm",
+        height: "1894 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "1780 mm"
       },
       image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Fiat Ducato L2H2",
-      tagline: "Dřevěná podlaha, výkonný motor.",
+      tagline: "Spolehlivý motor IVECO, dřevěná podlaha pro ochranu nákladu.",
       prices: { h4: "800 Kč", h12: "1 300 Kč" },
       specs: {
         pallets: "4 EURO palety",
@@ -123,15 +155,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "11 m³",
         load: "1080 kg",
         license: "sk. B",
-        consumption: "8-9 litrů",
+        consumption: "8-9 l/100km",
         seats: "3",
         euro: "5"
+      },
+      dims: {
+        length: "3120 mm",
+        width: "1870 mm",
+        height: "1932 mm",
+        betweenArches: "1422 mm",
+        doorHeight: "1755 mm"
       },
       image: "https://images.unsplash.com/photo-1580674684081-7617fbf3d745?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Opel Movano 2021",
-      tagline: "Klimatizace, Tempomat, Navigace, Apple car.",
+      tagline: "Komfortní výbava: Tempomat, Navigace, Apple CarPlay.",
       prices: { h4: "900 Kč", h12: "1 400 Kč" },
       specs: {
         pallets: "5 EURO palet",
@@ -139,15 +178,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "14 m³",
         load: "1100 kg",
         license: "sk. B",
-        consumption: "8-10 Litrů",
+        consumption: "8-10 l/100km",
         seats: "3",
         euro: "6"
+      },
+      dims: {
+        length: "3733 mm",
+        width: "1765 mm",
+        height: "1894 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "1780 mm"
       },
       image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Renault Master L4H3 MAXI",
-      tagline: "Klimatizace, Tempomat, Handsfree, Parkovací kamera, Bluetooth, asistent rozjezdu.",
+      tagline: "Největší dodávka v Brně. Parkovací kamera, asistent rozjezdu.",
       prices: { h4: "900 Kč", h12: "1 400 Kč" },
       specs: {
         pallets: "5 EURO palet",
@@ -155,15 +201,22 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "17 m³",
         load: "1300 kg",
         license: "sk. B",
-        consumption: "10-13 Litrů",
+        consumption: "10-13 l/100km",
         seats: "3",
         euro: "5"
+      },
+      dims: {
+        length: "4383 mm",
+        width: "1765 mm",
+        height: "2144 mm",
+        betweenArches: "1080 mm",
+        doorHeight: "2030 mm"
       },
       image: "https://images.unsplash.com/photo-1606206591513-adbf9762965a?q=80&w=800&auto=format&fit=crop"
     },
     {
       name: "Opel Movano L2H2 2021",
-      tagline: "Dřevěná podlaha, Klimatizace, Tempomat, Apple car play, navigace.",
+      tagline: "Dřevěná podlaha, Klimatizace, Apple CarPlay.",
       prices: { h4: "900 Kč", h12: "1 400 Kč" },
       specs: {
         pallets: "4 EURO palety",
@@ -171,9 +224,16 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         volume: "11 m³",
         load: "1100 kg",
         license: "sk. B",
-        consumption: "9-10 Litrů",
+        consumption: "9-10 l/100km",
         seats: "3",
-        euro: "-"
+        euro: "6"
+      },
+      dims: {
+        length: "3083 mm",
+        width: "1765 mm",
+        height: "1894 mm",
+        betweenArches: "1380 mm",
+        doorHeight: "1780 mm"
       },
       image: "https://images.unsplash.com/photo-1549194388-2469d59ec75c?q=80&w=800&auto=format&fit=crop"
     }
@@ -187,18 +247,18 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-full border border-orange-100">
               <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-              <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Půjčovna dodávek Brno</span>
+              <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Nejlépe hodnocená půjčovna dodávek Brno</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-[0.9]">
-              VAŠE PRÁCE <br/>
-              <span className="text-slate-400">NEPOČKÁ.</span>
+              PŮJČOVNA <br/>
+              <span className="text-slate-400 text-5xl md:text-7xl">DODÁVEK BRNO</span>
             </h1>
             <p className="text-xl text-slate-500 font-medium max-w-lg leading-relaxed">
-              Spolehlivé užitkové vozy Renault Master a Fiat Ducato. Půjčení již od 4 hodin, nonstop servis a dálniční známka v ceně.
+              Hledáte spolehlivý <strong>pronájem dodávek v Brně</strong>? Nabízíme užitkové vozy Renault Master a Fiat Ducato v perfektním stavu. Půjčení již od 800 Kč, nonstop servis a dálniční známka vždy v ceně.
             </p>
             <div className="flex flex-wrap gap-4">
               <button onClick={() => setCurrentView('fleet')} className="px-10 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-2xl shadow-slate-200 hover:bg-orange-600 transition-all flex items-center gap-3">
-                Rezervovat online
+                Vybrat dodávku online
                 <ArrowRight className="w-4 h-4" />
               </button>
               <a href="tel:776333301" className="px-10 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:border-slate-900 transition-all flex items-center gap-3">
@@ -206,15 +266,52 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
                 776 333 301
               </a>
             </div>
+            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Bez DPH</span>
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Nonstop 24/7</span>
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Parkování u nás</span>
+            </div>
           </div>
           <div className="relative">
             <div className="absolute -inset-10 bg-orange-100 rounded-[4rem] blur-3xl -z-10 opacity-50" />
             <img 
               src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=1200&auto=format&fit=crop" 
-              alt="Dodávka Renault Master" 
+              alt="Půjčovna dodávek Brno - Renault Master" 
               className="rounded-[3rem] shadow-premium rotate-2 hover:rotate-0 transition-transform duration-700"
               referrerPolicy="no-referrer"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Content Section */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-7xl mx-auto border-t border-slate-100 pt-20">
+          <div className="grid lg:grid-cols-3 gap-16">
+            <div className="lg:col-span-2 space-y-6">
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Profesionální pronájem užitkových vozů v Brně</h2>
+              <p className="text-slate-600 leading-relaxed">
+                Naše <strong>půjčovna dodávek Brno</strong> se specializuje na krátkodobý i dlouhodobý pronájem spolehlivých vozů do 3,5 tuny. Jsme ideální volbou pro firmy, živnostníky i soukromé osoby, které potřebují převézt materiál, zboží nebo nábytek. Díky naší strategické poloze na parkovišti Teslova jsme snadno dostupní z celého Brna i dálnice D1.
+              </p>
+              <p className="text-slate-600 leading-relaxed">
+                Proč zvolit právě nás? Zakládáme si na <strong>perfektním technickém stavu</strong> našich vozidel. Každá dodávka prochází pravidelným servisem, aby vás na cestách nic nepřekvapilo. Navíc nabízíme flexibilní tarify – potřebujete dodávku jen na 4 hodiny pro rychlý nákup v IKEA, nebo na celý měsíc pro vaše podnikání? U nás není nic problém.
+              </p>
+            </div>
+            <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+              <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-orange-600">Naše hlavní lokality</h3>
+              <ul className="space-y-4">
+                {["Brno-jih (Teslova)", "Brno-střed", "Brno-Bohunice", "Brno-Lískovec", "Okolí Brna (přistavení)"].map((loc, i) => (
+                  <li key={i} className="flex items-center gap-3 text-xs font-bold text-slate-700">
+                    <MapPin className="w-4 h-4 text-slate-400" /> {loc}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 pt-8 border-t border-slate-200">
+                <p className="text-[10px] text-slate-400 font-medium leading-relaxed italic">
+                  "Jsme nejlevnější půjčovna dodávek v Brně s důrazem na kvalitu a čistotu vozů."
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -226,8 +323,8 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
             {[
               { label: "Půjčení od", val: "4 hodin" },
               { label: "Cena od", val: "800 Kč" },
-              { label: "Dostupnost", val: "Nonstop" },
-              { label: "Pojištění", val: "V ceně" }
+              { label: "Dostupnost", val: "Nonstop 24/7" },
+              { label: "Nájezd v ceně", val: "300 km" }
             ].map((stat, i) => (
               <div key={i} className="text-center md:text-left">
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{stat.label}</div>
@@ -242,16 +339,37 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
       <section className="py-32 px-6 bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="mb-20">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">Proč si půjčit dodávku <br/>právě od nás?</h2>
-            <p className="text-slate-500 font-medium text-lg">Zákazník je pro nás na prvním místě. Děláme maximum pro vaši spokojenost.</p>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6 uppercase">Proč si půjčit dodávku <br/>právě u nás?</h2>
+            <p className="text-slate-500 font-medium text-lg max-w-2xl">Kombinujeme nízké ceny s nadstandardním servisem. U nás víte, co si půjčujete.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((benefit, i) => (
+            {[
+              {
+                title: "Vždy v perfektním stavu",
+                desc: "Naše vozy Fiat Ducato, Renault Master a Opel Movano prochází pravidelnou kontrolou. Čistota a technická spolehlivost jsou u nás standardem.",
+                icon: <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+              },
+              {
+                title: "Jsme tu pro vás nonstop",
+                desc: "Volejte kdykoliv, pracujeme o víkendech i svátcích. Předání vozu na Teslově probíhá 24/7 po předchozí domluvě.",
+                icon: <Clock className="w-6 h-6 text-blue-500" />
+              },
+              {
+                title: "Nejlepší ceny v Brně",
+                desc: "Ceny začínají na 800 Kč. Nejsme plátci DPH, takže cena, kterou vidíte, je konečná. Žádné skryté poplatky za pojištění.",
+                icon: <Zap className="w-6 h-6 text-orange-500" />
+              },
+              {
+                title: "Zákazník na 1. místě",
+                desc: "Nabízíme přistavení dodávky až před váš dům nebo firmu po celém Brně. Šetříme váš čas i peníze.",
+                icon: <MapPin className="w-6 h-6 text-red-500" />
+              }
+            ].map((benefit, i) => (
               <div key={i} className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group">
                 <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
                   {benefit.icon}
                 </div>
-                <h3 className="text-xl font-black mb-4">{benefit.title}</h3>
+                <h3 className="text-xl font-black mb-4 leading-tight">{benefit.title}</h3>
                 <p className="text-sm text-slate-500 font-medium leading-relaxed">{benefit.desc}</p>
               </div>
             ))}
@@ -265,20 +383,20 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
           <div className="absolute top-0 right-0 w-1/2 h-full bg-orange-600/10 blur-3xl -mr-32" />
           <div className="grid lg:grid-cols-2 items-center">
             <div className="p-12 md:p-20 space-y-8">
-              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-tight">
-                Stěhujete se? <br/>
-                <span className="text-orange-500">Bude to hračka.</span>
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tight leading-tight uppercase">
+                Stěhování v Brně <br/>
+                <span className="text-orange-500 text-3xl md:text-5xl">s námi bude hračka</span>
               </h2>
               <div className="space-y-6">
                 <p className="text-slate-400 text-lg font-medium leading-relaxed">
-                  Naše vozy mají v nákladním prostoru dřevěnou podlahu s kobercem. Váš majetek bude jako v bavlnce.
+                  Lidé říkají, že je lepší vyhořet než se stěhovat. S naší <strong>stěhovací dodávkou</strong> to ale neplatí. Naše vozy mají v nákladním prostoru dřevěnou podlahu s kobercem, aby se váš majetek nepoškodil.
                 </p>
                 <ul className="grid gap-4">
                   {[
-                    "Zdarma zapůjčíme rudl a popruhy",
+                    "Zdarma zapůjčíme rudl a utahovací popruhy",
                     "Přistavení před dům po Brně za 200 Kč",
-                    "Žádné zbytečné otáčení s osobákem",
-                    "Všechny vozy s dálniční známkou"
+                    "Dostatek prostoru i pro největší skříně",
+                    "Všechny vozy s dálniční známkou pro ČR"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-3 text-white font-bold text-sm">
                       <CheckCircle2 className="w-5 h-5 text-orange-500" />
@@ -294,11 +412,31 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
             <div className="hidden lg:block h-full min-h-[600px] relative">
               <img 
                 src="https://images.unsplash.com/photo-1600585152220-90363fe7e115?q=80&w=1000&auto=format&fit=crop" 
-                alt="Stěhování dodávkou" 
+                alt="Stěhování dodávkou Brno" 
                 className="absolute inset-0 w-full h-full object-cover opacity-80"
                 referrerPolicy="no-referrer"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section for SEO */}
+      <section className="py-32 px-6 bg-slate-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl font-black tracking-tight mb-12 text-center uppercase">Časté dotazy k pronájmu dodávek</h2>
+          <div className="space-y-4">
+            {[
+              { q: "Jaký řidičský průkaz potřebuji?", a: "Na všechny naše dodávky vám stačí řidičské oprávnění skupiny B (osobní automobil)." },
+              { q: "Je v ceně dálniční známka?", a: "Ano, všechny naše užitkové vozy jsou vybaveny platnou dálniční známkou pro Českou republiku." },
+              { q: "Mohu s dodávkou vyjet do zahraničí?", a: "Ano, po předchozí domluvě je možná cesta do EU. V tomto případě se skládá kauce 10 000 Kč." },
+              { q: "Kde si mohu dodávku vyzvednout?", a: "Hlavní předávací místo je na parkovišti Teslova v Brně. Po dohodě vám vůz přistavíme kamkoliv po Brně." }
+            ].map((faq, i) => (
+              <div key={i} className="bg-white p-8 rounded-3xl border border-slate-100">
+                <h4 className="font-black text-slate-900 mb-2">{faq.q}</h4>
+                <p className="text-sm text-slate-500 font-medium">{faq.a}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -311,18 +449,18 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
         <div className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-full border border-orange-100 mb-6">
             <Truck className="w-4 h-4 text-orange-600" />
-            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Náš vozový park</span>
+            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Vozový park půjčovny dodávek Brno</span>
           </div>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-8">Vozový park <br/><span className="text-slate-400 text-4xl md:text-6xl">půjčovny dodávek Brno</span></h2>
+          <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-8 uppercase">Vozový park <br/><span className="text-slate-400 text-4xl md:text-6xl">půjčovny dodávek Brno</span></h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
             {[
-              "Dlouhodobé zapůjčení za výhodnou cenu",
-              "Interaktivní rezervační systém",
-              "300 Km nájezd v ceně (další 3 Kč/km)",
-              "Perfektní technický stav",
+              "Dlouhodobé zapůjčení dodávky za výhodnou cenu",
+              "Interaktivní rezervační systém s přehledem volných vozů",
+              "V ceně 300 Km nájezd denně (další 3 Kč/km)",
+              "Všechny vozy v perfektním technickém stavu",
               "Nejsme plátci DPH - ceny jsou konečné",
-              "Přistavení po Brně za 200 Kč"
+              "Přistavení po Brně až před dům za 200 Kč"
             ].map((benefit, i) => (
               <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -332,7 +470,7 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="grid gap-12">
+        <div className="grid gap-16">
           {fleetData.map((van, i) => (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
@@ -341,7 +479,7 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
               key={i} 
               className="bg-white rounded-[3rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col lg:grid lg:grid-cols-12"
             >
-              <div className="lg:col-span-5 h-80 lg:h-auto relative overflow-hidden group">
+              <div className="lg:col-span-5 h-[400px] lg:h-auto relative overflow-hidden group">
                 <img 
                   src={van.image} 
                   alt={van.name} 
@@ -351,53 +489,137 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
                 <div className="absolute top-6 left-6 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
                   {van.name.includes('MAXI') ? 'Největší v nabídce' : 'Skladem v Brně'}
                 </div>
+                <div className="absolute bottom-6 left-6 right-6 p-6 bg-slate-900/90 backdrop-blur-md rounded-2xl text-white border border-white/10">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-500 mb-4">
+                    <Ruler className="w-3 h-3" /> Rozměry ložné plochy
+                  </div>
+                  <div className="grid grid-cols-3 gap-6">
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold mb-1">Délka</div>
+                      <div className="text-sm font-black tracking-tight">{van.dims.length}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold mb-1">Šířka</div>
+                      <div className="text-sm font-black tracking-tight">{van.dims.width}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold mb-1">Výška</div>
+                      <div className="text-sm font-black tracking-tight">{van.dims.height}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                    <div className="text-[9px] text-slate-400 uppercase font-bold">Mezi podběhy</div>
+                    <div className="text-xs font-black text-orange-400">{van.dims.betweenArches}</div>
+                  </div>
+                </div>
               </div>
-              <div className="lg:col-span-7 p-8 md:p-12 space-y-8">
-                <div>
-                  <h3 className="text-3xl font-black tracking-tight mb-2">{van.name}</h3>
-                  <p className="text-slate-500 font-medium">{van.tagline}</p>
+              <div className="lg:col-span-7 p-8 md:p-12 space-y-8 bg-white">
+                <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-3xl font-black tracking-tight">{van.name}</h3>
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-black uppercase tracking-widest">
+                        {van.specs.volume}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 font-medium leading-relaxed max-w-md">{van.tagline}</p>
+                  </div>
+                  <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 text-right min-w-[140px]">
+                    <div className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-1">Pronájem od</div>
+                    <div className="text-3xl font-black text-orange-600 leading-none">{van.prices.h4}</div>
+                    <div className="text-[9px] font-bold text-orange-400 mt-1">včetně pojištění</div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-2xl">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Objem</div>
-                    <div className="text-sm font-black">{van.specs.volume}</div>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Palety</div>
-                    <div className="text-sm font-black">{van.specs.pallets}</div>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Zatížení</div>
-                    <div className="text-sm font-black">{van.specs.load}</div>
-                  </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Řidičák</div>
-                    <div className="text-sm font-black">{van.specs.license}</div>
+                  {[
+                    { label: "Euro Palety", val: van.specs.pallets, icon: <LayoutGrid className="w-4 h-4" /> },
+                    { label: "Užitečná hm.", val: van.specs.load, icon: <Weight className="w-4 h-4" /> },
+                    { label: "Motorizace", val: van.specs.motor.split(' ')[0] + ' ' + van.specs.motor.split(' ')[1], icon: <Zap className="w-4 h-4" /> },
+                    { label: "Spotřeba", val: van.specs.consumption, icon: <Fuel className="w-4 h-4" /> }
+                  ].map((spec, idx) => (
+                    <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-orange-200 transition-colors">
+                      <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                        {spec.icon} {spec.label}
+                      </div>
+                      <div className="text-sm font-black text-slate-900">{spec.val}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="relative group/spec">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[2.2rem] blur opacity-20 group-hover/spec:opacity-30 transition duration-1000 group-hover/spec:duration-200"></div>
+                  <div className="relative bg-slate-900 text-white rounded-[2rem] p-8 overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-5">
+                      <Truck className="w-32 h-32 rotate-12" />
+                    </div>
+                    <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+                      <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest">Kompletní technický list</div>
+                      <div className="text-[10px] font-bold text-slate-500">ID: PD-2024-{i+100}</div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-12">
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Celý název motoru</div>
+                        <div className="text-xs font-bold text-slate-200">{van.specs.motor}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Výška nákl. dveří</div>
+                        <div className="text-xs font-bold text-slate-200">{van.dims.doorHeight}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Emisní norma</div>
+                        <div className="text-xs font-bold text-slate-200">EURO {van.specs.euro}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Řidičské oprávnění</div>
+                        <div className="text-xs font-bold text-slate-200">{van.specs.license} (do 3.5t)</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Počet míst</div>
+                        <div className="text-xs font-bold text-slate-200">{van.specs.seats} (včetně řidiče)</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-500 uppercase tracking-widest mb-1 font-bold">Dálniční známka</div>
+                        <div className="text-xs font-bold text-emerald-400">Platná (ČR)</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-8 py-6 border-y border-slate-50">
-                  <div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">4 hodiny</div>
-                    <div className="text-xl font-black text-orange-600">{van.prices.h4}</div>
+                <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vizualizace ložné plochy</div>
+                    <div className="flex gap-2">
+                      <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                      <span className="w-2 h-2 rounded-full bg-slate-200"></span>
+                      <span className="w-2 h-2 rounded-full bg-slate-200"></span>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">12 hodin</div>
-                    <div className="text-xl font-black text-orange-600">{van.prices.h12}</div>
-                  </div>
-                  <div className="ml-auto flex gap-2">
-                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-widest">Euro {van.specs.euro}</span>
-                    <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest">{van.specs.seats} místa</span>
+                  <div className="relative h-48 bg-white rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center">
+                    {/* Simple SVG Visualization of a Van Cargo Area */}
+                    <svg viewBox="0 0 400 200" className="w-full h-full p-8">
+                      <rect x="50" y="40" width="300" height="120" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="4 4" />
+                      <path d="M50 40 L350 40 L350 160 L50 160 Z" fill="#f8fafc" stroke="#94a3b8" strokeWidth="2" />
+                      {/* Dimension Lines */}
+                      <line x1="50" y1="180" x2="350" y2="180" stroke="#f97316" strokeWidth="1" />
+                      <text x="200" y="195" textAnchor="middle" className="text-[10px] font-bold fill-orange-600">{van.dims.length}</text>
+                      
+                      <line x1="30" y1="40" x2="30" y2="160" stroke="#f97316" strokeWidth="1" />
+                      <text x="20" y="100" textAnchor="middle" transform="rotate(-90 20 100)" className="text-[10px] font-bold fill-orange-600">{van.dims.height}</text>
+
+                      <line x1="370" y1="60" x2="370" y2="140" stroke="#94a3b8" strokeWidth="1" strokeDasharray="2 2" />
+                      <text x="385" y="100" textAnchor="middle" transform="rotate(90 385 100)" className="text-[8px] font-bold fill-slate-400">Dveře: {van.dims.doorHeight}</text>
+                    </svg>
+                    <div className="absolute top-4 right-4 text-[8px] font-black text-slate-300 uppercase tracking-tighter">Schéma ložného prostoru</div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-4 pt-4">
-                  <button className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-orange-600 transition-all flex items-center gap-2">
-                    Online rezervace <ArrowRight className="w-4 h-4" />
+                  <button className="flex-1 min-w-[200px] px-10 py-5 bg-orange-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/20 flex items-center justify-center gap-3">
+                    Rezervovat tento vůz <ArrowRight className="w-4 h-4" />
                   </button>
-                  <button className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:border-slate-900 transition-all">
-                    Detailní parametry
+                  <button className="px-10 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:border-slate-900 transition-all flex items-center gap-3">
+                    <Phone className="w-4 h-4" /> 776 333 301
                   </button>
                 </div>
               </div>
@@ -474,43 +696,114 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
 
   const renderTerms = () => (
     <div className="pt-40 pb-20 px-6">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-5xl font-black tracking-tight mb-12 text-slate-900">Podmínky zapůjčení</h2>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-full border border-orange-100 mb-6">
+            <ShieldCheck className="w-4 h-4 text-orange-600" />
+            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Férové podmínky</span>
+          </div>
+          <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-8 text-slate-900">Podmínky zapůjčení <br/><span className="text-slate-400 text-4xl md:text-6xl">dodávek u naší společnosti</span></h2>
+          <p className="text-slate-500 font-medium text-xl max-w-3xl leading-relaxed">
+            Potřebujete si půjčit dodávku? Není to nic složitého. Máme pro Vás přehledné podmínky zapůjčení v naší půjčovně v Brně.
+          </p>
+        </div>
         
-        <div className="space-y-8">
-          {[
-            {
-              title: "Doklady potřebné k zapůjčení",
-              content: "Fyzické osoby: Občanský průkaz a řidičský průkaz sk. B (platný min. 2 roky). Firmy: Výpis z OR nebo Živnostenský list, plná moc (pokud nepřebírá jednatel)."
-            },
-            {
-              title: "Platba a kauce",
-              content: "Při převzetí vozu se skládá vratná kauce ve výši 5 000 Kč. Nájemné se hradí předem při převzetí vozidla. Přijímáme platby v hotovosti i převodem."
-            },
-            {
-              title: "Pojištění a asistence",
-              content: "Všechny naše vozy mají kompletní havarijní pojištění se spoluúčastí 10% (min. 10 000 Kč). Součástí jsou nonstop asistenční služby pro případ poruchy nebo nehody."
-            },
-            {
-              title: "Vrácení vozidla",
-              content: "Vozidlo se vrací s plnou nádrží (tak, jak bylo předáno) a v přiměřeně čistém stavu. Předání i vrácení probíhá na adrese Teslova, Brno, pokud není domluveno jinak."
-            }
-          ].map((term, i) => (
-            <div key={i} className="p-10 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
-              <h3 className="text-xl font-black mb-4 flex items-center gap-3">
-                <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-xs">{i+1}</span>
-                {term.title}
-              </h3>
-              <p className="text-slate-500 font-medium leading-relaxed">{term.content}</p>
+        <div className="grid lg:grid-cols-3 gap-8 mb-20">
+          <div className="p-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-8">
+              <Star className="w-6 h-6 text-orange-500" />
             </div>
-          ))}
+            <h3 className="text-xl font-black mb-6">Fyzické osoby</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> Doklad totožnosti (OP nebo pas)
+              </li>
+              <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> Řidičský průkaz sk. B
+              </li>
+            </ul>
+          </div>
+
+          <div className="p-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-8">
+              <Package className="w-6 h-6 text-blue-500" />
+            </div>
+            <h3 className="text-xl font-black mb-6">Právnické osoby</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> Živnostenský list / Výpis z OR
+              </li>
+              <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> OP a ŘP řidiče
+              </li>
+            </ul>
+          </div>
+
+          <div className="p-10 bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-8">
+              <MapPin className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-xl font-black mb-6">Cizinci v ČR</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> Potvrzení o přechodném nebo trvalém pobytu v ČR
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-16 p-12 bg-slate-900 rounded-[3rem] text-center text-white">
+        <div className="bg-slate-900 rounded-[4rem] p-12 md:p-20 text-white relative overflow-hidden mb-20">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-orange-600/10 blur-3xl -mr-32" />
+          <div className="relative z-10 grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <h3 className="text-4xl font-black mb-6 tracking-tight">Vratná kauce</h3>
+              <p className="text-slate-400 text-lg font-medium mb-10">Kauce se skládá při převzetí vozidla a je plně vratná při odevzdání vozu v původním stavu.</p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-3xl">
+                  <div className="text-4xl font-black text-orange-500">5 000</div>
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400">Kč / Zapůjčení <br/>na území ČR</div>
+                </div>
+                <div className="flex items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-3xl">
+                  <div className="text-4xl font-black text-orange-500">10 000</div>
+                  <div className="text-xs font-black uppercase tracking-widest text-slate-400">Kč / Zapůjčení <br/>do zahraničí</div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-8">
+              <div className="p-8 bg-orange-600 rounded-[3rem] shadow-2xl shadow-orange-900/50">
+                <h4 className="text-xl font-black mb-4">Rychlá rezervace</h4>
+                <p className="text-orange-100 text-sm font-medium mb-6">Celé zapůjčení trvá maximálně 10 minut. Jsme efektivní, abyste mohli hned vyrazit.</p>
+                <button onClick={() => setCurrentView('fleet')} className="w-full py-4 bg-white text-orange-600 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-900 hover:text-white transition-all">
+                  Vybrat dodávku
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-20">
+          <h3 className="text-4xl font-black tracking-tight mb-12 text-center">Jak probíhá půjčení dodávky?</h3>
+          <div className="grid md:grid-cols-4 gap-4 relative">
+            {[
+              { title: "Příjezd", desc: "Najdete nás na parkovišti Teslova (Google Maps: pujcimedodavky)." },
+              { title: "Kontrola", desc: "Společně prohlédneme vůz, škrábance a technický stav." },
+              { title: "Smlouva", desc: "Sepsání smlouvy (2 vyhotovení) a složení vratné kauce." },
+              { title: "Start", desc: "Předání klíčů a můžete jet. Vše hotovo do 10 minut." }
+            ].map((step, i) => (
+              <div key={i} className="relative p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                <div className="text-6xl font-black text-slate-200 mb-4 leading-none">{i + 1}</div>
+                <h4 className="text-lg font-black mb-3">{step.title}</h4>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-12 bg-orange-50 rounded-[3rem] border border-orange-100 text-center">
           <Info className="w-12 h-12 text-orange-500 mx-auto mb-6" />
-          <h4 className="text-2xl font-black mb-4">Máte další dotazy?</h4>
-          <p className="text-slate-400 font-medium mb-8">Neváhejte nám zavolat, rádi vám vše vysvětlíme.</p>
-          <a href="tel:776333301" className="text-3xl font-black text-orange-500 hover:text-orange-400 transition-colors tracking-tight">776 333 301</a>
+          <h4 className="text-2xl font-black mb-4">Potřebujete poradit?</h4>
+          <p className="text-slate-600 font-medium mb-8">Náš zkušený pracovník se vám bude na Teslově plně věnovat.</p>
+          <a href="tel:776333301" className="text-4xl font-black text-slate-900 hover:text-orange-600 transition-colors tracking-tight">776 333 301</a>
         </div>
       </div>
     </div>
