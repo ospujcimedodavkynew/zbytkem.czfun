@@ -918,18 +918,6 @@ const VanRentalPreview: React.FC<VanRentalPreviewProps> = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 overflow-x-hidden relative">
-      {/* Sticky Mobile Action Bar */}
-      <div className="fixed bottom-6 left-6 right-6 z-50 md:hidden">
-        <div className="bg-slate-900/90 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-white/10 flex items-center justify-between gap-4">
-          <a href="tel:776333301" className="flex-1 py-4 bg-orange-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
-            <Phone className="w-3 h-3" /> Zavolat
-          </a>
-          <button onClick={() => setCurrentView('fleet')} className="flex-1 py-4 bg-white text-slate-900 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2">
-            <Calendar className="w-3 h-3" /> Rezervovat
-          </button>
-        </div>
-      </div>
-
       {/* Navigation Preview */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">

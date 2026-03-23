@@ -136,12 +136,12 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="text-left">
-            <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[0.9] mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
               Váš domov na cestách <br/>
-              <span className="text-orange-600">přímo z Brna</span>
+              <span className="text-brand-primary">přímo z Brna</span>
             </h1>
             
-            <p className="text-lg text-slate-500 font-medium leading-relaxed mb-10 max-w-xl">
+            <p className="text-lg text-slate-600 font-medium leading-relaxed mb-8 max-w-xl">
               Půjčte si náš plně vybavený obytný vůz <strong>Ahorn Canada TU Plus</strong>. Žádné skryté poplatky, kompletní výbava v ceně a férový přístup. 
             </p>
 
@@ -227,22 +227,22 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
             <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Po Brně přivezeme</h3>
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">Pokud budete chtít, obytňák vám přivezeme až před dům za 300 Kč. Jednoduché a pohodlné.</p>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Po Brně přivezeme</h3>
+            <p className="text-base text-slate-600 leading-relaxed">Pokud budete chtít, obytňák vám přivezeme až před dům za 300 Kč. Jednoduché a pohodlné.</p>
           </div>
           <div className="space-y-4">
             <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">GPS a alarm</h3>
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">Vůz je chráněn GPS sledováním s dálkovou deaktivací. Vaše bezpečí je naší prioritou.</p>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">GPS a alarm</h3>
+            <p className="text-base text-slate-600 leading-relaxed">Vůz je chráněn GPS sledováním s dálkovou deaktivací. Vaše bezpečí je naší prioritou.</p>
           </div>
           <div className="space-y-4">
             <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Osobní přístup</h3>
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">Vše vám vysvětlíme, poradíme a pomůžeme. Pronájem s lidským přístupem.</p>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Osobní přístup</h3>
+            <p className="text-base text-slate-600 leading-relaxed">Vše vám vysvětlíme, poradíme a pomůžeme. Pronájem s lidským přístupem.</p>
           </div>
           <div className="space-y-4">
             <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
@@ -334,32 +334,32 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               <div className="p-10">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
                   <div>
-                    <h3 className="text-3xl font-black text-slate-900">{mainVehicle.name}</h3>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Podvozek Renault Master | Motor 2.3 dCi 145 HP</p>
+                    <h3 className="text-2xl font-bold text-slate-900">{mainVehicle.name}</h3>
+                    <p className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] mt-1">Podvozek Renault Master | Motor 2.3 dCi 145 HP</p>
                   </div>
                   <div className="text-left md:text-right">
-                    <div className="text-3xl font-black text-slate-900">{formatCurrency(mainVehicle.basePrice)}</div>
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">cena od / den</div>
+                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(mainVehicle.basePrice)}</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">cena od / den</div>
                   </div>
                 </div>
 
                 {/* Technická karta */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">145 HP</div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Výkon motoru</div>
+                    <div className="text-slate-900 font-bold text-lg">145 HP</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Výkon motoru</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">3 500 kg</div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Celková váha (sk. B)</div>
+                    <div className="text-slate-900 font-bold text-lg">3 500 kg</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Celková váha (sk. B)</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">Renault</div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Spolehlivý podvozek</div>
+                    <div className="text-slate-900 font-bold text-lg">Renault</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Spolehlivý podvozek</div>
                   </div>
                   <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="text-slate-900 font-black text-lg">100 L</div>
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Nádrž na vodu</div>
+                    <div className="text-slate-900 font-bold text-lg">100 L</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Nádrž na vodu</div>
                   </div>
                 </div>
 
@@ -376,7 +376,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </div>
                 </div>
 
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Prémiové vybavení v ceně</h4>
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Prémiové vybavení v ceně</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
                   {mainVehicle.equipment.map((item, i) => (
                     <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -386,7 +386,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   ))}
                 </div>
 
-                <button onClick={() => onBookNow(mainVehicle.id)} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 hover:-translate-y-1">Rezervovat {mainVehicle.name}</button>
+                <button onClick={() => onBookNow(mainVehicle.id)} className="w-full py-5 bg-brand-primary text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:-translate-y-1">Rezervovat {mainVehicle.name}</button>
               </div>
             </div>
           </div>

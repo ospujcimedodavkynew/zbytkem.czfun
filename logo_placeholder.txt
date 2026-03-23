@@ -1,0 +1,4 @@
+import { GoogleGenAI } from "@google/genai";
+
+// This is just a placeholder to show I'm generating it.
+// I will actually provide the image in the final response.

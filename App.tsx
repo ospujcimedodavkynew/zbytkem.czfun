@@ -13,14 +13,13 @@ import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
 import VanRentalPreview from './components/VanRentalPreview';
 import Logo from './components/Logo';
-import LogoGenerator from './src/components/LogoGenerator';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol, Message } from './types';
 import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'logo-gen' | 'van-preview'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'van-preview'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -506,8 +505,8 @@ const App: React.FC = () => {
                           </div>
                           <div className="flex-grow text-center lg:text-left">
                             <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
-                              <h3 className="text-3xl font-black text-slate-900">{vehicle.name}</h3>
-                              <span className="inline-flex items-center px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-black uppercase tracking-widest rounded-full w-fit mx-auto lg:mx-0">
+                              <h3 className="text-2xl font-bold text-slate-900">{vehicle.name}</h3>
+                              <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-full w-fit mx-auto lg:mx-0">
                                 Skladem
                               </span>
                             </div>
@@ -519,13 +518,13 @@ const App: React.FC = () => {
                             </div>
                           </div>
                           <div className="flex flex-col items-center lg:items-end gap-4 min-w-[200px] w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                            <div className="text-3xl font-black text-orange-600">
+                            <div className="text-2xl font-bold text-brand-primary">
                               {vehicle.basePrice} Kč
                               <span className="text-xs text-slate-400 font-bold uppercase tracking-widest ml-2">/ den</span>
                             </div>
                             <button 
                               onClick={() => { setSelectedVehicleId(vehicle.id); }}
-                              className="w-full px-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 hover:shadow-orange-200"
+                              className="w-full px-10 py-5 bg-brand-primary text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:shadow-blue-200"
                             >
                               Rezervovat vůz
                             </button>
@@ -581,7 +580,6 @@ const App: React.FC = () => {
                 isEmbedded={isEmbedded}
               />
             )}
-            {view === 'logo-gen' && <LogoGenerator onBack={() => setView('home')} />}
             {view === 'admin' && (
               <AdminDashboard 
                 reservations={reservations} 

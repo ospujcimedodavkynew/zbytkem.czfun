@@ -44,7 +44,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
               <button 
                 key={link.label}
                 onClick={link.onClick}
-                className="px-6 py-2.5 text-slate-500 hover:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all rounded-full hover:bg-white hover:shadow-sm"
+                className="px-6 py-2.5 text-slate-500 hover:text-slate-900 font-bold text-[11px] uppercase tracking-wider transition-all rounded-full hover:bg-white hover:shadow-sm"
               >
                 {link.label}
               </button>
@@ -57,9 +57,9 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onNavigate('admin')}
-              className={`hidden sm:flex items-center px-6 py-3 text-[9px] font-black uppercase tracking-widest rounded-full transition-all
+              className={`hidden sm:flex items-center px-6 py-3 text-[10px] font-bold uppercase tracking-wider rounded-full transition-all
                 ${isAdmin 
-                  ? 'text-white bg-slate-900 hover:bg-slate-800 shadow-lg' 
+                  ? 'text-white bg-brand-primary hover:bg-blue-700 shadow-lg shadow-blue-100' 
                   : 'text-slate-900 bg-white border border-slate-200 hover:shadow-md'}`}
             >
               <User className="w-3 h-3 mr-2" />

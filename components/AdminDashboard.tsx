@@ -324,7 +324,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="flex justify-between items-center mb-10">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Administrace</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Administrace</h1>
           <p className="text-slate-500 font-medium">Vítejte, Milan Gula</p>
         </div>
         {onRefresh && (
@@ -344,7 +344,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                <div className="flex items-center gap-2">
                  Zprávy
                  {messages.filter(m => m.status === 'new').length > 0 && (
-                   <span className="bg-orange-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                   <span className="bg-brand-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                      {messages.filter(m => m.status === 'new').length}
                    </span>
                  )}
