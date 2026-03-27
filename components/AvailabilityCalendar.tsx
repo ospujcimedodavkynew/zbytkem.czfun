@@ -67,16 +67,16 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
     };
 
     return (
-      <div className={`bg-white ${isEmbedded ? 'rounded-none border-none shadow-none' : 'rounded-[2rem] border border-slate-100 shadow-premium'} ${isEmbedded ? 'p-0' : 'p-6 md:p-8'} animate-in fade-in duration-500`}>
+      <div className={`${isEmbedded ? 'rounded-none border-none shadow-none' : 'card-ultimate shadow-ultimate'} ${isEmbedded ? 'p-0' : 'p-6 md:p-8'} animate-in fade-in duration-500`}>
         <div className={`flex justify-between items-center ${isEmbedded ? 'mb-4' : 'mb-8'}`}>
           <h3 className={`${isEmbedded ? 'text-xs' : 'text-xl'} font-black text-slate-900 uppercase tracking-widest`}>
             {date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
           </h3>
           <div className="flex gap-1">
-            <button onClick={prevMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+            <button onClick={prevMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} glass rounded-full transition-colors border border-white/20 shadow-sm`}>
               <ChevronLeft className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-slate-600`} />
             </button>
-            <button onClick={nextMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} hover:bg-slate-50 rounded-full transition-colors border border-slate-100`}>
+            <button onClick={nextMonth} className={`${isEmbedded ? 'p-1.5' : 'p-2'} glass rounded-full transition-colors border border-white/20 shadow-sm`}>
               <ChevronRight className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-slate-600`} />
             </button>
           </div>
@@ -96,7 +96,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? 'bg-red-50 text-red-600 font-bold border border-red-100 cursor-not-allowed' 
-                      : 'bg-green-50 text-green-700 font-medium border border-green-100 cursor-pointer hover:bg-green-600 hover:text-white hover:scale-110 shadow-sm'}`}
+                      : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary hover:text-white hover:scale-110 shadow-sm'}`}
               >
                 {day}
               </div>
@@ -107,7 +107,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
         {!isEmbedded && (
           <div className="mt-8 flex flex-wrap gap-6 pt-6 border-t border-slate-50">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-100 border border-green-200" />
+              <div className="w-3 h-3 rounded-full bg-emerald-100 border border-emerald-200" />
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
             </div>
             <div className="flex items-center gap-2">
@@ -126,18 +126,18 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-              <CalendarIcon className="w-8 h-8 text-slate-900" />
+              <CalendarIcon className="w-8 h-8 text-brand-primary" />
               Dostupnost vozů
             </h2>
             <p className="text-slate-500 font-medium mt-1">Podívejte se na volné termíny v sezóně 2026</p>
           </div>
 
           <div className="w-full md:w-auto">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Vyberte vůz</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">Vyberte vůz</label>
             <select 
               value={selectedVehicleId}
               onChange={(e) => setSelectedVehicleId(e.target.value)}
-              className="w-full md:w-64 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-900 transition-all shadow-sm"
+              className="input-ultimate w-full md:w-64 px-4 py-3"
             >
               {vehicles.map(v => (
                 <option key={v.id} value={v.id}>{v.name}</option>
@@ -152,8 +152,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
       </div>
 
       {!isEmbedded && (
-        <div className="mt-10 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex gap-4 items-start">
-          <Info className="w-5 h-5 text-slate-900 shrink-0 mt-0.5" />
+        <div className="mt-10 p-6 glass rounded-[2rem] border border-white/20 flex gap-4 items-start shadow-ultimate">
+          <Info className="w-5 h-5 text-brand-primary shrink-0 mt-0.5" />
           <p className="text-sm text-slate-600 font-medium leading-relaxed">
             Zobrazené termíny jsou orientační. Pro závaznou rezervaci klikněte na tlačítko "Rezervovat" v detailu vozu. 
             Minimální doba nájmu jsou 3 dny.

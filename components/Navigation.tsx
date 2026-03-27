@@ -26,7 +26,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
 
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
-      <div className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-2xl shadow-slate-200/50 rounded-[2rem] px-6 md:px-10 py-4">
+      <div className="glass border border-white/20 shadow-ultimate rounded-[2rem] px-6 md:px-10 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <motion.div 
@@ -44,7 +44,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
               <button 
                 key={link.label}
                 onClick={link.onClick}
-                className="px-6 py-2.5 text-slate-500 hover:text-slate-900 font-bold text-[11px] uppercase tracking-wider transition-all rounded-full hover:bg-white hover:shadow-sm"
+                className="px-6 py-2.5 text-slate-500 hover:text-brand-primary font-bold text-[11px] uppercase tracking-wider transition-all rounded-full hover:bg-white hover:shadow-sm"
               >
                 {link.label}
               </button>
@@ -59,8 +59,8 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
               onClick={() => onNavigate('admin')}
               className={`hidden sm:flex items-center px-6 py-3 text-[10px] font-bold uppercase tracking-wider rounded-full transition-all
                 ${isAdmin 
-                  ? 'text-white bg-brand-primary hover:bg-blue-700 shadow-lg shadow-blue-100' 
-                  : 'text-slate-900 bg-white border border-slate-200 hover:shadow-md'}`}
+                  ? 'btn-ultimate-primary shadow-lg' 
+                  : 'btn-ultimate-secondary'}`}
             >
               <User className="w-3 h-3 mr-2" />
               {isAdmin ? 'Admin' : 'Přihlásit'}
@@ -79,7 +79,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
 
             {/* Mobile Menu Toggle */}
             <button 
-              className="md:hidden p-2 text-slate-900 bg-slate-50 rounded-full"
+              className="md:hidden p-2 text-slate-900 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -95,14 +95,14 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="md:hidden absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl rounded-[2.5rem] p-8 shadow-2xl border border-slate-100 overflow-hidden"
+            className="md:hidden absolute top-full left-0 right-0 mt-4 glass rounded-[2.5rem] p-8 shadow-ultimate border border-white/20 overflow-hidden"
           >
             <div className="space-y-4">
               {navLinks.map((link) => (
                 <button 
                   key={link.label}
                   onClick={() => { link.onClick(); setIsMobileMenuOpen(false); }}
-                  className="w-full text-left px-6 py-4 rounded-2xl bg-slate-50 hover:bg-slate-900 hover:text-white transition-all flex justify-between items-center group"
+                  className="w-full text-left px-6 py-4 rounded-2xl bg-slate-50 hover:bg-brand-primary hover:text-white transition-all flex justify-between items-center group"
                 >
                   <span className="text-xs font-black uppercase tracking-widest">{link.label}</span>
                   <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
@@ -111,7 +111,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
               <div className="pt-4">
                 <button
                   onClick={() => { onNavigate('admin'); setIsMobileMenuOpen(false); }}
-                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl"
+                  className="w-full py-5 btn-ultimate-primary rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl"
                 >
                   {isAdmin ? 'Administrace' : 'Klientská zóna'}
                 </button>

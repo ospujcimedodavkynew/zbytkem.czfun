@@ -59,13 +59,13 @@ const GuidesDetail: React.FC<GuidesDetailProps> = ({ onBack }) => {
     <div className="max-w-7xl mx-auto px-4 py-12 overflow-x-hidden">
       <button 
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-primary transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Zpět na úvod
       </button>
 
       <div className="mb-16 text-center">
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6">Návody a rady</h1>
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6 gradient-text">Návody a rady</h1>
         <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium">
           Vše, co potřebujete vědět pro bezstarostné cestování s naším obytným vozem. Podrobné návody pro začátečníky i pokročilé.
         </p>
@@ -79,10 +79,10 @@ const GuidesDetail: React.FC<GuidesDetailProps> = ({ onBack }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: idx * 0.1 }}
-            className="bg-white rounded-[3rem] p-8 md:p-12 border border-slate-100 shadow-sm hover:shadow-xl transition-all"
+            className="card-ultimate p-8 md:p-12 shadow-ultimate"
           >
             <div className="flex flex-col md:flex-row gap-10">
-              <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center shrink-0">
+              <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center shrink-0">
                 {guide.icon}
               </div>
               <div className="flex-grow">
@@ -91,13 +91,13 @@ const GuidesDetail: React.FC<GuidesDetailProps> = ({ onBack }) => {
                   {guide.content}
                 </p>
                 <div className="space-y-4">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <h3 className="text-xs font-black text-brand-primary uppercase tracking-widest flex items-center gap-2">
                     <Info className="w-4 h-4" /> Praktické tipy
                   </h3>
                   <ul className="grid gap-3">
                     {guide.tips.map((tip, i) => (
                       <li key={i} className="flex items-start gap-3 text-sm font-bold text-slate-700">
-                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></div>
+                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-brand-primary shrink-0"></div>
                         {tip}
                       </li>
                     ))}
@@ -109,9 +109,9 @@ const GuidesDetail: React.FC<GuidesDetailProps> = ({ onBack }) => {
         ))}
       </div>
 
-      <div className="mt-20 p-12 bg-orange-50 rounded-[3rem] border border-orange-100">
+      <div className="mt-20 p-12 glass rounded-[3rem] border border-white/20 shadow-ultimate">
         <div className="flex flex-col md:flex-row items-center gap-10">
-          <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center text-orange-600 shrink-0">
+          <div className="w-20 h-20 bg-brand-primary/10 rounded-3xl flex items-center justify-center text-brand-primary shrink-0">
             <AlertTriangle className="w-10 h-10" />
           </div>
           <div>

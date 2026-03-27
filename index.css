@@ -2,21 +2,26 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   
   --color-brand-primary: #2563eb;
   --color-brand-secondary: #f59e0b;
   --color-brand-dark: #0f172a;
   --color-brand-muted: #64748b;
+  --color-brand-accent: #3b82f6;
   
   --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
-  --shadow-strong: 0 10px 40px -10px rgba(15, 23, 42, 0.1);
+  --shadow-strong: 0 20px 50px -12px rgba(15, 23, 42, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
   
   --radius-standard: 12px;
   --radius-large: 24px;
+  --radius-xl: 32px;
 }
 
 /* Base Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
 html, body {
   font-family: var(--font-sans);
   background-color: #f8fafc;
@@ -24,109 +29,129 @@ html, body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
-/* Typography Hierarchy - Balanced and Readable */
-h1 {
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  margin-bottom: 1.5rem;
+::selection {
+  background-color: rgba(37, 99, 235, 0.15);
+  color: var(--color-brand-primary);
+}
+
+/* Typography Hierarchy - Ultimate Design */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   color: var(--color-brand-dark);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
 }
 
 h2 {
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
   margin-bottom: 1.25rem;
-  color: var(--color-brand-dark);
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 1rem;
+  line-height: 1.25;
 }
 
 p {
-  font-size: 1.0625rem; /* Slightly larger for better readability */
-  color: #334155;
+  font-size: 1.125rem;
+  color: #475569;
   margin-bottom: 1rem;
 }
 
-/* Embedded Widget Support */
-body.is-embedded {
-  background-color: transparent !important;
-  overflow-y: auto !important;
+/* Glassmorphism & Modern Surfaces */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: var(--shadow-glass);
 }
 
-/* Custom UI Components */
-.card {
+.card-ultimate {
   background: white;
   border-radius: var(--radius-large);
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: var(--shadow-soft);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
-.card:hover {
+.card-ultimate:hover {
   box-shadow: var(--shadow-strong);
-  transform: translateY(-2px);
+  transform: translateY(-6px);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
-.btn-primary {
-  background-color: var(--color-brand-primary);
+/* Ultimate Buttons */
+.btn-ultimate-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  padding: 0.75rem 2rem;
-  border-radius: var(--radius-standard);
+  padding: 0.875rem 2.5rem;
+  border-radius: 9999px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
 }
 
-.btn-primary:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+.btn-ultimate-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
+  filter: brightness(1.1);
 }
 
-.btn-secondary {
-  background-color: white;
+.btn-ultimate-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-ultimate-secondary {
+  background: white;
   color: var(--color-brand-dark);
   border: 1px solid #e2e8f0;
-  padding: 0.75rem 2rem;
-  border-radius: var(--radius-standard);
+  padding: 0.875rem 2.5rem;
+  border-radius: 9999px;
   font-weight: 600;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
-.btn-secondary:hover {
-  background-color: #f1f5f9;
+.btn-ultimate-secondary:hover {
+  background-color: #f8fafc;
   border-color: #cbd5e1;
+  transform: translateY(-1px);
 }
 
-/* Form Elements */
-input, select, textarea {
+/* Form Elements - Ultimate */
+.input-ultimate {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border-radius: var(--radius-standard);
   border: 1px solid #e2e8f0;
   background-color: #ffffff;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-size: 1rem;
 }
 
-input:focus, select:focus, textarea:focus {
+.input-ultimate:focus {
   outline: none;
   border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+  background-color: white;
 }
 
 /* Custom Scrollbar */
@@ -148,26 +173,41 @@ input:focus, select:focus, textarea:focus {
   background: #94a3b8;
 }
 
+/* Section Styling */
+.section-padding {
+  padding: clamp(4rem, 10vw, 8rem) 0;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Embedded Widget Support */
+body.is-embedded {
+  background-color: transparent !important;
+  overflow-y: auto !important;
+}
+
 /* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
+.reveal-up {
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Utility for Půjčíme dodávky specific sections */
-.van-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.price-tag {
-  font-family: var(--font-sans);
-  font-weight: 800;
+/* Van Specific */
+.van-badge {
+  background: rgba(37, 99, 235, 0.1);
   color: var(--color-brand-primary);
-  font-size: 1.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }

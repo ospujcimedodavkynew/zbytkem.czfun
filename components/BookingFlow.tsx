@@ -110,7 +110,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
 
   return (
     <div className={`max-w-3xl mx-auto px-4 ${isEmbedded ? 'py-4' : 'py-16'} overflow-x-hidden`}>
-      <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+      <div className="card-ultimate shadow-ultimate overflow-hidden p-0 border-none">
         <div className="bg-slate-900 px-6 py-4 text-white">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-black">{vehicle.name}</h2>
@@ -120,7 +120,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
           </div>
           <div className="flex gap-1.5">
             {[1, 2, 3].map(i => (
-              <div key={i} className={`h-1 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-white' : 'bg-slate-700'}`}></div>
+              <div key={i} className={`h-1 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-brand-primary' : 'bg-slate-700'}`}></div>
             ))}
           </div>
         </div>
@@ -142,7 +142,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.startDate} 
                     onChange={handleChange} 
-                    className={`w-full px-3 py-2.5 border-2 rounded-xl outline-none transition-all font-bold text-sm ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
+                    className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : ''}`} 
                   />
                 </div>
                 <div className="space-y-1">
@@ -154,7 +154,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                     required 
                     value={formData.endDate} 
                     onChange={handleChange} 
-                    className={`w-full px-3 py-2.5 border-2 rounded-xl outline-none transition-all font-bold text-sm ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'border-slate-100 focus:border-slate-900'}`} 
+                    className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : ''}`} 
                   />
                 </div>
               </div>
@@ -183,7 +183,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                   </div>
                   <div className="text-right">
                     <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Celkem</div>
-                    <div className="text-xl font-black text-slate-900 leading-none">{formatCurrency(totalPrice)}</div>
+                    <div className="text-xl font-black text-brand-primary leading-none">{formatCurrency(totalPrice)}</div>
                   </div>
                 </div>
               )}
@@ -194,22 +194,22 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
             <div className="space-y-4 animate-in fade-in duration-500">
               <h3 className="text-lg font-black text-slate-900">Vaše údaje</h3>
               <div className="grid grid-cols-2 gap-3">
-                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
-                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
+                <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+                <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
-                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
+                <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+                <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
-              <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 font-medium text-sm" />
-              <textarea name="note" placeholder="Poznámka..." value={formData.note} onChange={handleChange} className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl outline-none focus:border-slate-900 h-20 font-medium text-sm"></textarea>
+              <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+              <textarea name="note" placeholder="Poznámka..." value={formData.note} onChange={handleChange} className="input-ultimate w-full px-4 py-3 h-20 font-medium text-sm"></textarea>
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in duration-500">
               <h3 className="text-lg font-black text-slate-900">Shrnutí</h3>
-              <div className="p-6 bg-slate-900 rounded-2xl text-white space-y-3">
+              <div className="p-6 bg-slate-900 rounded-2xl text-white space-y-3 shadow-ultimate">
                 <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Vozidlo</span>
                   <span className="text-white text-xs">{vehicle.name}</span>
@@ -220,12 +220,12 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                 </div>
                 <div className="pt-3 border-t border-slate-800 flex justify-between items-end">
                   <div className="text-slate-400 font-black uppercase tracking-widest text-[8px]">Celkem</div>
-                  <div className="text-2xl font-black text-white">{formatCurrency(totalPrice)}</div>
+                  <div className="text-2xl font-black text-brand-primary">{formatCurrency(totalPrice)}</div>
                 </div>
               </div>
               
               <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl text-[10px] text-slate-600 font-bold leading-tight border border-slate-100">
-                <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded border-slate-200 text-slate-900 focus:ring-slate-900" />
+                <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded border-slate-200 text-brand-primary focus:ring-brand-primary" />
                 <label>Souhlasím s obchodními podmínkami a zákazem kouření ve voze.</label>
               </div>
             </div>
@@ -233,14 +233,14 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
 
           <div className="mt-6 flex justify-between items-center">
             {step > 1 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2 text-slate-400 font-black uppercase text-[10px] hover:text-slate-900 transition-colors">Zpět</button>
+              <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2 text-slate-400 font-black uppercase text-[10px] hover:text-brand-primary transition-colors">Zpět</button>
             ) : (
               <div></div>
             )}
             <button 
               type="submit" 
               disabled={step === 1 && (!!error || !formData.startDate || !formData.endDate)}
-              className="px-8 py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg hover:bg-slate-800 transition-all disabled:opacity-30"
+              className="btn-ultimate-primary px-8 py-4 text-[10px] tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-30"
             >
               {step === 3 ? 'Odeslat' : 'Další'}
             </button>

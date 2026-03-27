@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Navigation from './components/Navigation';
 import PublicHome from './components/PublicHome';
 import BookingFlow from './components/BookingFlow';
@@ -447,10 +448,13 @@ const App: React.FC = () => {
     <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
       <SEO title={seo.title} description={seo.description} />
       {view === 'home' && lastBooking && !isAdmin && (
-        <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700">
-          <div className="max-w-7xl mx-auto flex justify-between items-center text-xs font-bold uppercase tracking-widest">
-            <span>👋 Vítejte zpět, {lastBooking.name}! Máte u nás rozpracovanou rezervaci.</span>
-            <button onClick={() => setView('confirmation')} className="text-orange-400 hover:text-white transition-colors">Zobrazit stav →</button>
+        <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700 border-b border-white/5">
+          <div className="max-w-7xl mx-auto flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
+              Vítejte zpět, {lastBooking.name}! Máte u nás rozpracovanou rezervaci.
+            </span>
+            <button onClick={() => setView('confirmation')} className="text-brand-primary hover:text-white transition-colors">Zobrazit stav →</button>
           </div>
         </div>
       )}
@@ -460,9 +464,12 @@ const App: React.FC = () => {
       <main className="flex-grow overflow-x-hidden">
         {isLoading && view === 'booking' ? (
           <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <div className="animate-spin w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full"></div>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Odesílám rezervaci...</p>
+            <div className="flex flex-col items-center gap-6">
+              <div className="relative">
+                <div className="animate-spin w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full"></div>
+                <div className="absolute inset-0 animate-ping w-12 h-12 border-4 border-brand-primary/20 rounded-full"></div>
+              </div>
+              <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Odesílám rezervaci...</p>
             </div>
           </div>
         ) : (
@@ -472,7 +479,7 @@ const App: React.FC = () => {
                 <div className="max-w-4xl mx-auto mb-8 flex justify-end">
                   <button 
                     onClick={() => setView('calendar')}
-                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 flex items-center gap-2 transition-colors"
+                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-primary flex items-center gap-2 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z"></path></svg>
                     Zobrazit kalendář dostupnosti
@@ -489,42 +496,43 @@ const App: React.FC = () => {
                 ) : (
                   <div className="max-w-4xl mx-auto space-y-10">
                     <div className="text-center py-12">
-                      <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Rezervace vozu</h2>
+                      <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3 gradient-text">Rezervace vozu</h2>
                       <p className="text-slate-500 font-medium max-w-md mx-auto">Vyberte si jeden z našich prémiových vozů a vyrazte na cestu za dobrodružstvím.</p>
                     </div>
                     <div className="grid gap-8">
                       {vehicles.filter(v => v.isActive).map(vehicle => (
-                        <div key={vehicle.id} className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium flex flex-col lg:flex-row gap-10 items-center group hover:border-orange-200 transition-all duration-500">
+                        <div key={vehicle.id} className="card-ultimate p-8 shadow-ultimate flex flex-col lg:flex-row gap-10 items-center group">
                           <div className="relative overflow-hidden rounded-3xl w-full lg:w-80 h-48 shrink-0 bg-slate-100">
                             <img 
                               src={vehicle.images && vehicle.images.length > 0 ? vehicle.images[0] : 'https://picsum.photos/seed/camper/800/600'} 
                               alt={vehicle.name} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                              referrerPolicy="no-referrer"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                           <div className="flex-grow text-center lg:text-left">
                             <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
-                              <h3 className="text-2xl font-bold text-slate-900">{vehicle.name}</h3>
-                              <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-widest rounded-full w-fit mx-auto lg:mx-0">
+                              <h3 className="text-2xl font-black text-slate-900">{vehicle.name}</h3>
+                              <span className="inline-flex items-center px-3 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest rounded-full w-fit mx-auto lg:mx-0">
                                 Skladem
                               </span>
                             </div>
                             <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-2 mb-6">{vehicle.description}</p>
                             <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                               {vehicle.equipment.slice(0, 3).map(eq => (
-                                <span key={eq} className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">{eq}</span>
+                                <span key={eq} className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">{eq}</span>
                               ))}
                             </div>
                           </div>
                           <div className="flex flex-col items-center lg:items-end gap-4 min-w-[200px] w-full lg:w-auto pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-                            <div className="text-2xl font-bold text-brand-primary">
+                            <div className="text-2xl font-black text-brand-primary">
                               {vehicle.basePrice} Kč
-                              <span className="text-xs text-slate-400 font-bold uppercase tracking-widest ml-2">/ den</span>
+                              <span className="text-xs text-slate-400 font-black uppercase tracking-widest ml-2">/ den</span>
                             </div>
                             <button 
                               onClick={() => { setSelectedVehicleId(vehicle.id); }}
-                              className="w-full px-10 py-5 bg-brand-primary text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:shadow-blue-200"
+                              className="btn-ultimate-primary w-full px-10 py-5 text-xs"
                             >
                               Rezervovat vůz
                             </button>
@@ -542,7 +550,7 @@ const App: React.FC = () => {
                   <div className="max-w-4xl mx-auto mb-8">
                     <button 
                       onClick={() => setView('widget')}
-                      className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 flex items-center gap-2 transition-colors"
+                      className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-primary flex items-center gap-2 transition-colors"
                     >
                       ← Zpět na výběr vozů
                     </button>
@@ -611,41 +619,43 @@ const App: React.FC = () => {
       </main>
 
       {!isEmbedded && (
-        <footer className="bg-slate-900 text-white py-16 border-t border-slate-800 mt-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-12 mb-12">
-              <div className="flex flex-col items-center md:items-start gap-4">
-                <Logo light className="justify-center md:justify-start" />
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest max-w-xs text-center md:text-left">
-                  Půjčovna obytných vozů v Brně. Svoboda na čtyřech kolech.
+        <footer className="bg-slate-900 text-white py-20 border-t border-white/5 mt-24 relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent"></div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-16 mb-16">
+              <div className="flex flex-col items-center md:items-start gap-6">
+                <Logo light className="justify-center md:justify-start scale-110 origin-left" />
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] max-w-xs text-center md:text-left leading-loose">
+                  Půjčovna obytných vozů v Brně.<br />Svoboda na čtyřech kolech.
                 </p>
               </div>
               
-              <div className="flex flex-wrap justify-center gap-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <button onClick={() => handleScrollTo('fleet')} className="hover:text-white transition-colors">Naše vozy</button>
-                <button onClick={() => handleScrollTo('pricing')} className="hover:text-white transition-colors">Ceník</button>
-                <button onClick={() => handleScrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
-                <button onClick={() => handleScrollTo('guides')} className="hover:text-white transition-colors">Návody</button>
-                <button onClick={() => setView('admin')} className="hover:text-white transition-colors">Administrace</button>
+              <div className="flex flex-wrap justify-center gap-10 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <button onClick={() => handleScrollTo('fleet')} className="hover:text-brand-primary transition-colors">Naše vozy</button>
+                <button onClick={() => handleScrollTo('pricing')} className="hover:text-brand-primary transition-colors">Ceník</button>
+                <button onClick={() => handleScrollTo('faq')} className="hover:text-brand-primary transition-colors">FAQ</button>
+                <button onClick={() => handleScrollTo('guides')} className="hover:text-brand-primary transition-colors">Návody</button>
+                <button onClick={() => setView('admin')} className="hover:text-brand-primary transition-colors">Administrace</button>
               </div>
 
               <div className="flex flex-col items-center md:items-end gap-4">
-                <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Sesterské projekty</div>
+                <div className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-1">Sesterské projekty</div>
                 <button 
                   onClick={() => setView('van-preview')}
-                  className="flex items-center gap-3 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
+                  className="flex items-center gap-4 px-8 py-4 glass rounded-2xl border border-white/10 hover:bg-white/10 transition-all group shadow-ultimate"
                 >
-                  <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center text-white font-black text-[10px]">PD</div>
+                  <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-brand-primary/20">PD</div>
                   <div className="text-left">
-                    <div className="text-[9px] font-black text-white uppercase tracking-widest">Půjčíme dodávky</div>
-                    <div className="text-[8px] text-slate-500 font-bold">Zobrazit nový návrh webu</div>
+                    <div className="text-[10px] font-black text-white uppercase tracking-widest">Půjčíme dodávky</div>
+                    <div className="text-[9px] text-slate-500 font-bold">Zobrazit nový návrh webu</div>
                   </div>
                 </button>
               </div>
             </div>
             
-            <div className="pt-8 border-t border-white/5 text-center">
-              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em]">
+            <div className="pt-10 border-t border-white/5 text-center">
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">
                 © 2026 OBYTKEM.CZ • MILAN GULA • BRNO
               </p>
             </div>
@@ -654,32 +664,40 @@ const App: React.FC = () => {
       )}
 
       {isLoginModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-10">
-            <div className="flex justify-between items-center mb-8">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="card-ultimate shadow-ultimate w-full max-w-md p-10 relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-brand-primary"></div>
+            <div className="flex justify-between items-center mb-10">
               <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Vstup pro majitele</h2>
-              <button onClick={() => setIsLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button onClick={() => setIsLoginModalOpen(false)} className="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleAdminLogin} className="space-y-6">
-              <input 
-                type="password" 
-                autoFocus 
-                required 
-                value={loginPassword} 
-                onChange={(e) => setLoginPassword(e.target.value)} 
-                className="w-full px-5 py-4 border-2 border-slate-100 rounded-2xl outline-none focus:border-orange-500 font-bold" 
-                placeholder="Heslo" 
-              />
-              {loginError && <p className="text-red-500 text-xs font-bold text-center">{loginError}</p>}
-              <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs hover:bg-orange-600 transition-all">
-                Vstoupit
+            <form onSubmit={handleAdminLogin} className="space-y-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Přístupové heslo</label>
+                <input 
+                  type="password" 
+                  autoFocus 
+                  required 
+                  value={loginPassword} 
+                  onChange={(e) => setLoginPassword(e.target.value)} 
+                  className="input-ultimate w-full px-6 py-5" 
+                  placeholder="••••••••" 
+                />
+              </div>
+              {loginError && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest text-center">{loginError}</p>}
+              <button type="submit" className="btn-ultimate-primary w-full py-5 text-xs">
+                Vstoupit do administrace
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

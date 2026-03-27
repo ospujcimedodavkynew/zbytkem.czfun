@@ -131,14 +131,14 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
   }
 
   return (
-    <div className="space-y-24 py-12 overflow-x-hidden">
+    <div className="space-y-0 overflow-x-hidden">
       {/* Hero Section with Integrated Calendar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="text-left">
-            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight leading-tight mb-6">
+          <div className="text-left reveal-up">
+            <h1 className="gradient-text">
               Váš domov na cestách <br/>
-              <span className="text-brand-primary">přímo z Brna</span>
+              přímo z Brna
             </h1>
             
             <p className="text-lg text-slate-600 font-medium leading-relaxed mb-8 max-w-xl">
@@ -148,33 +148,27 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
             <div className="flex flex-wrap gap-4 mb-12">
               <button 
                 onClick={() => onBookNow(mainVehicle.id)} 
-                className="px-8 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-600 hover:-translate-y-1 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+                className="btn-ultimate-primary"
               >
                 Rezervovat vůz
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="ml-3 w-4 h-4" />
               </button>
               <button 
                 onClick={() => onNavigate('calculator')} 
-                className="px-8 py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-orange-200 transition-all flex items-center gap-3"
+                className="btn-ultimate-secondary"
               >
                 Spočítat cenu
-              </button>
-              <button 
-                onClick={() => onNavigate('blog')} 
-                className="px-8 py-5 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-100 transition-all"
-              >
-                Tipy na cesty
               </button>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pojištění v ceně</span>
+                <span className="van-badge">Pojištění v ceně</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bez limitu km</span>
+                <span className="van-badge">Bez limitu km</span>
               </div>
             </div>
           </div>
@@ -221,35 +215,35 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Why Choose Us Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
+          <div className="card-ultimate p-8 space-y-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Po Brně přivezeme</h3>
             <p className="text-base text-slate-600 leading-relaxed">Pokud budete chtít, obytňák vám přivezeme až před dům za 300 Kč. Jednoduché a pohodlné.</p>
           </div>
-          <div className="space-y-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+          <div className="card-ultimate p-8 space-y-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
             </div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">GPS a alarm</h3>
             <p className="text-base text-slate-600 leading-relaxed">Vůz je chráněn GPS sledováním s dálkovou deaktivací. Vaše bezpečí je naší prioritou.</p>
           </div>
-          <div className="space-y-4">
-            <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+          <div className="card-ultimate p-8 space-y-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Osobní přístup</h3>
             <p className="text-base text-slate-600 leading-relaxed">Vše vám vysvětlíme, poradíme a pomůžeme. Pronájem s lidským přístupem.</p>
           </div>
-          <div className="space-y-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600">
+          <div className="card-ultimate p-8 space-y-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
             </div>
-            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Dálniční známka</h3>
-            <p className="text-sm text-slate-500 font-medium leading-relaxed">Cestujte bez omezení po českých dálnicích. Havarijní pojištění v ceně.</p>
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">Dálniční známka</h3>
+            <p className="text-base text-slate-600 leading-relaxed">Cestujte bez omezení po českých dálnicích. Havarijní pojištění v ceně.</p>
           </div>
         </div>
 
@@ -278,15 +272,15 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Fleet Section */}
-      <section id="fleet" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      <section id="fleet" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Náš obytný vůz k pronájmu – Ahorn Canada TU Plus</h2>
-          <div className="h-1 w-12 bg-slate-900 mt-4 rounded-full"></div>
+          <h2 className="gradient-text">Náš obytný vůz k pronájmu – Ahorn Canada TU Plus</h2>
+          <div className="h-1.5 w-20 bg-brand-primary mt-4 rounded-full"></div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-12">
-            <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 group relative">
+            <div className="card-ultimate group relative">
               <div className="relative h-[500px] overflow-hidden bg-slate-100">
                 <AnimatePresence mode="wait">
                   <motion.img
@@ -386,15 +380,15 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   ))}
                 </div>
 
-                <button onClick={() => onBookNow(mainVehicle.id)} className="w-full py-5 bg-brand-primary text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:-translate-y-1">Rezervovat {mainVehicle.name}</button>
+                <button onClick={() => onBookNow(mainVehicle.id)} className="btn-ultimate-primary w-full">Rezervovat {mainVehicle.name}</button>
               </div>
             </div>
           </div>
           
           <div className="space-y-8">
             {renderMiniCalendar()}
-            <div className="bg-slate-900 p-8 rounded-3xl text-white shadow-xl">
-              <h4 className="font-black text-slate-400 mb-6 uppercase tracking-widest text-[10px]">Informace pro řidiče</h4>
+            <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl">
+              <h4 className="van-badge bg-white/10 text-white border-0 mb-6">Informace pro řidiče</h4>
               <ul className="space-y-6">
                 <li className="space-y-1">
                   <div className="text-sm font-bold">Řidičský průkaz sk. B</div>
@@ -415,12 +409,12 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Přehledný ceník 2026</h2>
+          <h2 className="gradient-text">Přehledný ceník 2026</h2>
           <p className="text-slate-500 mt-4 font-medium">Transparentní ceny bez skrytých poplatků a servisních nákladů</p>
         </div>
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="card-ultimate overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[600px] md:min-w-0">
               <thead className="bg-slate-50 border-b border-slate-200">
@@ -448,24 +442,24 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12 text-center">
-          <div className="inline-flex p-3 bg-slate-100 rounded-2xl mb-4">
-            <HelpCircle className="w-6 h-6 text-slate-900" />
+          <div className="inline-flex p-4 bg-blue-50 rounded-2xl mb-4">
+            <HelpCircle className="w-8 h-8 text-brand-primary" />
           </div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Časté dotazy</h2>
+          <h2 className="gradient-text">Časté dotazy</h2>
           <p className="text-slate-500 mt-4 font-medium">Vše, co potřebujete vědět před cestou</p>
         </div>
 
         <div className="space-y-4">
           {faqs.map((faq, idx) => (
-            <div key={idx} className="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all hover:border-slate-300">
+            <div key={idx} className="card-ultimate transition-all">
               <button 
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                 className="w-full px-8 py-6 flex items-center justify-between text-left"
               >
-                <span className="font-bold text-slate-900">{faq.q}</span>
-                {openFaq === idx ? <Minus className="w-5 h-5 text-slate-400" /> : <Plus className="w-5 h-5 text-slate-400" />}
+                <span className="font-bold text-slate-900 text-lg">{faq.q}</span>
+                {openFaq === idx ? <Minus className="w-5 h-5 text-brand-primary" /> : <Plus className="w-5 h-5 text-slate-400" />}
               </button>
               <AnimatePresence>
                 {openFaq === idx && (
@@ -487,22 +481,22 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Guides Section */}
-      <section id="guides" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+      <section id="guides" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Návody pro začátečníky</h2>
+          <h2 className="gradient-text">Návody pro začátečníky</h2>
           <p className="text-slate-500 mt-4 font-medium">Vše, co potřebujete vědět pro vaši první cestu</p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {guides.map((guide, idx) => (
-            <div key={idx} className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div key={idx} className="card-ultimate p-8">
               <div className="text-4xl mb-6">{guide.icon}</div>
-              <h3 className="text-lg font-black text-slate-900 mb-4">{guide.title}</h3>
+              <h3 className="text-lg font-bold text-slate-900 mb-4">{guide.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed font-medium mb-6">
                 {guide.content}
               </p>
               <button 
                 onClick={() => onNavigate('guides')}
-                className="text-[10px] font-black text-orange-600 uppercase tracking-widest hover:text-slate-900 transition-colors"
+                className="text-[11px] font-bold text-brand-primary uppercase tracking-wider hover:text-blue-700 transition-colors"
               >
                 Zobrazit detail návodu →
               </button>
@@ -560,9 +554,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Reviews Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding">
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight">Recenze našich zákazníků</h2>
+          <h2 className="gradient-text">Recenze našich zákazníků</h2>
           <p className="text-slate-500 mt-4 font-medium">Zkušenosti těch, kteří s námi už vyrazili za dobrodružstvím</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
@@ -580,14 +574,14 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               text: "Naprostá spokojenost. Online rezervace jednoduchá, rychlá domluva a profesionální předání. Obytný vůz byl krásně připravený a plně vybavený, nic nám nechybělo. Ideální způsob, jak cestovat pohodlně a svobodně. Rozhodně doporučuji."
             }
           ].map((rev, i) => (
-            <div key={i} className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div key={i} className="card-ultimate p-8">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-orange-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                  <svg key={i} className="w-4 h-4 text-blue-500 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                 ))}
               </div>
               <p className="text-slate-600 text-sm leading-relaxed italic mb-6">"{rev.text}"</p>
-              <div className="font-black text-slate-900 text-xs uppercase tracking-widest">— {rev.name}</div>
+              <div className="font-bold text-slate-900 text-xs uppercase tracking-wider">— {rev.name}</div>
             </div>
           ))}
         </div>

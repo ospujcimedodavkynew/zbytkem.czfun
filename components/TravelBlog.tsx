@@ -108,21 +108,21 @@ Tipy pro zimu:
 
   const [selectedPost, setSelectedPost] = React.useState<typeof posts[0] | null>(null);
 
-  if (selectedPost) {
+    if (selectedPost) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-12">
         <button 
           onClick={() => setSelectedPost(null)}
-          className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+          className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-primary transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Zpět na přehled článků
         </button>
 
-        <div className="bg-white rounded-[3rem] p-8 md:p-16 border border-slate-100 shadow-2xl">
+        <div className="card-ultimate p-8 md:p-16 shadow-ultimate">
           <div className="text-6xl mb-8">{selectedPost.icon}</div>
           <div className="flex flex-wrap gap-2 mb-6">
             {selectedPost.tags.map(tag => (
-              <span key={tag} className="px-3 py-1 bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+              <span key={tag} className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest rounded-full">
                 {tag}
               </span>
             ))}
@@ -138,7 +138,7 @@ Tipy pro zimu:
           {selectedPost.mapUrl && (
             <div className="mt-12">
               <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-orange-600" />
+                <MapPin className="w-5 h-5 text-brand-primary" />
                 Interaktivní mapa trasy
               </h3>
               <div className="aspect-video rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
@@ -158,17 +158,17 @@ Tipy pro zimu:
             </div>
           )}
 
-          <div className="mt-16 pt-16 border-t border-slate-100 flex justify-between items-center">
+          <div className="mt-16 pt-16 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-xs">OB</div>
+              <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-xs">PD</div>
               <div>
-                <div className="text-sm font-black text-slate-900 uppercase tracking-widest">Obytkem.cz</div>
+                <div className="text-sm font-black text-slate-900 uppercase tracking-widest">Pujcimedodavky.cz</div>
                 <div className="text-xs text-slate-400 font-bold">Specialista na svobodu</div>
               </div>
             </div>
             <button 
               onClick={onBack}
-              className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-600 transition-all shadow-xl"
+              className="btn-ultimate-primary px-8 py-4 text-[10px] shadow-xl shadow-brand-primary/20"
             >
               Rezervovat vůz
             </button>
@@ -182,13 +182,13 @@ Tipy pro zimu:
     <div className="max-w-7xl mx-auto px-4 py-12 overflow-x-hidden">
       <button 
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+        className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-brand-primary transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Zpět na úvod
       </button>
 
       <div className="mb-16 text-center">
-        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6">Cestovatelský blog</h1>
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight mb-6 gradient-text">Cestovatelský blog</h1>
         <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium">
           Inspirace pro vaše cesty s naším obytným vozem. Tipy na nejkrásnější místa, kempy a praktické rady z cest.
         </p>
@@ -203,10 +203,10 @@ Tipy pro zimu:
             viewport={{ once: true }}
             transition={{ delay: idx * 0.1 }}
             onClick={() => setSelectedPost(post)}
-            className="bg-white rounded-[3rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer flex flex-col"
+            className="card-ultimate p-8 shadow-sm hover:shadow-ultimate transition-all group cursor-pointer flex flex-col"
           >
             <div className="flex gap-6 mb-6">
-              <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
                 {post.icon}
               </div>
               <div>
@@ -217,28 +217,28 @@ Tipy pro zimu:
                     </span>
                   ))}
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-orange-600 transition-colors">{post.title}</h2>
+                <h2 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-brand-primary transition-colors">{post.title}</h2>
               </div>
             </div>
             <p className="text-slate-500 text-sm line-clamp-3 mb-6 font-medium leading-relaxed">
               {post.content.split('\n')[0]}
             </p>
-            <div className="mt-auto flex items-center text-[10px] font-black text-orange-600 uppercase tracking-widest">
+            <div className="mt-auto flex items-center text-[10px] font-black text-brand-primary uppercase tracking-widest">
               Číst celý článek <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="mt-20 p-12 bg-slate-900 rounded-[3rem] text-white text-center">
-        <Compass className="w-12 h-12 text-orange-500 mx-auto mb-6" />
+      <div className="mt-20 p-12 bg-slate-900 rounded-[3rem] text-white text-center shadow-ultimate">
+        <Compass className="w-12 h-12 text-brand-primary mx-auto mb-6" />
         <h2 className="text-3xl font-black mb-4">Chcete vyrazit také?</h2>
         <p className="text-slate-400 font-medium mb-8 max-w-xl mx-auto">
           Všechna tato místa jsou s naším Ahorn Canada TU Plus na dosah ruky. Rezervujte si svůj termín ještě dnes.
         </p>
         <button 
           onClick={onBack}
-          className="px-12 py-5 bg-white text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-500 hover:text-white transition-all"
+          className="btn-ultimate-primary px-12 py-5 text-xs shadow-xl shadow-brand-primary/20"
         >
           Zarezervovat vůz
         </button>

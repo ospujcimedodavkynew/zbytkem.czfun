@@ -29,12 +29,12 @@ interface ChecklistProps {
 
 const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('obytkem_checklist');
+    const saved = localStorage.getItem('pujcimedodavky_checklist');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
   React.useEffect(() => {
-    localStorage.setItem('obytkem_checklist', JSON.stringify(Array.from(checkedItems)));
+    localStorage.setItem('pujcimedodavky_checklist', JSON.stringify(Array.from(checkedItems)));
   }, [checkedItems]);
 
   const toggleItem = (id: string) => {
@@ -54,7 +54,7 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
     return (
       <div className="mb-8" id={`category-${category}`}>
         <div className="flex items-center gap-2 mb-4">
-          <Icon className="w-5 h-5 text-orange-600" />
+          <Icon className="w-5 h-5 text-brand-primary" />
           <h3 className="font-bold text-slate-900 uppercase tracking-wider text-[10px]">{title}</h3>
         </div>
         <div className="space-y-3">
@@ -65,16 +65,16 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
               onClick={() => toggleItem(item.id)}
               className={`flex items-center gap-4 p-5 rounded-[1.5rem] border transition-all cursor-pointer ${
                 checkedItems.has(item.id)
-                  ? 'bg-orange-50 border-orange-200'
-                  : 'bg-white border-slate-100 hover:border-slate-200'
+                  ? 'bg-brand-primary/5 border-brand-primary/20'
+                  : 'bg-white border-slate-100 hover:border-brand-primary/20 hover:shadow-sm'
               }`}
             >
               {checkedItems.has(item.id) ? (
-                <CheckCircle2 className="w-6 h-6 text-orange-600 flex-shrink-0" />
+                <CheckCircle2 className="w-6 h-6 text-brand-primary flex-shrink-0" />
               ) : (
                 <Circle className="w-6 h-6 text-slate-200 flex-shrink-0" />
               )}
-              <span className={`text-sm font-bold ${checkedItems.has(item.id) ? 'text-orange-900 line-through opacity-60' : 'text-slate-700'}`}>
+              <span className={`text-sm font-bold ${checkedItems.has(item.id) ? 'text-brand-primary line-through opacity-60' : 'text-slate-700'}`}>
                 {item.text}
               </span>
             </motion.div>
@@ -89,14 +89,14 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
       <div className="max-w-2xl mx-auto px-6">
         <button 
           onClick={onBack}
-          className="mb-8 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 flex items-center gap-2 transition-colors"
+          className="mb-8 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-brand-primary flex items-center gap-2 transition-colors"
         >
           ← Zpět na úvod
         </button>
 
-        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-premium mb-10">
+        <div className="card-ultimate p-10 shadow-ultimate mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <span className="px-3 py-1 bg-orange-100 text-orange-600 text-[9px] font-black uppercase tracking-widest rounded-full">
+            <span className="px-3 py-1 bg-brand-primary/10 text-brand-primary text-[9px] font-black uppercase tracking-widest rounded-full">
               Bezpečnost především
             </span>
           </div>
@@ -106,7 +106,7 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              className="absolute top-0 left-0 h-full bg-orange-600"
+              className="absolute top-0 left-0 h-full bg-brand-primary"
             />
           </div>
           <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -119,7 +119,7 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mb-10 p-8 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex items-center gap-6"
+            className="mb-10 p-8 bg-emerald-50 border border-emerald-100 rounded-[2.5rem] flex items-center gap-6 shadow-ultimate shadow-emerald-100"
           >
             <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-emerald-200">
               <Navigation className="w-7 h-7" />
@@ -136,10 +136,10 @@ const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
         {renderCategory('tech', 'Technika a plyn', Settings)}
         {renderCategory('safety', 'Bezpečnost jízdy', AlertTriangle)}
 
-        <div className="mt-16 p-10 bg-slate-900 rounded-[3rem] text-white text-center shadow-2xl shadow-slate-200">
+        <div className="mt-16 p-10 bg-slate-900 rounded-[3rem] text-white text-center shadow-ultimate">
           <h3 className="text-2xl font-black mb-4">Potřebujete PDF verzi?</h3>
           <p className="text-slate-400 text-sm mb-8 font-medium">Stáhněte si checklist do telefonu pro případ, že budete bez signálu.</p>
-          <button className="w-full py-5 bg-orange-600 hover:bg-orange-700 rounded-2xl font-black uppercase text-xs tracking-widest transition-all shadow-xl shadow-orange-900/20">
+          <button className="btn-ultimate-primary w-full py-5 text-xs shadow-xl shadow-brand-primary/20">
             Stáhnout PDF checklist
           </button>
         </div>
