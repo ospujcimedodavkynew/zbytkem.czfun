@@ -162,7 +162,7 @@ Tipy pro zimu:
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-white font-black text-xs">PD</div>
               <div>
-                <div className="text-sm font-black text-slate-900 uppercase tracking-widest">Pujcimedodavky.cz</div>
+                <div className="text-sm font-black text-slate-900 uppercase tracking-widest">obytkem.cz</div>
                 <div className="text-xs text-slate-400 font-bold">Specialista na svobodu</div>
               </div>
             </div>

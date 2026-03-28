@@ -29,12 +29,12 @@ interface ChecklistProps {
 
 const Checklist: React.FC<ChecklistProps> = ({ onBack }) => {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('pujcimedodavky_checklist');
+    const saved = localStorage.getItem('obytkem_checklist');
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
   React.useEffect(() => {
-    localStorage.setItem('pujcimedodavky_checklist', JSON.stringify(Array.from(checkedItems)));
+    localStorage.setItem('obytkem_checklist', JSON.stringify(Array.from(checkedItems)));
   }, [checkedItems]);
 
   const toggleItem = (id: string) => {

@@ -12,15 +12,14 @@ import VehicleDetail from './components/VehicleDetail';
 import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
-import VanRentalPreview from './components/VanRentalPreview';
 import Logo from './components/Logo';
-import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS } from './mockData';
-import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol, Message } from './types';
+import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS, MOCK_MAINTENANCE, MOCK_INVENTORY } from './mockData';
+import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol, Message, MaintenanceTask, InventoryItem } from './types';
 import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'van-preview'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -38,6 +37,8 @@ const App: React.FC = () => {
   const [handoverProtocols, setHandoverProtocols] = useState<HandoverProtocol[]>([]);
   const [returnProtocols, setReturnProtocols] = useState<ReturnProtocol[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(MOCK_MAINTENANCE);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
@@ -146,6 +147,36 @@ const App: React.FC = () => {
       const { data: hData } = await supabase.from('handover_protocols').select('*');
       const { data: retData } = await supabase.from('return_protocols').select('*');
       const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+      const { data: maintData } = await supabase.from('maintenance_tasks').select('*');
+      const { data: invData } = await supabase.from('inventory_items').select('*');
+
+      if (maintData) {
+        setMaintenanceTasks(maintData.map(m => ({
+          id: m.id,
+          vehicleId: m.vehicle_id,
+          title: m.title,
+          type: m.type,
+          description: m.description,
+          date: m.date,
+          cost: Number(m.cost),
+          status: m.status,
+          mileage: m.mileage
+        })));
+      }
+
+      if (invData) {
+        setInventoryItems(invData.map(i => ({
+          id: i.id,
+          name: i.name,
+          category: i.category,
+          totalQuantity: i.total_quantity,
+          availableQuantity: i.available_quantity,
+          pricePerDay: Number(i.price_per_day),
+          description: i.description,
+          image: i.image,
+          isOneTimeFee: i.is_one_time_fee
+        })));
+      }
 
       if (mData) {
         setMessages(mData.map(m => ({
@@ -171,6 +202,7 @@ const App: React.FC = () => {
           minDays: v.min_days,
           deposit: Number(v.deposit),
           kmLimitPerDay: v.km_limit_per_day,
+          extraKmPrice: Number(v.extra_km_price),
           images: v.images || [],
           isActive: v.is_active,
           seasonalPricing: v.seasonal_pricing || [],
@@ -371,12 +403,70 @@ const App: React.FC = () => {
         min_days: updatedVehicle.minDays,
         seasonal_pricing: updatedVehicle.seasonalPricing,
         license_plate: updatedVehicle.licensePlate,
-        images: updatedVehicle.images 
+        vin: updatedVehicle.vin,
+        deposit: updatedVehicle.deposit,
+        km_limit_per_day: updatedVehicle.kmLimitPerDay,
+        extra_km_price: updatedVehicle.extraKmPrice,
+        images: updatedVehicle.images,
+        equipment: updatedVehicle.equipment
       }).eq('id', updatedVehicle.id);
     }
     const updated = vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
     setVehicles(updated);
     localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(updated));
+  };
+
+  const handleUpdateInventoryItem = async (updatedItem: InventoryItem) => {
+    if (supabase) {
+      await supabase.from('inventory_items').update({
+        name: updatedItem.name,
+        category: updatedItem.category,
+        total_quantity: updatedItem.totalQuantity,
+        available_quantity: updatedItem.availableQuantity,
+        price_per_day: updatedItem.pricePerDay,
+        description: updatedItem.description,
+        image: updatedItem.image,
+        is_one_time_fee: updatedItem.isOneTimeFee
+      }).eq('id', updatedItem.id);
+    }
+    const updated = inventoryItems.map(item => item.id === updatedItem.id ? updatedItem : item);
+    setInventoryItems(updated);
+    localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
+  };
+
+  const handleAddInventoryItem = async (newItem: Omit<InventoryItem, 'id'>) => {
+    const id = `inv-${Date.now()}`;
+    const itemWithId = { ...newItem, id };
+    
+    if (supabase) {
+      await supabase.from('inventory_items').insert({
+        id,
+        name: newItem.name,
+        category: newItem.category,
+        total_quantity: newItem.totalQuantity,
+        available_quantity: newItem.availableQuantity,
+        price_per_day: newItem.pricePerDay,
+        description: newItem.description,
+        image: newItem.image,
+        is_one_time_fee: newItem.isOneTimeFee
+      });
+    }
+    
+    const updated = [...inventoryItems, itemWithId];
+    setInventoryItems(updated);
+    localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
+  };
+
+  const handleDeleteInventoryItem = async (id: string) => {
+    if (!confirm('Opravdu chcete tuto položku smazat?')) return;
+    
+    if (supabase) {
+      await supabase.from('inventory_items').delete().eq('id', id);
+    }
+    
+    const updated = inventoryItems.filter(item => item.id !== id);
+    setInventoryItems(updated);
+    localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
   };
 
   const handleBookNow = (vehicleId: string, startDate?: string) => {
@@ -489,6 +579,7 @@ const App: React.FC = () => {
                   <BookingFlow 
                     vehicle={vehicles.find(v => v.id === selectedVehicleId) || vehicles[0]} 
                     allReservations={reservations}
+                    inventoryItems={inventoryItems}
                     onCancel={() => setSelectedVehicleId(null)} 
                     onComplete={handleBookingComplete} 
                     isEmbedded={true}
@@ -576,12 +667,12 @@ const App: React.FC = () => {
               />
             )}
             {view === 'guides' && <GuidesDetail onBack={() => setView('home')} />}
-            {view === 'van-preview' && <VanRentalPreview onBack={() => setView('home')} />}
             {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} onNavigate={setView} />}
             {view === 'booking' && selectedVehicle && (
               <BookingFlow 
                 vehicle={selectedVehicle} 
                 allReservations={reservations}
+                inventoryItems={inventoryItems}
                 initialStartDate={initialStartDate || undefined}
                 onCancel={() => { setView('home'); setInitialStartDate(null); }} 
                 onComplete={handleBookingComplete} 
@@ -597,6 +688,8 @@ const App: React.FC = () => {
                 handoverProtocols={handoverProtocols}
                 returnProtocols={returnProtocols}
                 messages={messages}
+                maintenanceTasks={maintenanceTasks}
+                inventoryItems={inventoryItems}
                 onSaveHandover={handleSaveHandover}
                 onSaveReturn={handleSaveReturn}
                 onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
@@ -605,6 +698,9 @@ const App: React.FC = () => {
                 onDeleteMessage={handleDeleteMessage}
                 onDeleteReservation={handleDeleteReservation} 
                 onUpdateVehicle={handleUpdateVehicle}
+                onUpdateInventoryItem={handleUpdateInventoryItem}
+                onAddInventoryItem={handleAddInventoryItem}
+                onDeleteInventoryItem={handleDeleteInventoryItem}
                 onRefresh={fetchData} 
               />
             )}
@@ -641,16 +737,18 @@ const App: React.FC = () => {
 
               <div className="flex flex-col items-center md:items-end gap-4">
                 <div className="text-[10px] font-black text-brand-primary uppercase tracking-widest mb-1">Sesterské projekty</div>
-                <button 
-                  onClick={() => setView('van-preview')}
+                <a 
+                  href="https://www.pujcimedodavky.cz" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
                   className="flex items-center gap-4 px-8 py-4 glass rounded-2xl border border-white/10 hover:bg-white/10 transition-all group shadow-ultimate"
                 >
                   <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-brand-primary/20">PD</div>
                   <div className="text-left">
                     <div className="text-[10px] font-black text-white uppercase tracking-widest">Půjčíme dodávky</div>
-                    <div className="text-[9px] text-slate-500 font-bold">Zobrazit nový návrh webu</div>
+                    <div className="text-[9px] text-slate-500 font-bold">Přejít na web PD.cz</div>
                   </div>
-                </button>
+                </a>
               </div>
             </div>
             

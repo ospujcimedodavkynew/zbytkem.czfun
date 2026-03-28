@@ -11,7 +11,7 @@ interface PublicHomeProps {
   reservations: Reservation[];
   onBookNow: (vehicleId: string, startDate?: string) => void;
   onScrollTo: (sectionId: string) => void;
-  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'van-preview') => void;
+  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator') => void;
 }
 
 const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookNow, onScrollTo, onNavigate }) => {
@@ -174,10 +174,10 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 bg-orange-100/50 rounded-[3rem] blur-2xl -z-10" />
+            <div className="absolute -inset-4 bg-brand-primary/10 rounded-[3rem] blur-2xl -z-10" />
             <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-premium relative">
               <div className="flex justify-between items-center mb-6">
-                <div className="bg-orange-600 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                <div className="bg-brand-primary text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
                   Live Dostupnost
                 </div>
                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -204,7 +204,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 </div>
                 <button 
                   onClick={() => onScrollTo('fleet')}
-                  className="text-[9px] font-black text-orange-600 uppercase tracking-widest hover:text-slate-900 transition-colors"
+                  className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:text-slate-900 transition-colors"
                 >
                   Zobrazit ceník →
                 </button>
@@ -518,24 +518,17 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               <span className="text-orange-600">půjčit dodávku?</span>
             </h2>
             <p className="text-lg text-slate-500 font-medium leading-relaxed">
-              Kromě obytných vozů provozujeme také půjčovnu užitkových vozů v Brně. Ať už se stěhujete, nebo potřebujete převézt rozměrný náklad, jsme tu pro vás.
+              Kromě obytných vozů provozujeme také nejlépe hodnocenou půjčovnu užitkových vozů v Brně. Ať už se stěhujete, nebo potřebujete převézt rozměrný náklad, jsme tu pro vás s flotilou vozů Renault Master a Opel Movano.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button 
-                onClick={() => onNavigate('van-preview')}
-                className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
-              >
-                Zobrazit nový návrh webu
-                <ArrowRight className="w-4 h-4" />
-              </button>
               <a 
                 href="https://www.pujcimedodavky.cz" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:border-slate-900 transition-all flex items-center gap-3"
+                className="px-10 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
               >
-                Původní web PD.cz
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                Přejít na web PujcimeDodavky.cz
+                <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>

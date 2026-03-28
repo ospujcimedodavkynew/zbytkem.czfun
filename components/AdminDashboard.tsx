@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol, Message } from '../types';
+import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol, Message, MaintenanceTask, InventoryItem } from '../types';
 import MessageManager from '../src/components/MessageManager';
 import { formatCurrency, formatDate, getMonthName, calculateDays } from '../utils/format';
 import { generateContractTemplate, analyzeReservationTrends, isAiConfigured } from '../services/geminiService';
@@ -23,6 +23,8 @@ interface AdminDashboardProps {
   handoverProtocols: HandoverProtocol[];
   returnProtocols: ReturnProtocol[];
   messages: Message[];
+  maintenanceTasks: MaintenanceTask[];
+  inventoryItems: InventoryItem[];
   onSaveContract: (contract: SavedContract) => void;
   onSaveHandover: (protocol: HandoverProtocol) => void;
   onSaveReturn: (protocol: ReturnProtocol) => void;
@@ -31,6 +33,9 @@ interface AdminDashboardProps {
   onDeleteMessage: (id: string) => void;
   onDeleteReservation: (id: string) => void;
   onUpdateVehicle: (vehicle: Vehicle) => void;
+  onUpdateInventoryItem: (item: InventoryItem) => void;
+  onAddInventoryItem: (item: InventoryItem) => void;
+  onDeleteInventoryItem: (id: string) => void;
   onRefresh?: () => void;
 }
 
@@ -42,6 +47,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   handoverProtocols,
   returnProtocols,
   messages,
+  maintenanceTasks,
+  inventoryItems,
   onSaveContract,
   onSaveHandover,
   onSaveReturn,
@@ -50,9 +57,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onDeleteMessage,
   onDeleteReservation,
   onUpdateVehicle,
+  onUpdateInventoryItem,
+  onAddInventoryItem,
+  onDeleteInventoryItem,
   onRefresh
 }) => {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
@@ -335,7 +345,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
-        {(['reservations', 'calendar', 'stats', 'messages', 'protocols', 'fleet', 'advisor', 'widget'] as const).map((tab) => (
+        {(['reservations', 'calendar', 'stats', 'messages', 'protocols', 'fleet', 'pricing', 'maintenance', 'inventory', 'advisor', 'widget'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
             {tab === 'reservations' ? 'Rezervace' : 
              tab === 'calendar' ? 'Kalendář' :
@@ -352,6 +362,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
              ) :
              tab === 'protocols' ? 'Protokoly' : 
              tab === 'fleet' ? 'Vozový park' : 
+             tab === 'pricing' ? 'Ceník & Služby' :
+             tab === 'maintenance' ? 'Servis' :
+             tab === 'inventory' ? 'Sklad' :
              tab === 'advisor' ? 'AI Poradce' : 'Widget'}
           </button>
         ))}
@@ -431,6 +444,219 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 bg-slate-100 border border-slate-200 rounded-sm"></div>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volno</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'maintenance' && (
+          <div className="p-10 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-black">Servisní kniha</h2>
+              <button className="btn-ultimate-primary px-6 py-3 text-[10px]">Přidat záznam</button>
+            </div>
+            <div className="grid gap-6">
+              {maintenanceTasks.map(task => {
+                const vehicle = vehicles.find(v => v.id === task.vehicleId);
+                return (
+                  <div key={task.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{vehicle?.name} • {task.type}</div>
+                        <div className="font-black text-slate-900">{task.title}</div>
+                        <div className="text-xs text-slate-500 font-medium">{task.description}</div>
+                        <div className="text-xs text-slate-400 font-bold mt-1">{formatDate(task.date)} • {task.mileage || 0} km</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+                      <div className="text-right">
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Náklady</div>
+                        <div className="font-black text-slate-900">{formatCurrency(task.cost || 0)}</div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${task.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {task.status === 'completed' ? 'Hotovo' : 'Plánováno'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'inventory' && (
+          <div className="p-10 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-black">Sklad doplňků</h2>
+              <button className="btn-ultimate-primary px-6 py-3 text-[10px]">Přidat položku</button>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {inventoryItems.map(item => (
+                <div key={item.id} className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-200 flex flex-col">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                      <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.category}</div>
+                      <div className="font-black text-slate-900">{item.name}</div>
+                    </div>
+                  </div>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Skladem / Celkem</span>
+                      <span className="font-black text-slate-900">{item.availableQuantity} / {item.totalQuantity}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-brand-primary" style={{ width: `${(item.availableQuantity / item.totalQuantity) * 100}%` }}></div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cena / den</span>
+                      <span className="font-black text-brand-primary">{formatCurrency(item.pricePerDay)}</span>
+                    </div>
+                  </div>
+                  <button className="w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100 transition-all">Upravit položku</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {activeTab === 'pricing' && editingVehicle && (
+          <div className="p-10 space-y-12 animate-in fade-in duration-500">
+            <div className="flex justify-between items-end">
+              <div>
+                <h2 className="text-2xl font-black">Ceník a doplňkové služby</h2>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Správa cen, sezón a příplatků</p>
+              </div>
+              <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all">Uložit vše</button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Základní cena (mimo sezónu)</label>
+                <div className="flex items-center gap-3">
+                  <input type="number" value={editingVehicle.basePrice} onChange={e => setEditingVehicle({...editingVehicle, basePrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-white rounded-2xl font-black text-xl text-brand-primary outline-none" />
+                  <span className="font-black text-slate-400">Kč</span>
+                </div>
+              </div>
+              <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Denní limit km</label>
+                <div className="flex items-center gap-3">
+                  <input type="number" value={editingVehicle.kmLimitPerDay} onChange={e => setEditingVehicle({...editingVehicle, kmLimitPerDay: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-white rounded-2xl font-black text-xl text-slate-900 outline-none" />
+                  <span className="font-black text-slate-400">km</span>
+                </div>
+              </div>
+              <div className="p-8 bg-slate-50 rounded-3xl border border-slate-100 space-y-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Cena za km nad limit</label>
+                <div className="flex items-center gap-3">
+                  <input type="number" value={editingVehicle.extraKmPrice} onChange={e => setEditingVehicle({...editingVehicle, extraKmPrice: Number(e.target.value)})} className="w-full px-5 py-3 border-2 border-white rounded-2xl font-black text-xl text-slate-900 outline-none" />
+                  <span className="font-black text-slate-400">Kč</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-3">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Sezónní úpravy cen
+              </h3>
+              <div className="grid gap-4">
+                {editingVehicle.seasonalPricing.map((s, idx) => (
+                  <div key={s.id} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex-grow space-y-1">
+                      <input className="w-full bg-transparent font-black text-slate-900 text-lg outline-none" value={s.name} onChange={e => {
+                        const newPricing = [...editingVehicle.seasonalPricing];
+                        newPricing[idx].name = e.target.value;
+                        setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
+                      }} />
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatDate(s.startDate)} - {formatDate(s.endDate)}</div>
+                    </div>
+                    <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                      <input type="number" className="w-32 bg-white border border-slate-200 rounded-xl px-4 py-2 font-black text-brand-primary text-xl text-right outline-none" value={s.pricePerDay} onChange={e => {
+                        const newPricing = [...editingVehicle.seasonalPricing];
+                        newPricing[idx].pricePerDay = Number(e.target.value);
+                        setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
+                      }} />
+                      <span className="font-black text-slate-400 pr-2">Kč / den</span>
+                    </div>
+                  </div>
+                ))}
+                <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
+                  + Přidat novou sezónu
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  Doplňkové služby a vybavení
+                </h3>
+                <button onClick={() => onAddInventoryItem({
+                  id: `i-${Date.now()}`,
+                  name: 'Nová služba',
+                  totalQuantity: 1,
+                  availableQuantity: 1,
+                  category: 'sport',
+                  pricePerDay: 0,
+                  description: 'Popis služby...'
+                })} className="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline">+ Přidat službu</button>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {inventoryItems.filter(i => i.category === 'sport' || i.category === 'service' || i.pricePerDay > 0).map(item => (
+                  <div key={item.id} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-grow">
+                        <input 
+                          className="w-full bg-transparent font-black text-slate-900 outline-none mb-1" 
+                          value={item.name} 
+                          onChange={e => onUpdateInventoryItem({...item, name: e.target.value})}
+                        />
+                        <input 
+                          className="w-full bg-transparent text-[10px] font-bold text-slate-400 outline-none" 
+                          value={item.description || ''} 
+                          onChange={e => onUpdateInventoryItem({...item, description: e.target.value})}
+                          placeholder="Krátký popis..."
+                        />
+                      </div>
+                      <button onClick={() => onDeleteInventoryItem(item.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-4 pt-4 border-t border-slate-50">
+                      <div className="flex-grow flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          className="w-20 bg-slate-50 border border-slate-100 rounded-lg px-3 py-1 font-black text-brand-primary outline-none" 
+                          value={item.pricePerDay} 
+                          onChange={e => onUpdateInventoryItem({...item, pricePerDay: Number(e.target.value)})}
+                        />
+                        <span className="text-[10px] font-black text-slate-400 uppercase">Kč</span>
+                        <select 
+                          className="bg-transparent text-[10px] font-black text-slate-400 uppercase outline-none cursor-pointer"
+                          value={item.isOneTimeFee ? 'once' : 'daily'}
+                          onChange={e => onUpdateInventoryItem({...item, isOneTimeFee: e.target.value === 'once'})}
+                        >
+                          <option value="daily">/ den</option>
+                          <option value="once">/ jednorázově</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-slate-400 uppercase">Skladem:</span>
+                        <input 
+                          type="number" 
+                          className="w-12 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 font-black text-slate-900 text-center outline-none" 
+                          value={item.totalQuantity} 
+                          onChange={e => onUpdateInventoryItem({...item, totalQuantity: Number(e.target.value), availableQuantity: Number(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

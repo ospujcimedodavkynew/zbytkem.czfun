@@ -45,6 +45,7 @@ export interface Vehicle {
   minDays: number;
   deposit: number;
   kmLimitPerDay: number;
+  extraKmPrice: number;
   images: string[];
   isActive: boolean;
   seasonalPricing: SeasonPrice[];
@@ -81,6 +82,7 @@ export interface Reservation {
   status: ReservationStatus;
   createdAt: string;
   customerNote?: string;
+  selectedAddOns?: { itemId: string; quantity: number }[];
 }
 
 export interface SavedContract {
@@ -89,6 +91,30 @@ export interface SavedContract {
   customerName: string;
   createdAt: string;
   content: string;
+}
+
+export interface MaintenanceTask {
+  id: string;
+  vehicleId: string;
+  title: string;
+  description: string;
+  date: string; // ISO format
+  type: 'service' | 'oil' | 'gas' | 'tires' | 'other';
+  status: 'pending' | 'completed';
+  cost?: number;
+  mileage?: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  totalQuantity: number;
+  availableQuantity: number;
+  category: 'camping' | 'kitchen' | 'safety' | 'other' | 'sport' | 'service';
+  pricePerDay: number;
+  isOneTimeFee?: boolean;
+  description?: string;
+  image?: string;
 }
 
 export interface DashboardStats {

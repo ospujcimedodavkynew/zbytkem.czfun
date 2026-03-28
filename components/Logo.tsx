@@ -39,10 +39,10 @@ const Logo: React.FC<LogoProps> = ({ className = "", light = false }) => {
       </div>
       <div className="flex flex-col leading-none">
         <span className="text-xl font-[900] tracking-tighter uppercase" style={{ color: colors.textPrimary }}>
-          pujcimedodavky.cz
+          obytkem.cz
         </span>
         <span className="text-[8px] font-black tracking-[0.3em] uppercase mt-1" style={{ color: colors.textSecondary }}>
-          Premium Rental Services
+          Premium Camper Rental
         </span>
       </div>
     </div>

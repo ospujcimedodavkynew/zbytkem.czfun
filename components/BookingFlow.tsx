@@ -1,19 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { Vehicle, Reservation, ReservationStatus } from '../types';
+import { Vehicle, Reservation, ReservationStatus, InventoryItem } from '../types';
 import { formatCurrency, calculateDays, formatDate } from '../utils/format';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import { MOCK_INVENTORY } from '../mockData';
 
 interface BookingFlowProps {
   vehicle: Vehicle;
   allReservations: Reservation[];
+  inventoryItems: InventoryItem[];
   onComplete: (data: any) => void;
   onCancel: () => void;
   isEmbedded?: boolean;
   initialStartDate?: string;
 }
 
-const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onComplete, onCancel, isEmbedded, initialStartDate }) => {
+const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inventoryItems, onComplete, onCancel, isEmbedded, initialStartDate }) => {
   const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -24,7 +26,8 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
     email: '',
     phone: '',
     address: '',
-    note: ''
+    note: '',
+    selectedAddOns: [] as { itemId: string; quantity: number }[]
   });
 
   const today = new Date().toISOString().split('T')[0];
@@ -71,10 +74,44 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
     });
   };
 
+  const handleRangeSelect = (start: string, end: string) => {
+    setFormData(prev => {
+      const newData = { ...prev, startDate: start, endDate: end };
+      
+      // Real-time validation
+      if (newData.startDate && newData.endDate) {
+        if (newData.endDate <= newData.startDate) {
+          setError("Datum vrácení musí být po datu vyzvednutí.");
+        } else if (!checkAvailability(newData.startDate, newData.endDate)) {
+          setError("Bohužel, v tomto termínu je již vůz obsazen. Vyberte prosím jiné datum.");
+        } else if (calculateDays(newData.startDate, newData.endDate) < vehicle.minDays) {
+          setError(`Minimální délka pronájmu je ${vehicle.minDays} dny.`);
+        } else {
+          setError(null);
+        }
+      } else {
+        setError(null);
+      }
+      return newData;
+    });
+  };
+
+  const handleAddOnToggle = (itemId: string) => {
+    setFormData(prev => {
+      const exists = prev.selectedAddOns.find(a => a.itemId === itemId);
+      if (exists) {
+        return { ...prev, selectedAddOns: prev.selectedAddOns.filter(a => a.itemId !== itemId) };
+      } else {
+        return { ...prev, selectedAddOns: [...prev.selectedAddOns, { itemId, quantity: 1 }] };
+      }
+    });
+  };
+
   const calculateTotalPrice = () => {
     if (!formData.startDate || !formData.endDate || error) return 0;
     const start = new Date(formData.startDate);
     const end = new Date(formData.endDate);
+    const daysCount = calculateDays(formData.startDate, formData.endDate);
     
     let total = 0;
     for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
@@ -84,6 +121,19 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
       );
       total += season ? season.pricePerDay : vehicle.basePrice;
     }
+
+    // Add-on prices
+    formData.selectedAddOns.forEach(addon => {
+      const item = inventoryItems.find(i => i.id === addon.itemId);
+      if (item) {
+        if (item.isOneTimeFee) {
+          total += item.pricePerDay; // For one-time fee, pricePerDay is the fixed price
+        } else {
+          total += item.pricePerDay * daysCount;
+        }
+      }
+    });
+
     return total;
   };
 
@@ -94,7 +144,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
     e.preventDefault();
     if (error) return;
     
-    if (step < 3) {
+    if (step < 4) {
       setStep(step + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -119,7 +169,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
             </button>
           </div>
           <div className="flex gap-1.5">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div key={i} className={`h-1 flex-grow rounded-full transition-all duration-500 ${step >= i ? 'bg-brand-primary' : 'bg-slate-700'}`}></div>
             ))}
           </div>
@@ -135,30 +185,18 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vyzvednutí</label>
-                  <input 
-                    type="date" 
-                    name="startDate" 
-                    min={today} 
-                    required 
-                    value={formData.startDate} 
-                    onChange={handleChange} 
-                    className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : ''}`} 
-                  />
+                  <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
+                    {formData.startDate ? formatDate(formData.startDate) : 'Vyberte v kalendáři'}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vrácení</label>
-                  <input 
-                    type="date" 
-                    name="endDate" 
-                    min={formData.startDate || today} 
-                    required 
-                    value={formData.endDate} 
-                    onChange={handleChange} 
-                    className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : ''}`} 
-                  />
+                  <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
+                    {formData.endDate ? formatDate(formData.endDate) : 'Vyberte v kalendáři'}
+                  </div>
                 </div>
               </div>
-              
+
               {error && (
                 <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-sm font-bold flex items-center gap-3 animate-in slide-in-from-top-2">
                   <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -168,10 +206,16 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
 
               {/* Visual Availability Calendar */}
               <div className="pt-6 border-t border-slate-100">
+                <div className="mb-4">
+                  <p className="text-[10px] font-bold text-slate-500 italic">Kliknutím do kalendáře vyberte začátek a konec vaší cesty.</p>
+                </div>
                 <AvailabilityCalendar 
                   vehicles={[vehicle]} 
                   reservations={allReservations} 
                   isEmbedded={true} 
+                  startDate={formData.startDate}
+                  endDate={formData.endDate}
+                  onRangeSelect={handleRangeSelect}
                 />
               </div>
 
@@ -179,7 +223,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center gap-2 animate-in zoom-in-95">
                   <div>
                     <div className="text-slate-900 font-black text-sm">{days} dní</div>
-                    <div className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Kauce 25 000 Kč</div>
+                    <div className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Kauce {formatCurrency(vehicle.deposit)} | Limit {vehicle.kmLimitPerDay} km/den</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Celkem</div>
@@ -191,6 +235,48 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
           )}
 
           {step === 2 && (
+            <div className="space-y-6 animate-in fade-in duration-500">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Doplňkové služby</h3>
+                <p className="text-[10px] font-bold text-slate-500 italic">Vylepšete si svou cestu o doplňkovou výbavu.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {inventoryItems.filter(i => i.pricePerDay > 0 || i.category === 'sport' || i.category === 'service').map(item => {
+                  const isSelected = formData.selectedAddOns.some(a => a.itemId === item.id);
+                  return (
+                    <div 
+                      key={item.id}
+                      onClick={() => handleAddOnToggle(item.id)}
+                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${isSelected ? 'border-brand-primary bg-brand-primary/5' : 'border-slate-100 hover:border-slate-200 bg-white'}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-brand-primary text-white' : 'bg-slate-100 text-slate-400'}`}>
+                          {item.category === 'sport' ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-slate-900">{item.name}</div>
+                          <div className="text-[9px] font-bold text-slate-500">{item.description}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-black text-slate-900">
+                          {formatCurrency(item.pricePerDay)}
+                          <span className="text-[8px] text-slate-400 ml-1 uppercase">{item.isOneTimeFee ? '/ jednorázově' : '/ den'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
             <div className="space-y-4 animate-in fade-in duration-500">
               <h3 className="text-lg font-black text-slate-900">Vaše údaje</h3>
               <div className="grid grid-cols-2 gap-3">
@@ -206,7 +292,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
             </div>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="space-y-4 animate-in fade-in duration-500">
               <h3 className="text-lg font-black text-slate-900">Shrnutí</h3>
               <div className="p-6 bg-slate-900 rounded-2xl text-white space-y-3 shadow-ultimate">
@@ -216,8 +302,34 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
                 </div>
                 <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Termín</span>
-                  <span className="text-white text-xs">{formatDate(formData.startDate)} - {formatDate(formData.endDate)}</span>
+                  <span className="text-white text-xs">{formatDate(formData.startDate)} - {formatDate(formData.endDate)} ({days} dní)</span>
                 </div>
+                
+                {formData.selectedAddOns.length > 0 && (
+                  <div className="pt-3 border-t border-slate-800 space-y-2">
+                    <div className="text-slate-400 font-bold uppercase tracking-widest text-[8px]">Doplňkové služby</div>
+                    {formData.selectedAddOns.map(addon => {
+                      const item = inventoryItems.find(i => i.id === addon.itemId);
+                      if (!item) return null;
+                      const price = item.isOneTimeFee ? item.pricePerDay : item.pricePerDay * days;
+                      return (
+                        <div key={addon.itemId} className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-300">{item.name}</span>
+                          <span className="text-white font-bold">{formatCurrency(price)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-slate-800">
+                  <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px] mb-1">
+                    <span>Limit ujetých km</span>
+                    <span className="text-white text-[10px]">{vehicle.kmLimitPerDay * days} km celkem</span>
+                  </div>
+                  <div className="text-[7px] text-slate-500 italic">Nad limit: {vehicle.extraKmPrice} Kč / km</div>
+                </div>
+
                 <div className="pt-3 border-t border-slate-800 flex justify-between items-end">
                   <div className="text-slate-400 font-black uppercase tracking-widest text-[8px]">Celkem</div>
                   <div className="text-2xl font-black text-brand-primary">{formatCurrency(totalPrice)}</div>
@@ -242,7 +354,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, onC
               disabled={step === 1 && (!!error || !formData.startDate || !formData.endDate)}
               className="btn-ultimate-primary px-8 py-4 text-[10px] tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-30"
             >
-              {step === 3 ? 'Odeslat' : 'Další'}
+              {step === 4 ? 'Odeslat' : 'Další'}
             </button>
           </div>
         </form>

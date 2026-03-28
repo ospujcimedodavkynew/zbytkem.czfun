@@ -10,9 +10,21 @@ interface AvailabilityCalendarProps {
   isEmbedded?: boolean;
   initialVehicleId?: string;
   onDateClick?: (date: string) => void;
+  startDate?: string;
+  endDate?: string;
+  onRangeSelect?: (start: string, end: string) => void;
 }
 
-const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, reservations, isEmbedded, initialVehicleId, onDateClick }) => {
+const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ 
+  vehicles, 
+  reservations, 
+  isEmbedded, 
+  initialVehicleId, 
+  onDateClick,
+  startDate,
+  endDate,
+  onRangeSelect
+}) => {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Start with May 2026 for demo
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialVehicleId || vehicles[0]?.id || '');
 
@@ -25,7 +37,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
   };
 
   const handleDayClick = (day: number) => {
-    if (!day || !onDateClick) return;
+    if (!day) return;
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
     // Check if it's available
@@ -36,8 +48,35 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
       dateStr <= r.endDate
     );
 
-    if (!isReserved) {
+    if (isReserved) return;
+
+    if (onDateClick) {
       onDateClick(dateStr);
+    }
+
+    if (onRangeSelect) {
+      if (!startDate || (startDate && endDate)) {
+        onRangeSelect(dateStr, '');
+      } else {
+        if (dateStr < startDate) {
+          onRangeSelect(dateStr, '');
+        } else {
+          // Check if any reservation exists between startDate and dateStr
+          const hasOverlap = reservations.some(r => 
+            r.vehicleId === selectedVehicleId &&
+            r.status !== ReservationStatus.CANCELLED &&
+            ((r.startDate >= startDate && r.startDate <= dateStr) ||
+             (r.endDate >= startDate && r.endDate <= dateStr) ||
+             (startDate >= r.startDate && startDate <= r.endDate))
+          );
+
+          if (!hasOverlap) {
+            onRangeSelect(startDate, dateStr);
+          } else {
+            onRangeSelect(dateStr, '');
+          }
+        }
+      }
     }
   };
 
@@ -63,7 +102,13 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
         dateStr <= r.endDate
       );
 
-      return isReserved ? 'reserved' : 'available';
+      if (isReserved) return 'reserved';
+
+      if (startDate && dateStr === startDate) return 'selected-start';
+      if (endDate && dateStr === endDate) return 'selected-end';
+      if (startDate && endDate && dateStr > startDate && dateStr < endDate) return 'selected-range';
+
+      return 'available';
     };
 
     return (
@@ -88,6 +133,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
           ))}
           {days.map((day, idx) => {
             const status = getDayStatus(day || 0);
+            const isSelected = status.startsWith('selected');
+            
             return (
               <div 
                 key={idx} 
@@ -96,9 +143,14 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({ vehicles, r
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? 'bg-red-50 text-red-600 font-bold border border-red-100 cursor-not-allowed' 
-                      : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary hover:text-white hover:scale-110 shadow-sm'}`}
+                      : isSelected
+                        ? 'bg-brand-primary text-white font-black shadow-lg shadow-brand-primary/30 scale-105 z-10'
+                        : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary/10 hover:scale-110 shadow-sm'}`}
               >
                 {day}
+                {status === 'selected-range' && (
+                  <div className="absolute inset-0 bg-brand-primary/20 -z-10 rounded-none" />
+                )}
               </div>
             );
           })}
