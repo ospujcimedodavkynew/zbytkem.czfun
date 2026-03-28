@@ -29,8 +29,19 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const [lastBooking, setLastBooking] = useState<{name: string, date: string} | null>(null);
+  const [isEmbedded, setIsEmbedded] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
+  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
+  const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
+  const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
+  const [handoverProtocols, setHandoverProtocols] = useState<HandoverProtocol[]>([]);
+  const [returnProtocols, setReturnProtocols] = useState<ReturnProtocol[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(MOCK_MAINTENANCE);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
     if (!supabase) return;
@@ -86,7 +97,7 @@ const App: React.FC = () => {
         }
       });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChanged((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
         if (session) {
           setUser(session.user);
           setIsAdmin(true);
