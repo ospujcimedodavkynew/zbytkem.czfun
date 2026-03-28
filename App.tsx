@@ -23,7 +23,7 @@ const App: React.FC = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginEmail, setLoginEmail] = useState('pujcimedodavky@gmail.com');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -157,7 +157,15 @@ const App: React.FC = () => {
       }
     }
 
-    fetchData();
+    // Safety timeout to prevent getting stuck on loading screen
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Načítání trvá příliš dlouho, přepínám do demo módu.");
+        setIsLoading(false);
+      }
+    }, 8000);
+
+    fetchData().finally(() => clearTimeout(timeoutId));
   }, []);
 
   const fetchData = async () => {
@@ -167,15 +175,33 @@ const App: React.FC = () => {
     }
 
     try {
-      const { data: vData } = await supabase.from('vehicles').select('*');
-      const { data: rData } = await supabase.from('reservations').select('*').order('created_at', { ascending: false });
-      const { data: cData } = await supabase.from('customers').select('*');
-      const { data: hData } = await supabase.from('handover_protocols').select('*');
-      const { data: retData } = await supabase.from('return_protocols').select('*');
-      const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-      const { data: maintData } = await supabase.from('maintenance_tasks').select('*');
-      const { data: invData } = await supabase.from('inventory_items').select('*');
-      const { data: sContracts } = await supabase.from('saved_contracts').select('*').order('created_at', { ascending: false });
+      const [
+        { data: vData, error: vError },
+        { data: rData, error: rError },
+        { data: cData, error: cError },
+        { data: hData, error: hError },
+        { data: retData, error: retError },
+        { data: mData, error: mError },
+        { data: maintData, error: maintError },
+        { data: invData, error: invError },
+        { data: sContracts, error: sError }
+      ] = await Promise.all([
+        supabase.from('vehicles').select('*'),
+        supabase.from('reservations').select('*').order('created_at', { ascending: false }),
+        supabase.from('customers').select('*'),
+        supabase.from('handover_protocols').select('*'),
+        supabase.from('return_protocols').select('*'),
+        supabase.from('messages').select('*').order('created_at', { ascending: false }),
+        supabase.from('maintenance_tasks').select('*'),
+        supabase.from('inventory_items').select('*'),
+        supabase.from('saved_contracts').select('*').order('created_at', { ascending: false })
+      ]);
+
+      if (vError || rError || cError || hError || retError || mError || maintError || invError || sError) {
+        console.warn("Některá data se nepodařilo načíst, přepínám do demo módu.");
+        setIsLoading(false);
+        return;
+      }
 
       if (sContracts) {
         setSavedContracts(sContracts.map(s => ({
@@ -651,7 +677,15 @@ const App: React.FC = () => {
                 <div className="animate-spin w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full"></div>
                 <div className="absolute inset-0 animate-ping w-12 h-12 border-4 border-brand-primary/20 rounded-full"></div>
               </div>
-              <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Načítám data...</p>
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Načítám data...</p>
+                <button 
+                  onClick={() => setIsLoading(false)}
+                  className="text-[9px] font-bold text-brand-primary/60 hover:text-brand-primary uppercase tracking-widest transition-colors mt-4"
+                >
+                  Přeskočit a zkusit demo verzi
+                </button>
+              </div>
             </div>
           </div>
         ) : isSubmitting && view === 'booking' ? (
@@ -890,12 +924,22 @@ const App: React.FC = () => {
                 </svg>
               </button>
             </div>
-            <form onSubmit={handleAdminLogin} className="space-y-8">
+            <form onSubmit={handleAdminLogin} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">E-mail administrátora</label>
+                <input 
+                  type="email" 
+                  required 
+                  value={loginEmail} 
+                  onChange={(e) => setLoginEmail(e.target.value)} 
+                  className="input-ultimate w-full px-6 py-5" 
+                  placeholder="admin@obytkem.cz" 
+                />
+              </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Přístupové heslo</label>
                 <input 
                   type="password" 
-                  autoFocus 
                   required 
                   value={loginPassword} 
                   onChange={(e) => setLoginPassword(e.target.value)} 
