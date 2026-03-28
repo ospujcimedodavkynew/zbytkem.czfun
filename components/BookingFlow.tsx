@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Vehicle, Reservation, ReservationStatus, InventoryItem } from '../types';
 import { formatCurrency, calculateDays, formatDate } from '../utils/format';
 import AvailabilityCalendar from './AvailabilityCalendar';
-import { MOCK_INVENTORY } from '../mockData';
 
 interface BookingFlowProps {
   vehicle: Vehicle;
@@ -223,7 +222,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center gap-2 animate-in zoom-in-95">
                   <div>
                     <div className="text-slate-900 font-black text-sm">{days} dní</div>
-                    <div className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Kauce {formatCurrency(vehicle.deposit)} | Limit {vehicle.kmLimitPerDay} km/den</div>
+                    <div className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Kauce {formatCurrency(vehicle.deposit)} | {vehicle.kmLimitPerDay === 0 ? 'Bez limitu km' : `Limit ${vehicle.kmLimitPerDay} km/den (nad limit ${vehicle.extraKmPrice} Kč/km)`}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Celkem</div>

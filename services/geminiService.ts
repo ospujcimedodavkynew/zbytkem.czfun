@@ -73,7 +73,7 @@ export const generateContractTemplate = async (details: any) => {
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
     
     PRONAJÍMATEL: Milan Gula, Teslova Brno, IČO 07031653
-    NÁJEMCE: ${details.customerName}, adresa: ${details.customerAddress}, email: ${details.customerEmail}
+    NÁJEMCE: ${details.customerName}, adresa: ${details.customerAddress}, email: ${details.customerEmail}, telefon: ${details.customerPhone}
     VOZIDLO: ${details.vehicleName}, SPZ: ${details.licensePlate}
     TERMÍN: od ${details.startDate} do ${details.endDate}
     CENA: ${details.price}

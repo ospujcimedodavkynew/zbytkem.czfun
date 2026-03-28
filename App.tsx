@@ -23,23 +23,14 @@ const App: React.FC = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [lastBooking, setLastBooking] = useState<{name: string, date: string} | null>(null);
-  
-  const [isEmbedded, setIsEmbedded] = useState(false);
-
-  const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
-  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
-  const [customers, setCustomers] = useState<Customer[]>(MOCK_CUSTOMERS);
-  const [savedContracts, setSavedContracts] = useState<SavedContract[]>([]);
-  const [handoverProtocols, setHandoverProtocols] = useState<HandoverProtocol[]>([]);
-  const [returnProtocols, setReturnProtocols] = useState<ReturnProtocol[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(MOCK_MAINTENANCE);
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
+  const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
     if (!supabase) return;
@@ -86,6 +77,29 @@ const App: React.FC = () => {
     const resizeObserver = new ResizeObserver(reportHeight);
     resizeObserver.observe(document.body);
 
+    // Check for existing session
+    if (supabase) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setUser(session.user);
+          setIsAdmin(true);
+        }
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChanged((_event, session) => {
+        if (session) {
+          setUser(session.user);
+          setIsAdmin(true);
+        } else {
+          setUser(null);
+          setIsAdmin(false);
+          if (view === 'admin') setView('home');
+        }
+      });
+
+      return () => subscription.unsubscribe();
+    }
+
     const vehicleIdParam = urlParams.get('vehicleId');
 
     if (initialViewParam === 'widget') {
@@ -104,8 +118,8 @@ const App: React.FC = () => {
         const parsed = JSON.parse(savedVehicles);
         const cleaned = parsed.map((v: any) => ({
           ...v,
-          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2021)' : v.name,
-          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle.' : v.description,
+          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
+          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
         }));
         setVehicles(cleaned);
       } catch (e) {
@@ -149,6 +163,17 @@ const App: React.FC = () => {
       const { data: mData } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
       const { data: maintData } = await supabase.from('maintenance_tasks').select('*');
       const { data: invData } = await supabase.from('inventory_items').select('*');
+      const { data: sContracts } = await supabase.from('saved_contracts').select('*').order('created_at', { ascending: false });
+
+      if (sContracts) {
+        setSavedContracts(sContracts.map(s => ({
+          id: s.id,
+          reservationId: s.reservation_id,
+          customerName: s.customer_name,
+          createdAt: s.created_at,
+          content: s.content
+        })));
+      }
 
       if (maintData) {
         setMaintenanceTasks(maintData.map(m => ({
@@ -194,8 +219,8 @@ const App: React.FC = () => {
       if (vData && vData.length > 0) {
         const mappedVehicles = vData.map(v => ({
           id: v.id,
-          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2021)' : v.name,
-          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle.' : v.description,
+          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
+          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
           licensePlate: v.license_plate,
           vin: v.vin,
           basePrice: Number(v.base_price),
@@ -469,6 +494,19 @@ const App: React.FC = () => {
     localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
   };
 
+  const handleSaveContract = async (contract: SavedContract) => {
+    if (supabase) {
+      const { error } = await supabase.from('saved_contracts').insert({
+        id: contract.id,
+        reservation_id: contract.reservationId,
+        customer_name: contract.customerName,
+        content: contract.content
+      });
+      if (error) console.error("Chyba při ukládání smlouvy:", error.message);
+    }
+    setSavedContracts(prev => [...prev, contract]);
+  };
+
   const handleBookNow = (vehicleId: string, startDate?: string) => {
     setSelectedVehicleId(vehicleId);
     setInitialStartDate(startDate || null);
@@ -485,12 +523,39 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginPassword === 'admin') {
-      setIsAdmin(true); setView('admin'); setIsLoginModalOpen(false); setLoginPassword(''); setLoginError('');
-    } else {
-      setLoginError('Nesprávné heslo.');
+    setLoginError('');
+    
+    if (!supabase) {
+      setLoginError('Databáze není připojena.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      if (error) throw error;
+
+      setIsAdmin(true);
+      setView('admin');
+      setIsLoginModalOpen(false);
+      setLoginPassword('');
+      setLoginEmail('');
+    } catch (err: any) {
+      setLoginError(err.message === 'Invalid login credentials' ? 'Nesprávný e-mail nebo heslo.' : err.message);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setIsAdmin(false);
+      setUser(null);
+      setView('home');
     }
   };
 
@@ -667,7 +732,17 @@ const App: React.FC = () => {
               />
             )}
             {view === 'guides' && <GuidesDetail onBack={() => setView('home')} />}
-            {view === 'home' && <PublicHome vehicles={vehicles} reservations={reservations} onBookNow={handleBookNow} onScrollTo={handleScrollTo} onNavigate={setView} />}
+            {view === 'home' && (
+              <PublicHome 
+                vehicles={vehicles} 
+                reservations={reservations} 
+                onBookNow={handleBookNow} 
+                onScrollTo={handleScrollTo} 
+                onNavigate={setView} 
+                isDarkMode={isDarkMode}
+                setIsDarkMode={setIsDarkMode}
+              />
+            )}
             {view === 'booking' && selectedVehicle && (
               <BookingFlow 
                 vehicle={selectedVehicle} 
@@ -692,7 +767,7 @@ const App: React.FC = () => {
                 inventoryItems={inventoryItems}
                 onSaveHandover={handleSaveHandover}
                 onSaveReturn={handleSaveReturn}
-                onSaveContract={(c) => setSavedContracts(prev => [...prev, c])} 
+                onSaveContract={handleSaveContract} 
                 onUpdateStatus={handleUpdateStatus} 
                 onUpdateMessageStatus={handleUpdateMessageStatus}
                 onDeleteMessage={handleDeleteMessage}
@@ -715,7 +790,7 @@ const App: React.FC = () => {
       </main>
 
       {!isEmbedded && (
-        <footer className="bg-slate-900 text-white py-20 border-t border-white/5 mt-24 relative overflow-hidden">
+        <footer className={`py-20 border-t relative overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-slate-950 border-white/5 text-white' : 'bg-slate-900 border-white/5 text-white'}`}>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-px bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent"></div>
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -741,7 +816,7 @@ const App: React.FC = () => {
                   href="https://www.pujcimedodavky.cz" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center gap-4 px-8 py-4 glass rounded-2xl border border-white/10 hover:bg-white/10 transition-all group shadow-ultimate"
+                  className={`flex items-center gap-4 px-8 py-4 rounded-2xl border transition-all group shadow-ultimate ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                 >
                   <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-brand-primary/20">PD</div>
                   <div className="text-left">

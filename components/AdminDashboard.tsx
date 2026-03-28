@@ -62,9 +62,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onDeleteInventoryItem,
   onRefresh
 }) => {
-  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing'>('reservations');
+  const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing' | 'customers' | 'contracts'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
@@ -183,6 +184,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         customerName: `${customer?.firstName} ${customer?.lastName}`,
         customerAddress: customer?.address || 'Neuvedena',
         customerEmail: customer?.email || '',
+        customerPhone: customer?.phone || 'Neuveden',
         vehicleName: vehicle?.name || 'Obytný vůz',
         licensePlate: vehicle?.licensePlate || '',
         startDate: formatDate(res.startDate),
@@ -345,10 +347,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
-        {(['reservations', 'calendar', 'stats', 'messages', 'protocols', 'fleet', 'pricing', 'maintenance', 'inventory', 'advisor', 'widget'] as const).map((tab) => (
+        {(['reservations', 'calendar', 'customers', 'contracts', 'stats', 'messages', 'protocols', 'fleet', 'pricing', 'maintenance', 'inventory', 'advisor', 'widget'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
             {tab === 'reservations' ? 'Rezervace' : 
              tab === 'calendar' ? 'Kalendář' :
+             tab === 'customers' ? 'Zákazníci' :
+             tab === 'contracts' ? 'Smlouvy' :
              tab === 'stats' ? 'Statistiky' :
              tab === 'messages' ? (
                <div className="flex items-center gap-2">
@@ -765,6 +769,170 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
+        {activeTab === 'customers' && (
+          <div className="p-10 space-y-8 animate-in fade-in duration-500">
+            {selectedCustomerId ? (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setSelectedCustomerId(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                  </button>
+                  <h2 className="text-2xl font-black">Detail zákazníka</h2>
+                </div>
+                
+                {(() => {
+                  const customer = customers.find(c => c.id === selectedCustomerId);
+                  const customerReservations = reservations.filter(r => r.customerId === selectedCustomerId);
+                  
+                  if (!customer) return <div>Zákazník nenalezen.</div>;
+                  
+                  return (
+                    <div className="grid lg:grid-cols-3 gap-8">
+                      <div className="lg:col-span-1 space-y-6">
+                        <div className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm">
+                          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+                            <span className="text-2xl font-black text-slate-400">{customer.firstName[0]}{customer.lastName[0]}</span>
+                          </div>
+                          <h3 className="text-xl font-black text-slate-900 mb-1">{customer.firstName} {customer.lastName}</h3>
+                          <p className="text-slate-400 font-bold text-sm mb-6">{customer.email}</p>
+                          
+                          <div className="space-y-4 pt-6 border-t border-slate-50">
+                            <div>
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Telefon</div>
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-slate-900">{customer.phone}</span>
+                                <a href={`tel:${customer.phone}`} className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-all">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                </a>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Adresa</div>
+                              <div className="font-bold text-slate-900">{customer.address}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm">
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Historie rezervací</h3>
+                          <div className="space-y-4">
+                            {customerReservations.length > 0 ? (
+                              customerReservations.map(res => (
+                                <div key={res.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+                                  <div>
+                                    <div className="font-black text-slate-900">{formatDate(res.startDate)} - {formatDate(res.endDate)}</div>
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase">{res.vehicleId} • {formatCurrency(res.totalPrice)}</div>
+                                  </div>
+                                  <div className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${res.status === ReservationStatus.CONFIRMED ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'}`}>
+                                    {res.status}
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-slate-400 font-medium italic">Žádné rezervace.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-black">Seznam zákazníků</h2>
+                <div className="bg-white border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-sm">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-100 text-left">
+                      <tr>
+                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jméno</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Telefon</th>
+                        <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Akce</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {customers.map(customer => (
+                        <tr key={customer.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-8 py-6 font-black text-slate-900">{customer.firstName} {customer.lastName}</td>
+                          <td className="px-8 py-6 text-sm font-bold text-slate-500">{customer.email}</td>
+                          <td className="px-8 py-6 text-sm font-bold text-slate-500">{customer.phone}</td>
+                          <td className="px-8 py-6 text-right">
+                            <button 
+                              onClick={() => setSelectedCustomerId(customer.id)}
+                              className="text-[10px] font-black text-brand-primary hover:underline uppercase tracking-widest"
+                            >
+                              Detail
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'contracts' && (
+          <div className="p-10 space-y-8 animate-in fade-in duration-500">
+            <h2 className="text-2xl font-black">Uložené smlouvy</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {savedContracts.length > 0 ? (
+                savedContracts.map(contract => (
+                  <div key={contract.id} className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm flex flex-col">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="font-black text-slate-900">{contract.customerName}</h3>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatDate(contract.createdAt)}</p>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-2xl">
+                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                      </div>
+                    </div>
+                    <div className="mt-auto flex gap-3">
+                      <button 
+                        onClick={() => setViewingContract({
+                          content: contract.content,
+                          customer: contract.customerName,
+                          resId: contract.reservationId
+                        })}
+                        className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all"
+                      >
+                        Zobrazit
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const blob = new Blob([contract.content], { type: 'text/plain' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `smlouva-${contract.customerName}-${contract.reservationId}.txt`;
+                          a.click();
+                        }}
+                        className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full p-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+                    <svg className="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 mb-2">Zatím žádné smlouvy</h3>
+                  <p className="text-slate-400 font-medium max-w-xs">Vygenerujte smlouvu u konkrétní rezervace a uložte ji pro pozdější nahlédnutí.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'reservations' && (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -784,7 +952,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   return (
                     <tr key={res.id} className="hover:bg-slate-50/50">
                       <td className="px-8 py-6">
-                        <div className="font-black text-slate-900">{customer?.firstName} {customer?.lastName}</div>
+                        <div 
+                          className="font-black text-slate-900 cursor-pointer hover:text-brand-primary"
+                          onClick={() => {
+                            setSelectedCustomerId(res.customerId);
+                            setActiveTab('customers');
+                          }}
+                        >
+                          {customer?.firstName} {customer?.lastName}
+                        </div>
                         <div className="text-[10px] text-slate-400 font-bold uppercase">{customer?.email}</div>
                       </td>
                       <td className="px-8 py-6 text-sm font-medium">
@@ -1148,7 +1324,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {viewingContract.content}
             </div>
             <div className="flex gap-4">
-              <button onClick={handlePrintContract} className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100">Vytisknout Smlouvu</button>
+              <button onClick={handlePrintContract} className="flex-1 py-5 bg-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all">Vytisknout Smlouvu</button>
+              <button 
+                onClick={() => {
+                  onSaveContract({
+                    id: `contract-${Date.now()}`,
+                    reservationId: viewingContract.resId,
+                    customerName: viewingContract.customer,
+                    createdAt: new Date().toISOString(),
+                    content: viewingContract.content
+                  });
+                  setViewingContract(null);
+                  alert('Smlouva byla uložena.');
+                }}
+                className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
+              >
+                Uložit Smlouvu
+              </button>
               <button onClick={() => setViewingContract(null)} className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Zavřít</button>
             </div>
           </div>
