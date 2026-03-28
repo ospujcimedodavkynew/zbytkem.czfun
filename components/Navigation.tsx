@@ -108,13 +108,22 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
                   <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
                 </button>
               ))}
-              <div className="pt-4">
+              <div className="pt-4 space-y-4">
                 <button
                   onClick={() => { onNavigate('admin'); setIsMobileMenuOpen(false); }}
                   className="w-full py-5 btn-ultimate-primary rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl"
                 >
                   {isAdmin ? 'Administrace' : 'Klientská zóna'}
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
+                    className="w-full py-5 bg-red-50 text-red-600 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100 flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Odhlásit se
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

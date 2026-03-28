@@ -42,6 +42,7 @@ const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(MOCK_MAINTENANCE);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
     if (!supabase) return;
@@ -357,7 +358,7 @@ const App: React.FC = () => {
       date: new Date().toISOString()
     }));
     setLastBooking({ name: data.firstName, date: new Date().toISOString() });
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     const newReservation: Reservation = {
       id: `res-${Date.now()}`,
@@ -378,7 +379,7 @@ const App: React.FC = () => {
     localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updatedReservations));
 
     if (!supabase) {
-      setTimeout(() => { setIsLoading(false); setView('confirmation'); }, 1500);
+      setTimeout(() => { setIsSubmitting(false); setView('confirmation'); }, 1500);
       return;
     }
 
@@ -411,7 +412,7 @@ const App: React.FC = () => {
       console.error("DB error:", err.message);
       setView('confirmation');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -564,10 +565,10 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
-      setIsAdmin(false);
-      setUser(null);
-      setView('home');
     }
+    setIsAdmin(false);
+    setUser(null);
+    setView('home');
   };
 
   const handleAdminClick = () => {
@@ -575,6 +576,14 @@ const App: React.FC = () => {
       setIsLoginModalOpen(true);
     } else {
       setView('admin');
+    }
+  };
+
+  const handleNavigate = (newView: typeof view) => {
+    if (newView === 'admin') {
+      handleAdminClick();
+    } else {
+      setView(newView);
     }
   };
 
@@ -625,10 +634,27 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Navigation removed as per user request */}
+      {!isEmbedded && (
+        <Navigation 
+          isAdmin={isAdmin} 
+          onNavigate={handleNavigate} 
+          onScrollTo={handleScrollTo} 
+          onLogout={handleLogout} 
+        />
+      )}
       
-      <main className="flex-grow overflow-x-hidden">
-        {isLoading && view === 'booking' ? (
+      <main className={`flex-grow overflow-x-hidden ${!isEmbedded ? 'pt-32' : ''}`}>
+        {isLoading ? (
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="flex flex-col items-center gap-6">
+              <div className="relative">
+                <div className="animate-spin w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full"></div>
+                <div className="absolute inset-0 animate-ping w-12 h-12 border-4 border-brand-primary/20 rounded-full"></div>
+              </div>
+              <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Načítám data...</p>
+            </div>
+          </div>
+        ) : isSubmitting && view === 'booking' ? (
           <div className="min-h-[60vh] flex items-center justify-center">
             <div className="flex flex-col items-center gap-6">
               <div className="relative">
@@ -749,7 +775,7 @@ const App: React.FC = () => {
                 reservations={reservations} 
                 onBookNow={handleBookNow} 
                 onScrollTo={handleScrollTo} 
-                onNavigate={setView} 
+                onNavigate={handleNavigate} 
                 isDarkMode={isDarkMode}
                 setIsDarkMode={setIsDarkMode}
               />
@@ -787,6 +813,7 @@ const App: React.FC = () => {
                 onUpdateInventoryItem={handleUpdateInventoryItem}
                 onAddInventoryItem={handleAddInventoryItem}
                 onDeleteInventoryItem={handleDeleteInventoryItem}
+                onLogout={handleLogout}
                 onRefresh={fetchData} 
               />
             )}

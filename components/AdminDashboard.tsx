@@ -36,6 +36,7 @@ interface AdminDashboardProps {
   onUpdateInventoryItem: (item: InventoryItem) => void;
   onAddInventoryItem: (item: InventoryItem) => void;
   onDeleteInventoryItem: (id: string) => void;
+  onLogout: () => void;
   onRefresh?: () => void;
 }
 
@@ -60,6 +61,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateInventoryItem,
   onAddInventoryItem,
   onDeleteInventoryItem,
+  onLogout,
   onRefresh
 }) => {
   const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing' | 'customers' | 'contracts'>('reservations');
@@ -339,11 +341,20 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Administrace</h1>
           <p className="text-slate-500 font-medium">Vítejte, Milan Gula</p>
         </div>
-        {onRefresh && (
-          <button onClick={onRefresh} className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors">
-            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <div className="flex items-center gap-4">
+          {onRefresh && (
+            <button onClick={onRefresh} className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors" title="Obnovit data">
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+          )}
+          <button 
+            onClick={onLogout} 
+            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-100 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            Odhlásit
           </button>
-        )}
+        </div>
       </div>
 
       <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
