@@ -83,6 +83,8 @@ export interface Reservation {
   createdAt: string;
   customerNote?: string;
   selectedAddOns?: { itemId: string; quantity: number }[];
+  deliveryAddress?: string;
+  deliveryTime?: string;
 }
 
 export interface SavedContract {
@@ -110,7 +112,7 @@ export interface InventoryItem {
   name: string;
   totalQuantity: number;
   availableQuantity: number;
-  category: 'camping' | 'kitchen' | 'safety' | 'other' | 'sport' | 'service';
+  category: 'camping' | 'kitchen' | 'safety' | 'other' | 'sport' | 'service' | 'equipment';
   pricePerDay: number;
   isOneTimeFee?: boolean;
   description?: string;

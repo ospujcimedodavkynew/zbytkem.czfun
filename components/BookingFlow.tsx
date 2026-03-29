@@ -25,11 +25,15 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
     email: '',
     phone: '',
     address: '',
+    deliveryAddress: '',
+    deliveryTime: '',
     note: '',
     selectedAddOns: [] as { itemId: string; quantity: number }[]
   });
 
   const today = new Date().toISOString().split('T')[0];
+
+  const isDeliverySelected = formData.selectedAddOns.some(a => a.itemId === 'i4');
 
   // Filtrování relevantních rezervací pro tento vůz
   const activeReservations = allReservations.filter(r => 
@@ -287,6 +291,36 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
               <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+              
+              {isDeliverySelected && (
+                <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/20 space-y-3 animate-in slide-in-from-left-2">
+                  <div className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Detaily dovozu</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <input 
+                        type="text" 
+                        name="deliveryAddress" 
+                        placeholder="Adresa dovozu" 
+                        required={isDeliverySelected}
+                        value={formData.deliveryAddress} 
+                        onChange={handleChange} 
+                        className="input-ultimate w-full px-4 py-3 font-medium text-sm" 
+                      />
+                    </div>
+                    <div>
+                      <input 
+                        type="time" 
+                        name="deliveryTime" 
+                        required={isDeliverySelected}
+                        value={formData.deliveryTime} 
+                        onChange={handleChange} 
+                        className="input-ultimate w-full px-4 py-3 font-medium text-sm" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <textarea name="note" placeholder="Poznámka..." value={formData.note} onChange={handleChange} className="input-ultimate w-full px-4 py-3 h-20 font-medium text-sm"></textarea>
             </div>
           )}
@@ -304,6 +338,13 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                   <span className="text-white text-xs">{formatDate(formData.startDate)} - {formatDate(formData.endDate)} ({days} dní)</span>
                 </div>
                 
+                {isDeliverySelected && (
+                  <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
+                    <span>Dovoz na adresu</span>
+                    <span className="text-white text-xs">{formData.deliveryAddress} v {formData.deliveryTime}</span>
+                  </div>
+                )}
+
                 {formData.selectedAddOns.length > 0 && (
                   <div className="pt-3 border-t border-slate-800 space-y-2">
                     <div className="text-slate-400 font-bold uppercase tracking-widest text-[8px]">Doplňkové služby</div>

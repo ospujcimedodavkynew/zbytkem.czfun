@@ -19,9 +19,10 @@ export const MOCK_VEHICLES: Vehicle[] = [
       'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=1200'
     ],
     seasonalPricing: [
-      { id: 's2026-1', name: 'Hlavní sezóna (Léto)', startDate: '2026-06-15', endDate: '2026-09-15', pricePerDay: 3400 },
-      { id: 's2026-2', name: 'Mimo sezóna (Jaro)', startDate: '2026-03-01', endDate: '2026-06-14', pricePerDay: 2900 },
-      { id: 's2026-3', name: 'Mimo sezóna (Podzim)', startDate: '2026-09-16', endDate: '2026-11-30', pricePerDay: 2900 }
+      { id: 's2026-1', name: 'Vedlejší sezóna', startDate: '2026-01-01', endDate: '2026-03-31', pricePerDay: 2500 },
+      { id: 's2026-2', name: 'Střední sezóna', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 2900 },
+      { id: 's2026-3', name: 'Hlavní sezóna', startDate: '2026-06-01', endDate: '2026-09-30', pricePerDay: 3400 },
+      { id: 's2026-4', name: 'Pozdní sezóna', startDate: '2026-10-01', endDate: '2026-12-31', pricePerDay: 2700 }
     ],
     equipment: [
       'Zadní sezení ve tvaru "U" (unikátní prostor pro 6 osob)',

@@ -41,6 +41,10 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   const handleDayClick = (day: number) => {
     if (!day) return;
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Prevent selecting past dates
+    if (dateStr < today) return;
     
     // Check if it's available
     const isReserved = reservations.some(r => 
@@ -96,6 +100,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     const getDayStatus = (day: number) => {
       if (!day) return 'empty';
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const today = new Date().toISOString().split('T')[0];
       
       const isReserved = reservations.some(r => 
         r.vehicleId === selectedVehicleId &&
@@ -105,6 +110,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       );
 
       if (isReserved) return 'reserved';
+      if (dateStr < today) return 'past';
+      if (dateStr === today) return 'today';
 
       if (startDate && dateStr === startDate) return 'selected-start';
       if (endDate && dateStr === endDate) return 'selected-end';
@@ -159,11 +166,15 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? isDarkMode ? 'bg-red-900/20 text-red-400 font-bold border border-red-900/30 cursor-not-allowed' : 'bg-red-50 text-red-600 font-bold border border-red-100 cursor-not-allowed' 
-                      : isSelected
-                        ? 'bg-brand-primary text-white font-black shadow-lg shadow-brand-primary/30 scale-105 z-10'
-                        : isDarkMode 
-                          ? 'bg-emerald-900/20 text-emerald-400 font-medium border border-emerald-900/30 cursor-pointer hover:bg-brand-primary/20 hover:scale-110 shadow-sm'
-                          : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary/10 hover:scale-110 shadow-sm'}`}
+                      : status === 'past'
+                        ? isDarkMode ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-50 text-slate-300 cursor-not-allowed'
+                        : isSelected
+                          ? 'bg-brand-primary text-white font-black shadow-lg shadow-brand-primary/30 scale-105 z-10'
+                          : status === 'today'
+                            ? isDarkMode ? 'bg-brand-primary/20 text-brand-primary font-black border-2 border-brand-primary cursor-pointer' : 'bg-brand-primary/10 text-brand-primary font-black border-2 border-brand-primary cursor-pointer'
+                            : isDarkMode 
+                              ? 'bg-emerald-900/20 text-emerald-400 font-medium border border-emerald-900/30 cursor-pointer hover:bg-brand-primary/20 hover:scale-110 shadow-sm'
+                              : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary/10 hover:scale-110 shadow-sm'}`}
               >
                 {day}
                 {status === 'selected-range' && (

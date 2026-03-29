@@ -390,7 +390,10 @@ const App: React.FC = () => {
       deposit: 25000,
       status: ReservationStatus.PENDING,
       createdAt: new Date().toISOString(),
-      customerNote: data.note
+      customerNote: data.note,
+      selectedAddOns: data.selectedAddOns,
+      deliveryAddress: data.deliveryAddress,
+      deliveryTime: data.deliveryTime
     };
 
     // Update local state and localStorage immediately for demo mode
@@ -422,7 +425,10 @@ const App: React.FC = () => {
         total_price: data.totalPrice,
         deposit: 25000,
         status: ReservationStatus.PENDING,
-        customer_note: data.note
+        customer_note: data.note,
+        selected_add_ons: data.selectedAddOns,
+        delivery_address: data.deliveryAddress,
+        delivery_time: data.deliveryTime
       });
       
       if (rErr) throw rErr;
@@ -452,66 +458,99 @@ const App: React.FC = () => {
   };
 
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
-    if (supabase) {
-      await supabase.from('vehicles').update({
-        name: updatedVehicle.name,
-        description: updatedVehicle.description,
-        base_price: updatedVehicle.basePrice,
-        min_days: updatedVehicle.minDays,
-        seasonal_pricing: updatedVehicle.seasonalPricing,
-        license_plate: updatedVehicle.licensePlate,
-        vin: updatedVehicle.vin,
-        deposit: updatedVehicle.deposit,
-        km_limit_per_day: updatedVehicle.kmLimitPerDay,
-        extra_km_price: updatedVehicle.extraKmPrice,
-        images: updatedVehicle.images,
-        equipment: updatedVehicle.equipment
-      }).eq('id', updatedVehicle.id);
+    console.log("Updating vehicle:", updatedVehicle.id);
+    try {
+      if (supabase) {
+        const { error } = await supabase.from('vehicles').update({
+          name: updatedVehicle.name,
+          description: updatedVehicle.description,
+          base_price: updatedVehicle.basePrice,
+          min_days: updatedVehicle.minDays,
+          seasonal_pricing: updatedVehicle.seasonalPricing,
+          license_plate: updatedVehicle.licensePlate,
+          vin: updatedVehicle.vin,
+          deposit: updatedVehicle.deposit,
+          km_limit_per_day: updatedVehicle.kmLimitPerDay,
+          extra_km_price: updatedVehicle.extraKmPrice,
+          images: updatedVehicle.images,
+          equipment: updatedVehicle.equipment
+        }).eq('id', updatedVehicle.id);
+        
+        if (error) {
+          console.error("Supabase update error:", error.message);
+          alert("Chyba při ukládání do databáze: " + error.message);
+        } else {
+          console.log("Supabase update successful");
+        }
+      }
+      const updated = vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
+      setVehicles(updated);
+      localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(updated));
+    } catch (err: any) {
+      console.error("Critical error in handleUpdateVehicle:", err);
+      alert("Kritická chyba při ukládání: " + err.message);
     }
-    const updated = vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v);
-    setVehicles(updated);
-    localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(updated));
   };
 
   const handleUpdateInventoryItem = async (updatedItem: InventoryItem) => {
-    if (supabase) {
-      await supabase.from('inventory_items').update({
-        name: updatedItem.name,
-        category: updatedItem.category,
-        total_quantity: updatedItem.totalQuantity,
-        available_quantity: updatedItem.availableQuantity,
-        price_per_day: updatedItem.pricePerDay,
-        description: updatedItem.description,
-        image: updatedItem.image,
-        is_one_time_fee: updatedItem.isOneTimeFee
-      }).eq('id', updatedItem.id);
+    console.log("Updating inventory item:", updatedItem.id);
+    try {
+      if (supabase) {
+        const { error } = await supabase.from('inventory_items').update({
+          name: updatedItem.name,
+          category: updatedItem.category,
+          total_quantity: updatedItem.totalQuantity,
+          available_quantity: updatedItem.availableQuantity,
+          price_per_day: updatedItem.pricePerDay,
+          description: updatedItem.description,
+          image: updatedItem.image,
+          is_one_time_fee: updatedItem.isOneTimeFee
+        }).eq('id', updatedItem.id);
+        
+        if (error) {
+          console.error("Supabase inventory update error:", error.message);
+        }
+      }
+      const updated = inventoryItems.map(item => item.id === updatedItem.id ? updatedItem : item);
+      setInventoryItems(updated);
+      localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
+    } catch (err: any) {
+      console.error("Error in handleUpdateInventoryItem:", err);
     }
-    const updated = inventoryItems.map(item => item.id === updatedItem.id ? updatedItem : item);
-    setInventoryItems(updated);
-    localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
   };
 
   const handleAddInventoryItem = async (newItem: Omit<InventoryItem, 'id'>) => {
+    console.log("Adding inventory item:", newItem.name);
     const id = `inv-${Date.now()}`;
     const itemWithId = { ...newItem, id };
     
-    if (supabase) {
-      await supabase.from('inventory_items').insert({
-        id,
-        name: newItem.name,
-        category: newItem.category,
-        total_quantity: newItem.totalQuantity,
-        available_quantity: newItem.availableQuantity,
-        price_per_day: newItem.pricePerDay,
-        description: newItem.description,
-        image: newItem.image,
-        is_one_time_fee: newItem.isOneTimeFee
-      });
+    try {
+      if (supabase) {
+        const { error } = await supabase.from('inventory_items').insert({
+          id,
+          name: newItem.name,
+          category: newItem.category,
+          total_quantity: newItem.totalQuantity,
+          available_quantity: newItem.availableQuantity,
+          price_per_day: newItem.pricePerDay,
+          description: newItem.description,
+          image: newItem.image,
+          is_one_time_fee: newItem.isOneTimeFee
+        });
+        
+        if (error) {
+          console.error("Supabase inventory insert error:", error.message);
+          alert("Chyba při přidávání do databáze: " + error.message);
+        }
+      }
+      
+      const updated = [...inventoryItems, itemWithId];
+      setInventoryItems(updated);
+      localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
+    } catch (err: any) {
+      console.error("Error in handleAddInventoryItem:", err);
+      alert("Kritická chyba při přidávání: " + err.message);
     }
-    
-    const updated = [...inventoryItems, itemWithId];
-    setInventoryItems(updated);
-    localStorage.setItem('obytkem_inventory_v3', JSON.stringify(updated));
   };
 
   const handleDeleteInventoryItem = async (id: string) => {

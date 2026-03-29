@@ -627,24 +627,43 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
                 ))}
-                <button 
-                  onClick={() => {
-                    const newSeason: SeasonPrice = {
-                      id: `s-${Date.now()}`,
-                      name: 'Nová sezóna',
-                      startDate: new Date().toISOString().split('T')[0],
-                      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                      pricePerDay: editingVehicle.basePrice
-                    };
-                    setEditingVehicle({
-                      ...editingVehicle,
-                      seasonalPricing: [...editingVehicle.seasonalPricing, newSeason]
-                    });
-                  }}
-                  className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
-                >
-                  + Přidat novou sezónu
-                </button>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => {
+                      const newSeason: SeasonPrice = {
+                        id: `s-${Date.now()}`,
+                        name: 'Nová sezóna',
+                        startDate: new Date().toISOString().split('T')[0],
+                        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        pricePerDay: editingVehicle.basePrice
+                      };
+                      setEditingVehicle({
+                        ...editingVehicle,
+                        seasonalPricing: [...editingVehicle.seasonalPricing, newSeason]
+                      });
+                    }}
+                    className="flex-grow py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
+                  >
+                    + Přidat novou sezónu
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const defaultSeasons: SeasonPrice[] = [
+                        { id: 's1', name: 'Vedlejší sezóna', startDate: '2026-01-01', endDate: '2026-03-31', pricePerDay: 2500 },
+                        { id: 's2', name: 'Střední sezóna', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 2900 },
+                        { id: 's3', name: 'Hlavní sezóna', startDate: '2026-06-01', endDate: '2026-09-30', pricePerDay: 3400 },
+                        { id: 's4', name: 'Pozdní sezóna', startDate: '2026-10-01', endDate: '2026-12-31', pricePerDay: 2700 }
+                      ];
+                      setEditingVehicle({
+                        ...editingVehicle,
+                        seasonalPricing: defaultSeasons
+                      });
+                    }}
+                    className="px-6 py-4 border-2 border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 transition-all"
+                  >
+                    Resetovat na výchozí
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -655,13 +674,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   Doplňkové služby a vybavení
                 </h3>
                 <button onClick={() => onAddInventoryItem({
-                  id: `i-${Date.now()}`,
                   name: 'Nová služba',
                   totalQuantity: 1,
                   availableQuantity: 1,
                   category: 'sport',
                   pricePerDay: 0,
-                  description: 'Popis služby...'
+                  description: 'Popis služby...',
+                  isOneTimeFee: false
                 })} className="text-[10px] font-black text-brand-primary uppercase tracking-widest hover:underline">+ Přidat službu</button>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
