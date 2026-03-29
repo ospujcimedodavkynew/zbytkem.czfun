@@ -166,7 +166,7 @@ const App: React.FC = () => {
     }, 8000);
 
     fetchData().finally(() => clearTimeout(timeoutId));
-  }, []);
+  }, [isAdmin]);
 
   const fetchData = async () => {
     if (!supabase) {
@@ -175,42 +175,40 @@ const App: React.FC = () => {
     }
 
     try {
+      // Public data - always fetch
       const [
         { data: vData, error: vError },
-        { data: rData, error: rError },
-        { data: cData, error: cError },
-        { data: hData, error: hError },
-        { data: retData, error: retError },
-        { data: mData, error: mError },
         { data: maintData, error: maintError },
-        { data: invData, error: invError },
-        { data: sContracts, error: sError }
+        { data: invData, error: invError }
       ] = await Promise.all([
         supabase.from('vehicles').select('*'),
-        supabase.from('reservations').select('*').order('created_at', { ascending: false }),
-        supabase.from('customers').select('*'),
-        supabase.from('handover_protocols').select('*'),
-        supabase.from('return_protocols').select('*'),
-        supabase.from('messages').select('*').order('created_at', { ascending: false }),
         supabase.from('maintenance_tasks').select('*'),
-        supabase.from('inventory_items').select('*'),
-        supabase.from('saved_contracts').select('*').order('created_at', { ascending: false })
+        supabase.from('inventory_items').select('*')
       ]);
 
-      if (vError || rError || cError || hError || retError || mError || maintError || invError || sError) {
-        console.warn("Některá data se nepodařilo načíst, přepínám do demo módu.");
-        setIsLoading(false);
-        return;
-      }
+      if (vError) console.warn("Chyba při načítání vozů:", vError.message);
+      if (maintError) console.warn("Chyba při načítání údržby:", maintError.message);
+      if (invError) console.warn("Chyba při načítání inventáře:", invError.message);
 
-      if (sContracts) {
-        setSavedContracts(sContracts.map(s => ({
-          id: s.id,
-          reservationId: s.reservation_id,
-          customerName: s.customer_name,
-          createdAt: s.created_at,
-          content: s.content
-        })));
+      if (vData && vData.length > 0) {
+        const mappedVehicles = vData.map(v => ({
+          id: v.id,
+          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
+          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
+          licensePlate: v.license_plate,
+          vin: v.vin,
+          basePrice: Number(v.base_price),
+          minDays: v.min_days,
+          deposit: Number(v.deposit),
+          kmLimitPerDay: v.km_limit_per_day,
+          extraKmPrice: Number(v.extra_km_price),
+          images: v.images || [],
+          isActive: v.is_active,
+          seasonalPricing: v.seasonal_pricing || [],
+          equipment: v.equipment || []
+        }));
+        setVehicles(mappedVehicles);
+        localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(mappedVehicles));
       }
 
       if (maintData) {
@@ -241,100 +239,110 @@ const App: React.FC = () => {
         })));
       }
 
-      if (mData) {
-        setMessages(mData.map(m => ({
-          id: m.id,
-          createdAt: m.created_at,
-          name: m.name,
-          email: m.email,
-          phone: m.phone,
-          subject: m.subject,
-          message: m.message,
-          status: m.status
-        })));
-      }
+      // Admin data - only fetch if authenticated
+      if (isAdmin) {
+        const [
+          { data: rData, error: rError },
+          { data: cData, error: cError },
+          { data: hData, error: hError },
+          { data: retData, error: retError },
+          { data: mData, error: mError },
+          { data: sContracts, error: sError }
+        ] = await Promise.all([
+          supabase.from('reservations').select('*').order('created_at', { ascending: false }),
+          supabase.from('customers').select('*'),
+          supabase.from('handover_protocols').select('*'),
+          supabase.from('return_protocols').select('*'),
+          supabase.from('messages').select('*').order('created_at', { ascending: false }),
+          supabase.from('saved_contracts').select('*').order('created_at', { ascending: false })
+        ]);
 
-      if (vData && vData.length > 0) {
-        const mappedVehicles = vData.map(v => ({
-          id: v.id,
-          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
-          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
-          licensePlate: v.license_plate,
-          vin: v.vin,
-          basePrice: Number(v.base_price),
-          minDays: v.min_days,
-          deposit: Number(v.deposit),
-          kmLimitPerDay: v.km_limit_per_day,
-          extraKmPrice: Number(v.extra_km_price),
-          images: v.images || [],
-          isActive: v.is_active,
-          seasonalPricing: v.seasonal_pricing || [],
-          equipment: v.equipment || []
-        }));
-        setVehicles(mappedVehicles);
-        localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(mappedVehicles));
-      }
+        if (rError) console.warn("Chyba při načítání rezervací:", rError.message);
+        
+        if (rData) {
+          setReservations(rData.map(r => ({
+            id: r.id,
+            vehicleId: r.vehicle_id,
+            customerId: r.customer_id,
+            startDate: r.start_date,
+            endDate: r.end_date,
+            totalPrice: Number(r.total_price),
+            deposit: Number(r.deposit),
+            status: r.status as ReservationStatus,
+            createdAt: r.created_at,
+            customerNote: r.customer_note
+          })));
+        }
 
-      if (rData) {
-        setReservations(rData.map(r => ({
-          id: r.id,
-          vehicleId: r.vehicle_id,
-          customerId: r.customer_id,
-          startDate: r.start_date,
-          endDate: r.end_date,
-          totalPrice: Number(r.total_price),
-          deposit: Number(r.deposit),
-          status: r.status as ReservationStatus,
-          createdAt: r.created_at,
-          customerNote: r.customer_note
-        })));
-      }
+        if (cData) {
+          setCustomers(cData.map(c => ({
+            id: c.id,
+            firstName: c.first_name,
+            lastName: c.last_name,
+            email: c.email,
+            phone: c.phone,
+            address: c.address,
+            idNumber: c.id_number || ''
+          })));
+        }
 
-      if (cData) {
-        setCustomers(cData.map(c => ({
-          id: c.id,
-          firstName: c.first_name,
-          lastName: c.last_name,
-          email: c.email,
-          phone: c.phone,
-          address: c.address,
-          idNumber: c.id_number || ''
-        })));
-      }
+        if (hData) {
+          setHandoverProtocols(hData.map(h => ({
+            id: h.id,
+            reservationId: h.reservation_id,
+            date: h.date,
+            time: h.time,
+            mileage: h.mileage,
+            fuelLevel: h.fuel_level,
+            cleanliness: h.cleanliness,
+            damages: h.damages,
+            notes: h.notes
+          })));
+        }
 
-      if (hData) {
-        setHandoverProtocols(hData.map(h => ({
-          id: h.id,
-          reservationId: h.reservation_id,
-          date: h.date,
-          time: h.time,
-          mileage: h.mileage,
-          fuelLevel: h.fuel_level,
-          cleanliness: h.cleanliness,
-          damages: h.damages,
-          notes: h.notes
-        })));
-      }
+        if (retData) {
+          setReturnProtocols(retData.map(r => ({
+            id: r.id,
+            reservationId: r.reservation_id,
+            date: r.date,
+            time: r.time,
+            mileage: r.mileage,
+            fuelLevel: r.fuel_level,
+            cleanliness: r.cleanliness,
+            damages: r.damages,
+            notes: r.notes,
+            returnMileage: r.return_mileage,
+            returnFuelLevel: r.return_fuel_level,
+            returnDamages: r.return_damages,
+            extraKmCharge: r.extra_km_charge
+          })));
+        }
 
-      if (retData) {
-        setReturnProtocols(retData.map(r => ({
-          id: r.id,
-          reservationId: r.reservation_id,
-          date: r.date,
-          time: r.time,
-          mileage: r.mileage,
-          fuelLevel: r.fuel_level,
-          cleanliness: r.cleanliness,
-          damages: r.damages,
-          notes: r.notes,
-          returnMileage: r.return_mileage,
-          returnFuelLevel: r.return_fuel_level,
-          returnDamages: r.return_damages,
-          extraKmCharge: r.extra_km_charge
-        })));
+        if (mData) {
+          setMessages(mData.map(m => ({
+            id: m.id,
+            createdAt: m.created_at,
+            name: m.name,
+            email: m.email,
+            phone: m.phone,
+            subject: m.subject,
+            message: m.message,
+            status: m.status
+          })));
+        }
+
+        if (sContracts) {
+          setSavedContracts(sContracts.map(s => ({
+            id: s.id,
+            reservationId: s.reservation_id,
+            customerName: s.customer_name,
+            createdAt: s.created_at,
+            content: s.content
+          })));
+        }
       }
     } catch (error: any) {
-      console.warn("Demo mód aktivní.");
+      console.warn("Chyba při načítání dat:", error.message);
     } finally {
       setIsLoading(false);
     }
@@ -570,9 +578,14 @@ const App: React.FC = () => {
       return;
     }
 
+    if (!loginEmail || !loginPassword) {
+      setLoginError('Zadejte prosím e-mail i heslo.');
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+        email: loginEmail.trim(),
         password: loginPassword,
       });
 
@@ -582,9 +595,15 @@ const App: React.FC = () => {
       setView('admin');
       setIsLoginModalOpen(false);
       setLoginPassword('');
-      setLoginEmail('');
+      // Ponecháme email pro příští přihlášení
     } catch (err: any) {
-      setLoginError(err.message === 'Invalid login credentials' ? 'Nesprávný e-mail nebo heslo.' : err.message);
+      if (err.message === 'Invalid login credentials') {
+        setLoginError('Nesprávný e-mail nebo heslo.');
+      } else if (err.message === 'Email not confirmed') {
+        setLoginError('E-mail nebyl potvrzen. Zkontrolujte svou schránku.');
+      } else {
+        setLoginError(err.message);
+      }
     }
   };
 
