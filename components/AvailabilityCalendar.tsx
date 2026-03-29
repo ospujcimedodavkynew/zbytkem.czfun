@@ -27,7 +27,7 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   onRangeSelect,
   isDarkMode = false
 }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 4, 1)); // Start with May 2026 for demo
+  const [currentDate, setCurrentDate] = useState(new Date()); // Start with current date
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialVehicleId || vehicles[0]?.id || '');
 
   const nextMonth = () => {
@@ -120,10 +120,24 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
             {date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
           </h3>
           <div className="flex gap-1">
-            <button onClick={prevMonth} className={`p-2 rounded-full transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'}`}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                prevMonth();
+              }} 
+              className={`p-2 rounded-full transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'}`}
+            >
               <ChevronLeft className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
             </button>
-            <button onClick={nextMonth} className={`p-2 rounded-full transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'}`}>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                nextMonth();
+              }} 
+              className={`p-2 rounded-full transition-colors border shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-slate-100 text-slate-600 hover:bg-slate-50'}`}
+            >
               <ChevronRight className={`${isEmbedded ? 'w-3.5 h-3.5' : 'w-5 h-5'}`} />
             </button>
           </div>

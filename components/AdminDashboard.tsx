@@ -34,7 +34,7 @@ interface AdminDashboardProps {
   onDeleteReservation: (id: string) => void;
   onUpdateVehicle: (vehicle: Vehicle) => void;
   onUpdateInventoryItem: (item: InventoryItem) => void;
-  onAddInventoryItem: (item: InventoryItem) => void;
+  onAddInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
   onDeleteInventoryItem: (id: string) => void;
   onLogout: () => void;
   onRefresh?: () => void;
@@ -506,7 +506,19 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="p-10 animate-in fade-in duration-500">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-black">Sklad doplňků</h2>
-              <button className="btn-ultimate-primary px-6 py-3 text-[10px]">Přidat položku</button>
+              <button 
+                onClick={() => onAddInventoryItem({
+                  name: 'Nová položka',
+                  totalQuantity: 1,
+                  availableQuantity: 1,
+                  category: 'equipment',
+                  pricePerDay: 0,
+                  description: 'Popis položky...'
+                })}
+                className="btn-ultimate-primary px-6 py-3 text-[10px]"
+              >
+                Přidat položku
+              </button>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {inventoryItems.map(item => (
@@ -533,7 +545,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <span className="font-black text-brand-primary">{formatCurrency(item.pricePerDay)}</span>
                     </div>
                   </div>
-                  <button className="w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100 transition-all">Upravit položku</button>
+                  <button 
+                    onClick={() => {
+                      setActiveTab('pricing');
+                      // Scroll to the inventory section in pricing tab would be nice but let's just switch tab
+                    }}
+                    className="w-full py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-100 transition-all"
+                  >
+                    Upravit položku
+                  </button>
                 </div>
               ))}
             </div>
@@ -546,7 +566,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <h2 className="text-2xl font-black">Ceník a doplňkové služby</h2>
                 <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Správa cen, sezón a příplatků</p>
               </div>
-              <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all">Uložit vše</button>
+              <button 
+                onClick={() => {
+                  onUpdateVehicle(editingVehicle);
+                  alert('Změny ve vozidle a ceníku byly uloženy.');
+                }} 
+                className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all"
+              >
+                Uložit vše
+              </button>
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
@@ -599,7 +627,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
                 ))}
-                <button className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all">
+                <button 
+                  onClick={() => {
+                    const newSeason: SeasonPrice = {
+                      id: `s-${Date.now()}`,
+                      name: 'Nová sezóna',
+                      startDate: new Date().toISOString().split('T')[0],
+                      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                      pricePerDay: editingVehicle.basePrice
+                    };
+                    setEditingVehicle({
+                      ...editingVehicle,
+                      seasonalPricing: [...editingVehicle.seasonalPricing, newSeason]
+                    });
+                  }}
+                  className="w-full py-4 border-2 border-dashed border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:border-slate-900 hover:text-slate-900 transition-all"
+                >
                   + Přidat novou sezónu
                 </button>
               </div>
@@ -1016,7 +1059,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="p-10 space-y-8 animate-in fade-in duration-500">
              <div className="flex justify-between items-end">
                <h2 className="text-2xl font-black">Správa vozu</h2>
-               <button onClick={() => onUpdateVehicle(editingVehicle)} className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all">Uložit změny</button>
+               <button 
+                onClick={() => {
+                  onUpdateVehicle(editingVehicle);
+                  alert('Změny ve vozu byly uloženy.');
+                }} 
+                className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-xs hover:bg-slate-800 transition-all"
+               >
+                 Uložit změny
+               </button>
              </div>
 
              <div className="grid md:grid-cols-2 gap-8">
