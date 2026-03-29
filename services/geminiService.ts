@@ -1,11 +1,12 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 
 const getApiKey = () => {
   // Zkusíme všechny možné zdroje klíče
-  const key = process.env.GEMINI_API_KEY || 
+  // V produkčním buildu Vite jsou tyto hodnoty nahrazeny během buildu
+  const key = (typeof process !== 'undefined' && process.env.GEMINI_API_KEY) || 
               import.meta.env.VITE_GEMINI_API_KEY || 
-              (typeof process !== 'undefined' ? process.env.API_KEY : '') ||
+              (typeof process !== 'undefined' && process.env.API_KEY) ||
               '';
   return key;
 };
@@ -60,7 +61,7 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
       contents: [{ parts: [{ text: prompt }] }],
       config: { 
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 0 } 
+        thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } 
       }
     });
     

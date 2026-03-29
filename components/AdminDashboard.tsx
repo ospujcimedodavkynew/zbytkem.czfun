@@ -1237,6 +1237,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                  <p className="text-slate-400 font-medium mb-8 leading-relaxed">
                    Váš osobní analytik poháněný modelem Gemini 3 Flash. Analyzuje vaše stávající rezervace a navrhuje strategii pro maximalizaci zisku.
                  </p>
+                 {!isAiConfigured() && (
+                   <div className="p-6 bg-white/5 border border-white/10 rounded-[2rem] flex items-center gap-4 mb-8">
+                     <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
+                       <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                     </div>
+                     <div>
+                       <div className="font-black text-white text-sm">AI klíč není nastaven</div>
+                       <p className="text-xs text-slate-400 font-medium">Pro fungování analýzy a generování smluv je nutné nastavit <code className="bg-white/10 px-1 rounded text-white">GEMINI_API_KEY</code> v prostředí Vercel a provést nový Deploy.</p>
+                     </div>
+                   </div>
+                 )}
+
                  {!aiAnalysis ? (
                    <button 
                      onClick={handleRunAiAnalysis} 
@@ -1544,14 +1556,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     >
                       Zavřít
                     </button>
+                    {!isAiConfigured() && (
+                      <div className="flex-1 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex items-center gap-3">
+                        <svg className="w-5 h-5 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <p className="text-[10px] font-bold text-orange-700 leading-tight">AI není nastaveno. Pro generování smluv nastavte GEMINI_API_KEY ve Vercelu.</p>
+                      </div>
+                    )}
                     <button 
                       onClick={() => {
                         handleGenerateContract(res);
                         setViewingReservationId(null);
                       }}
-                      className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
+                      disabled={!isAiConfigured() || generatingContractId === res.id}
+                      className={`px-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 ${(!isAiConfigured() || generatingContractId === res.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      Generovat smlouvu
+                      {generatingContractId === res.id ? 'Generuji...' : 'Generovat smlouvu'}
                     </button>
                   </div>
                 </div>
