@@ -19,6 +19,7 @@ import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
 const App: React.FC = () => {
+  console.log("App component rendering...");
   const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
@@ -74,11 +75,9 @@ const App: React.FC = () => {
     
     if (embedded) {
       setIsEmbedded(true);
-      // Add a class to body for embedded view to handle scrollbars better
       document.body.classList.add('is-embedded');
     }
 
-    // Report height to parent for iframe resizing
     const reportHeight = () => {
       if (embedded) {
         const height = document.documentElement.scrollHeight;
@@ -89,13 +88,19 @@ const App: React.FC = () => {
     const resizeObserver = new ResizeObserver(reportHeight);
     resizeObserver.observe(document.body);
 
-    // Check for existing session
+    // Initial session check
     if (supabase) {
+      console.log("Supabase inicializován, kontroluji relaci...");
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
+          console.log("Relace nalezena:", session.user.email);
           setUser(session.user);
           setIsAdmin(true);
+        } else {
+          console.log("Relace nenalezena.");
         }
+      }).catch(err => {
+        console.warn("Chyba při získávání relace:", err);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
@@ -109,72 +114,55 @@ const App: React.FC = () => {
         }
       });
 
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+        resizeObserver.disconnect();
+      };
     }
 
     const vehicleIdParam = urlParams.get('vehicleId');
-
     if (initialViewParam === 'widget') {
       setView('widget');
-      if (vehicleIdParam) {
-        setSelectedVehicleId(vehicleIdParam);
-      }
+      if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
     } else if (initialViewParam === 'calendar') {
       setView('calendar');
     }
     
-    // Load from localStorage first (for demo mode persistence)
-    const savedVehicles = localStorage.getItem('obytkem_vehicles_v3');
-    if (savedVehicles) {
-      try {
-        const parsed = JSON.parse(savedVehicles);
-        const cleaned = parsed.map((v: any) => ({
-          ...v,
-          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
-          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
-        }));
-        setVehicles(cleaned);
-      } catch (e) {
-        console.error("Chyba při načítání vozů z localStorage", e);
-      }
-    }
+    return () => resizeObserver.disconnect();
+  }, []);
 
-    const savedReservations = localStorage.getItem('obytkem_reservations_v3');
-    if (savedReservations) {
-      try {
-        setReservations(JSON.parse(savedReservations));
-      } catch (e) {
-        console.error("Chyba při načítání rezervací z localStorage", e);
-      }
-    }
-
-    const saved = localStorage.getItem('obytkem_last_booking');
-    if (saved) {
-      try {
-        setLastBooking(JSON.parse(saved));
-      } catch (e) {
-        console.error("Chyba při načítání poslední rezervace z localStorage", e);
-      }
-    }
-
-    // Safety timeout to prevent getting stuck on loading screen
+  // Separate effect for data fetching
+  useEffect(() => {
+    console.log("Spouštím fetchData, isAdmin:", isAdmin);
+    
+    // Safety timeout - absolute maximum wait time
     const timeoutId = setTimeout(() => {
       if (isLoading) {
-        console.warn("Načítání trvá příliš dlouho, přepínám do demo módu.");
+        console.warn("Načítání trvá příliš dlouho (8s), vynucuji ukončení načítací obrazovky.");
         setIsLoading(false);
       }
     }, 8000);
 
-    fetchData().finally(() => clearTimeout(timeoutId));
+    fetchData().catch(err => {
+      console.error("fetchData failed with unhandled error:", err);
+      setIsLoading(false);
+    }).finally(() => {
+      console.log("fetchData dokončeno.");
+      clearTimeout(timeoutId);
+      setIsLoading(false);
+    });
   }, [isAdmin]);
 
   const fetchData = async () => {
+    console.log("fetchData start...");
     if (!supabase) {
+      console.log("Supabase není k dispozici, zůstávám v demo režimu.");
       setIsLoading(false);
       return;
     }
 
     try {
+      console.log("Načítám veřejná data...");
       // Public data - always fetch
       const [
         { data: vData, error: vError },
@@ -191,19 +179,20 @@ const App: React.FC = () => {
       if (invError) console.warn("Chyba při načítání inventáře:", invError.message);
 
       if (vData && vData.length > 0) {
+        console.log(`Načteno ${vData.length} vozů.`);
         const mappedVehicles = vData.map(v => ({
           id: v.id,
-          name: v.name.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : v.name,
-          description: v.description.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : v.description,
-          licensePlate: v.license_plate,
-          vin: v.vin,
-          basePrice: Number(v.base_price),
-          minDays: v.min_days,
-          deposit: Number(v.deposit),
-          kmLimitPerDay: v.km_limit_per_day,
-          extraKmPrice: Number(v.extra_km_price),
+          name: v.name?.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : (v.name || 'Obytný vůz'),
+          description: v.description?.includes('Laika') ? 'Moderní a prostorný polointegrovaný vůz na podvozku Renault Master s výkonným motorem 165 kW. Unikátní zadní sezení ve tvaru "U" nabízí maximální komfort pro relaxaci a společné chvíle. Vůz je homologován pro 5 osob na jízdu i spaní.' : (v.description || ''),
+          licensePlate: v.license_plate || '',
+          vin: v.vin || '',
+          basePrice: Number(v.base_price || 0),
+          minDays: v.min_days || 3,
+          deposit: Number(v.deposit || 0),
+          kmLimitPerDay: v.km_limit_per_day || 300,
+          extraKmPrice: Number(v.extra_km_price || 0),
           images: v.images || [],
-          isActive: v.is_active,
+          isActive: v.is_active !== false,
           seasonalPricing: v.seasonal_pricing || [],
           equipment: v.equipment || []
         }));
@@ -239,8 +228,14 @@ const App: React.FC = () => {
         })));
       }
 
+      // VÝZNAMNÁ ZMĚNA: Ukončíme načítání hned po veřejných datech
+      // Admin data se mohou načítat na pozadí
+      console.log("Veřejná data načtena, uvolňuji UI...");
+      setIsLoading(false);
+
       // Admin data - only fetch if authenticated
       if (isAdmin) {
+        console.log("Načítám administrátorská data na pozadí...");
         const [
           { data: rData, error: rError },
           { data: cData, error: cError },
@@ -260,6 +255,7 @@ const App: React.FC = () => {
         if (rError) console.warn("Chyba při načítání rezervací:", rError.message);
         
         if (rData) {
+          console.log(`Načteno ${rData.length} rezervací.`);
           setReservations(rData.map(r => ({
             id: r.id,
             vehicleId: r.vehicle_id,
@@ -274,75 +270,65 @@ const App: React.FC = () => {
           })));
         }
 
-        if (cData) {
-          setCustomers(cData.map(c => ({
-            id: c.id,
-            firstName: c.first_name,
-            lastName: c.last_name,
-            email: c.email,
-            phone: c.phone,
-            address: c.address,
-            idNumber: c.id_number || ''
-          })));
-        }
+        if (cData) setCustomers(cData.map(c => ({
+          id: c.id,
+          firstName: c.first_name,
+          lastName: c.last_name,
+          email: c.email,
+          phone: c.phone,
+          address: c.address,
+          idNumber: c.id_number || ''
+        })));
 
-        if (hData) {
-          setHandoverProtocols(hData.map(h => ({
-            id: h.id,
-            reservationId: h.reservation_id,
-            date: h.date,
-            time: h.time,
-            mileage: h.mileage,
-            fuelLevel: h.fuel_level,
-            cleanliness: h.cleanliness,
-            damages: h.damages,
-            notes: h.notes
-          })));
-        }
+        if (hData) setHandoverProtocols(hData.map(h => ({
+          id: h.id,
+          reservationId: h.reservation_id,
+          date: h.date,
+          time: h.time,
+          mileage: h.mileage,
+          fuelLevel: h.fuel_level,
+          cleanliness: h.cleanliness,
+          damages: h.damages,
+          notes: h.notes
+        })));
 
-        if (retData) {
-          setReturnProtocols(retData.map(r => ({
-            id: r.id,
-            reservationId: r.reservation_id,
-            date: r.date,
-            time: r.time,
-            mileage: r.mileage,
-            fuelLevel: r.fuel_level,
-            cleanliness: r.cleanliness,
-            damages: r.damages,
-            notes: r.notes,
-            returnMileage: r.return_mileage,
-            returnFuelLevel: r.return_fuel_level,
-            returnDamages: r.return_damages,
-            extraKmCharge: r.extra_km_charge
-          })));
-        }
+        if (retData) setReturnProtocols(retData.map(r => ({
+          id: r.id,
+          reservationId: r.reservation_id,
+          date: r.date,
+          time: r.time,
+          mileage: r.mileage,
+          fuelLevel: r.fuel_level,
+          cleanliness: r.cleanliness,
+          damages: r.damages,
+          notes: r.notes,
+          returnMileage: r.return_mileage,
+          returnFuelLevel: r.return_fuel_level,
+          returnDamages: r.return_damages,
+          extraKmCharge: r.extra_km_charge
+        })));
 
-        if (mData) {
-          setMessages(mData.map(m => ({
-            id: m.id,
-            createdAt: m.created_at,
-            name: m.name,
-            email: m.email,
-            phone: m.phone,
-            subject: m.subject,
-            message: m.message,
-            status: m.status
-          })));
-        }
+        if (mData) setMessages(mData.map(m => ({
+          id: m.id,
+          createdAt: m.created_at,
+          name: m.name,
+          email: m.email,
+          phone: m.phone,
+          subject: m.subject,
+          message: m.message,
+          status: m.status
+        })));
 
-        if (sContracts) {
-          setSavedContracts(sContracts.map(s => ({
-            id: s.id,
-            reservationId: s.reservation_id,
-            customerName: s.customer_name,
-            createdAt: s.created_at,
-            content: s.content
-          })));
-        }
+        if (sContracts) setSavedContracts(sContracts.map(s => ({
+          id: s.id,
+          reservationId: s.reservation_id,
+          customerName: s.customer_name,
+          createdAt: s.created_at,
+          content: s.content
+        })));
       }
     } catch (error: any) {
-      console.warn("Chyba při načítání dat:", error.message);
+      console.error("Kritická chyba při fetchData:", error?.message || error);
     } finally {
       setIsLoading(false);
     }
