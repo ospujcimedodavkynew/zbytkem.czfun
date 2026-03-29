@@ -397,9 +397,9 @@ const App: React.FC = () => {
     setIsSubmitting(true);
 
     const newReservation: Reservation = {
-      id: `res-${Date.now()}`,
+      id: crypto.randomUUID(),
       vehicleId: data.vehicleId,
-      customerId: `cust-${Date.now()}`,
+      customerId: crypto.randomUUID(),
       startDate: data.startDate,
       endDate: data.endDate,
       totalPrice: data.totalPrice,
@@ -537,7 +537,7 @@ const App: React.FC = () => {
 
   const handleAddInventoryItem = async (newItem: Omit<InventoryItem, 'id'>) => {
     console.log("Adding inventory item:", newItem.name);
-    const id = `inv-${Date.now()}`;
+    const id = crypto.randomUUID();
     const itemWithId = { ...newItem, id };
     
     try {

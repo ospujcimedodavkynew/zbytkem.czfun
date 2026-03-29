@@ -304,7 +304,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     
     if (activeProtocolEdit.type === 'handover') {
       const protocol: HandoverProtocol = {
-        id: `hp-${Date.now()}`,
+        id: crypto.randomUUID(),
         reservationId: activeProtocolEdit.reservationId,
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
@@ -318,7 +318,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } else {
       const hp = handoverProtocols.find(p => p.reservationId === activeProtocolEdit.reservationId);
       const protocol: ReturnProtocol = {
-        id: `rp-${Date.now()}`,
+        id: crypto.randomUUID(),
         reservationId: activeProtocolEdit.reservationId,
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString(),
@@ -660,7 +660,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <button 
                     onClick={() => {
                       const newSeason: SeasonPrice = {
-                        id: `s-${Date.now()}`,
+                        id: crypto.randomUUID(),
                         name: 'Nová sezóna',
                         startDate: new Date().toISOString().split('T')[0],
                         endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -1580,7 +1580,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button 
                 onClick={() => {
                   onSaveContract({
-                    id: `contract-${Date.now()}`,
+                    id: crypto.randomUUID(),
                     reservationId: viewingContract.resId,
                     customerName: viewingContract.customer,
                     createdAt: new Date().toISOString(),
