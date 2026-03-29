@@ -157,12 +157,16 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           {days.map((day, idx) => {
             const status = getDayStatus(day || 0);
             const isSelected = status.startsWith('selected');
+            const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : '';
+            const vehicle = vehicles.find(v => v.id === selectedVehicleId);
+            const season = vehicle?.seasonalPricing?.find(s => dateStr >= s.startDate && dateStr <= s.endDate);
+            const price = season ? season.pricePerDay : vehicle?.basePrice;
             
             return (
               <div 
                 key={idx} 
                 onClick={() => handleDayClick(day || 0)}
-                className={`aspect-square flex items-center justify-center text-[9px] rounded-lg transition-all relative group
+                className={`aspect-square flex flex-col items-center justify-center rounded-lg transition-all relative group
                   ${!day ? 'bg-transparent' : 
                     status === 'reserved' 
                       ? isDarkMode ? 'bg-red-900/20 text-red-400 font-bold border border-red-900/30 cursor-not-allowed' : 'bg-red-50 text-red-600 font-bold border border-red-100 cursor-not-allowed' 
@@ -171,12 +175,18 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                         : isSelected
                           ? 'bg-brand-primary text-white font-black shadow-lg shadow-brand-primary/30 scale-105 z-10'
                           : status === 'today'
-                            ? isDarkMode ? 'bg-brand-primary/20 text-brand-primary font-black border-2 border-brand-primary cursor-pointer' : 'bg-brand-primary/10 text-brand-primary font-black border-2 border-brand-primary cursor-pointer'
+                            ? isDarkMode ? 'bg-brand-primary/20 text-brand-primary font-black border-2 border-brand-primary cursor-pointer ring-4 ring-brand-primary/10' : 'bg-brand-primary/10 text-brand-primary font-black border-2 border-brand-primary cursor-pointer ring-4 ring-brand-primary/10'
                             : isDarkMode 
                               ? 'bg-emerald-900/20 text-emerald-400 font-medium border border-emerald-900/30 cursor-pointer hover:bg-brand-primary/20 hover:scale-110 shadow-sm'
                               : 'bg-emerald-50 text-emerald-700 font-medium border border-emerald-100 cursor-pointer hover:bg-brand-primary/10 hover:scale-110 shadow-sm'}`}
               >
-                {day}
+                {status === 'today' && (
+                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 bg-brand-primary text-white text-[5px] font-black px-1 rounded-full z-20">DNES</span>
+                )}
+                <span className={isEmbedded ? 'text-[8px]' : 'text-[10px]'}>{day}</span>
+                {day && status !== 'reserved' && status !== 'past' && !isEmbedded && (
+                  <span className="text-[6px] opacity-60 font-black mt-0.5">{price} Kč</span>
+                )}
                 {status === 'selected-range' && (
                   <div className="absolute inset-0 bg-brand-primary/20 -z-10 rounded-none" />
                 )}

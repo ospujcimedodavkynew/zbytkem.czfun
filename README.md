@@ -12,7 +12,7 @@ Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů
 
 ## 🛠 Instalace a spuštění
 1. Systém běží jako statická webová aplikace (SPA).
-2. Pro správnou funkci generování smluv a analýz je vyžadován `process.env.API_KEY` (Gemini API).
+2. Pro správnou funkci generování smluv a analýz je vyžadován `process.env.GEMINI_API_KEY` (Gemini API).
 3. **Přístup do administrace**:
    - Tlačítko: "Vstup pro majitele" v navigaci.
    - Heslo: `admin`

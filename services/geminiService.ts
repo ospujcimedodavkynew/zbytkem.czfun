@@ -5,7 +5,13 @@ import { GoogleGenAI } from "@google/genai";
  * Zkontroluje, zda je AI klíč dostupný v prostředí
  */
 export const isAiConfigured = () => {
-  return !!process.env.API_KEY;
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    console.warn("GEMINI_API_KEY is not defined in process.env");
+  } else {
+    console.log("GEMINI_API_KEY is defined (starts with: " + key.substring(0, 4) + "...)");
+  }
+  return !!key;
 };
 
 /**
@@ -14,13 +20,13 @@ export const isAiConfigured = () => {
 export const analyzeReservationTrends = async (reservations: any[]) => {
   if (!isAiConfigured()) {
     return {
-      summary: "AI klíč nebyl nalezen v prostředí (process.env.API_KEY).",
+      summary: "AI klíč nebyl nalezen v prostředí (process.env.GEMINI_API_KEY).",
       occupancyRate: "0 %",
       recommendation: "Pro aktivaci analýzy nastavte API klíč."
     };
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const resData = (reservations || []).map(r => ({
     start: r.startDate,
     end: r.endDate,
@@ -64,10 +70,10 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
  */
 export const generateContractTemplate = async (details: any) => {
   if (!isAiConfigured()) {
-    return "Chyba: process.env.API_KEY není definován. Smlouvu nelze vygenerovat.";
+    return "Chyba: process.env.GEMINI_API_KEY není definován. Smlouvu nelze vygenerovat.";
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
   const prompt = `Jsi právní asistent pro půjčovnu obytných vozů v ČR. 
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
@@ -100,6 +106,6 @@ export const generateContractTemplate = async (details: any) => {
     return response.text || "Nepodařilo se vygenerovat text smlouvy.";
   } catch (error) {
     console.error("AI Contract error:", error);
-    return "Chyba při generování smlouvy přes AI. Ověřte nastavení API_KEY.";
+    return "Chyba při generování smlouvy přes AI. Ověřte nastavení GEMINI_API_KEY.";
   }
 };

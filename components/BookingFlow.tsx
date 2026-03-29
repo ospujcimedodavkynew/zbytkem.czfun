@@ -33,7 +33,10 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
 
   const today = new Date().toISOString().split('T')[0];
 
-  const isDeliverySelected = formData.selectedAddOns.some(a => a.itemId === 'i4');
+  const isDeliverySelected = formData.selectedAddOns.some(a => {
+    const item = inventoryItems.find(i => i.id === a.itemId);
+    return item?.category === 'service' || item?.name?.toLowerCase().includes('dovoz');
+  });
 
   // Filtrování relevantních rezervací pro tento vůz
   const activeReservations = allReservations.filter(r => 

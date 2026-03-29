@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Reservation, Vehicle, ReservationStatus, Customer, SavedContract, SeasonPrice, HandoverProtocol, ReturnProtocol, Message, MaintenanceTask, InventoryItem } from '../types';
+import { DEFAULT_SEASONS } from '../App';
+import { motion, AnimatePresence } from 'motion/react';
 import MessageManager from '../src/components/MessageManager';
 import { formatCurrency, formatDate, getMonthName, calculateDays } from '../utils/format';
 import { generateContractTemplate, analyzeReservationTrends, isAiConfigured } from '../services/geminiService';
@@ -67,6 +69,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing' | 'customers' | 'contracts'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
+  const [viewingReservationId, setViewingReservationId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
@@ -609,13 +612,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="grid gap-4">
                 {editingVehicle.seasonalPricing.map((s, idx) => (
                   <div key={s.id} className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex-grow space-y-1">
+                    <div className="flex-grow space-y-3">
                       <input className="w-full bg-transparent font-black text-slate-900 text-lg outline-none" value={s.name} onChange={e => {
                         const newPricing = [...editingVehicle.seasonalPricing];
                         newPricing[idx].name = e.target.value;
                         setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
                       }} />
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formatDate(s.startDate)} - {formatDate(s.endDate)}</div>
+                      <div className="flex items-center gap-4">
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Od</label>
+                          <input type="date" value={s.startDate} onChange={e => {
+                            const newPricing = [...editingVehicle.seasonalPricing];
+                            newPricing[idx].startDate = e.target.value;
+                            setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
+                          }} className="text-[10px] font-bold text-slate-600 bg-slate-50 border-0 p-1 rounded outline-none" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Do</label>
+                          <input type="date" value={s.endDate} onChange={e => {
+                            const newPricing = [...editingVehicle.seasonalPricing];
+                            newPricing[idx].endDate = e.target.value;
+                            setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
+                          }} className="text-[10px] font-bold text-slate-600 bg-slate-50 border-0 p-1 rounded outline-none" />
+                        </div>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100">
                       <input type="number" className="w-32 bg-white border border-slate-200 rounded-xl px-4 py-2 font-black text-brand-primary text-xl text-right outline-none" value={s.pricePerDay} onChange={e => {
@@ -625,6 +645,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       }} />
                       <span className="font-black text-slate-400 pr-2">Kč / den</span>
                     </div>
+                    <button 
+                      onClick={() => {
+                        const newPricing = editingVehicle.seasonalPricing.filter((_, i) => i !== idx);
+                        setEditingVehicle({...editingVehicle, seasonalPricing: newPricing});
+                      }}
+                      className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
                   </div>
                 ))}
                 <div className="flex gap-4">
@@ -648,15 +677,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </button>
                   <button 
                     onClick={() => {
-                      const defaultSeasons: SeasonPrice[] = [
-                        { id: 's1', name: 'Vedlejší sezóna', startDate: '2026-01-01', endDate: '2026-03-31', pricePerDay: 2500 },
-                        { id: 's2', name: 'Střední sezóna', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 2900 },
-                        { id: 's3', name: 'Hlavní sezóna', startDate: '2026-06-01', endDate: '2026-09-30', pricePerDay: 3400 },
-                        { id: 's4', name: 'Pozdní sezóna', startDate: '2026-10-01', endDate: '2026-12-31', pricePerDay: 2700 }
-                      ];
+                      if (confirm('Opravdu chcete tyto sezóny nastavit pro VŠECHNY vozy?')) {
+                        vehicles.forEach(v => {
+                          onUpdateVehicle({
+                            ...v,
+                            seasonalPricing: editingVehicle.seasonalPricing
+                          });
+                        });
+                        alert('Sezóny byly nastaveny pro všechny vozy.');
+                      }
+                    }}
+                    className="px-6 py-4 border-2 border-brand-primary/20 rounded-3xl text-[10px] font-black uppercase text-brand-primary hover:bg-brand-primary/5 transition-all"
+                  >
+                    Použít pro všechny vozy
+                  </button>
+                  <button 
+                    onClick={() => {
                       setEditingVehicle({
                         ...editingVehicle,
-                        seasonalPricing: defaultSeasons
+                        seasonalPricing: DEFAULT_SEASONS
                       });
                     }}
                     className="px-6 py-4 border-2 border-slate-200 rounded-3xl text-[10px] font-black uppercase text-slate-400 hover:bg-slate-50 transition-all"
@@ -1035,6 +1074,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           {customer?.firstName} {customer?.lastName}
                         </div>
                         <div className="text-[10px] text-slate-400 font-bold uppercase">{customer?.email}</div>
+                        {res.deliveryAddress && (
+                          <div className="mt-1 flex items-center gap-1 text-[9px] text-brand-primary font-black uppercase">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Dovoz: {res.deliveryAddress} ({res.deliveryTime})
+                          </div>
+                        )}
                       </td>
                       <td className="px-8 py-6 text-sm font-medium">
                         {formatDate(res.startDate)} - {formatDate(res.endDate)}
@@ -1057,6 +1102,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         {hp && !rp && (
                           <button onClick={() => openProtocolModal('return', res.id)} className="text-[10px] font-black text-purple-600 hover:text-purple-800 uppercase">Vrátit vůz</button>
                         )}
+                        <button 
+                          onClick={() => setViewingReservationId(res.id)}
+                          className="text-[10px] font-black text-brand-primary hover:text-brand-primary/80 uppercase"
+                        >
+                          Detail
+                        </button>
                         <button 
                           disabled={generatingContractId === res.id}
                           onClick={() => handleGenerateContract(res)}
@@ -1389,6 +1440,126 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Reservation Detail Modal */}
+      {viewingReservationId && (
+        <div className="fixed inset-0 z-[450] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[3rem] shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300"
+          >
+            {(() => {
+              const res = reservations.find(r => r.id === viewingReservationId);
+              if (!res) return null;
+              const customer = customers.find(c => c.id === res.customerId);
+              const vehicle = vehicles.find(v => v.id === res.vehicleId);
+              
+              return (
+                <div className="p-12 space-y-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h2 className="text-3xl font-black tracking-tight">Detail rezervace</h2>
+                      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">ID: {res.id}</p>
+                    </div>
+                    <button onClick={() => setViewingReservationId(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors">
+                      <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Zákazník</label>
+                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="font-black text-slate-900 text-lg">{customer?.firstName} {customer?.lastName}</div>
+                          <div className="text-sm text-slate-500 font-medium mt-1">{customer?.email}</div>
+                          <div className="text-sm text-slate-500 font-medium">{customer?.phone}</div>
+                          <div className="text-sm text-slate-500 font-medium mt-2">{customer?.address}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vozidlo a termín</label>
+                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="font-black text-slate-900">{vehicle?.name}</div>
+                          <div className="text-sm text-slate-500 font-medium">{vehicle?.licensePlate}</div>
+                          <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
+                            <div className="font-black text-brand-primary">{formatDate(res.startDate)} - {formatDate(res.endDate)}</div>
+                            <div className="text-[10px] font-black bg-slate-200 px-2 py-0.5 rounded text-slate-600 uppercase">{calculateDays(res.startDate, res.endDate)} dní</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Doplňkové služby a dovoz</label>
+                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                          {res.selectedAddOns && res.selectedAddOns.length > 0 ? (
+                            <div className="space-y-2">
+                              {res.selectedAddOns.map(addon => {
+                                const item = inventoryItems.find(i => i.id === addon.itemId);
+                                return (
+                                  <div key={addon.itemId} className="flex justify-between text-xs font-bold">
+                                    <span className="text-slate-600">{item?.name}</span>
+                                    <span className="text-slate-900">{addon.quantity}x</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-400 italic">Žádné doplňkové služby</div>
+                          )}
+
+                          {res.deliveryAddress && (
+                            <div className="pt-4 border-t border-slate-200">
+                              <div className="text-[9px] font-black text-brand-primary uppercase tracking-widest mb-1">Dovoz na adresu</div>
+                              <div className="font-black text-slate-900 text-sm leading-tight">{res.deliveryAddress}</div>
+                              <div className="text-xs text-slate-500 font-bold mt-1">Čas: {res.deliveryTime}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Finanční souhrn</label>
+                        <div className="p-5 bg-slate-900 rounded-2xl text-white">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-slate-400">Celková cena:</span>
+                            <span className="text-2xl font-black text-brand-primary">{formatCurrency(res.totalPrice)}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                            <span className="text-xs font-bold text-slate-400">Vratná kauce:</span>
+                            <span className="text-sm font-black text-white">{formatCurrency(res.deposit)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
+                    <button 
+                      onClick={() => setViewingReservationId(null)}
+                      className="px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all"
+                    >
+                      Zavřít
+                    </button>
+                    <button 
+                      onClick={() => {
+                        handleGenerateContract(res);
+                        setViewingReservationId(null);
+                      }}
+                      className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
+                    >
+                      Generovat smlouvu
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </motion.div>
+        </div>
+      )}
 
       {/* Contract Viewer Modal */}
       {viewingContract && (

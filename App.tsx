@@ -18,6 +18,13 @@ import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, Hando
 import { supabase } from './lib/supabase';
 import SEO from './src/components/SEO';
 
+export const DEFAULT_SEASONS = [
+  { id: 's1', name: 'Vedlejší sezóna', startDate: '2026-01-01', endDate: '2026-03-31', pricePerDay: 2500 },
+  { id: 's2', name: 'Střední sezóna', startDate: '2026-04-01', endDate: '2026-05-31', pricePerDay: 2900 },
+  { id: 's3', name: 'Hlavní sezóna', startDate: '2026-06-01', endDate: '2026-09-30', pricePerDay: 3400 },
+  { id: 's4', name: 'Pozdní sezóna', startDate: '2026-10-01', endDate: '2026-12-31', pricePerDay: 2700 }
+];
+
 const App: React.FC = () => {
   console.log("App component rendering...");
   const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
@@ -193,7 +200,7 @@ const App: React.FC = () => {
           extraKmPrice: Number(v.extra_km_price || 0),
           images: v.images || [],
           isActive: v.is_active !== false,
-          seasonalPricing: v.seasonal_pricing || [],
+          seasonalPricing: (v.seasonal_pricing && v.seasonal_pricing.length > 0) ? v.seasonal_pricing : DEFAULT_SEASONS,
           equipment: v.equipment || []
         }));
         setVehicles(mappedVehicles);
@@ -215,6 +222,9 @@ const App: React.FC = () => {
       }
 
       if (invData) {
+        if (invData.length > 0) {
+          console.log("Inventory columns:", Object.keys(invData[0]));
+        }
         setInventoryItems(invData.map(i => ({
           id: i.id,
           name: i.name,
@@ -256,6 +266,9 @@ const App: React.FC = () => {
         
         if (rData) {
           console.log(`Načteno ${rData.length} rezervací.`);
+          if (rData.length > 0) {
+            console.log("Reservation columns:", Object.keys(rData[0]));
+          }
           setReservations(rData.map(r => ({
             id: r.id,
             vehicleId: r.vehicle_id,
@@ -266,7 +279,10 @@ const App: React.FC = () => {
             deposit: Number(r.deposit),
             status: r.status as ReservationStatus,
             createdAt: r.created_at,
-            customerNote: r.customer_note
+            customerNote: r.customer_note,
+            deliveryAddress: r.delivery_address,
+            deliveryTime: r.delivery_time,
+            selectedAddOns: r.selected_add_ons || []
           })));
         }
 
