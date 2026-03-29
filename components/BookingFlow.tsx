@@ -35,7 +35,8 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
 
   const isDeliverySelected = formData.selectedAddOns.some(a => {
     const item = inventoryItems.find(i => i.id === a.itemId);
-    return item?.category === 'service' || item?.name?.toLowerCase().includes('dovoz');
+    const name = item?.name?.toLowerCase() || '';
+    return item?.category === 'service' || name.includes('dovoz') || name.includes('delivery') || name.includes('home');
   });
 
   // Filtrování relevantních rezervací pro tento vůz

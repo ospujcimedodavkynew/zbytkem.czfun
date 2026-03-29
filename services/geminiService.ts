@@ -5,9 +5,9 @@ import { GoogleGenAI } from "@google/genai";
  * Zkontroluje, zda je AI klíč dostupný v prostředí
  */
 export const isAiConfigured = () => {
-  const key = process.env.GEMINI_API_KEY;
+  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
   if (!key) {
-    console.warn("GEMINI_API_KEY is not defined in process.env");
+    console.warn("GEMINI_API_KEY is not defined in process.env or import.meta.env");
   } else {
     console.log("GEMINI_API_KEY is defined (starts with: " + key.substring(0, 4) + "...)");
   }
@@ -18,7 +18,8 @@ export const isAiConfigured = () => {
  * AI analýza trendů rezervací s využitím modelu Gemini 3 Flash
  */
 export const analyzeReservationTrends = async (reservations: any[]) => {
-  if (!isAiConfigured()) {
+  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  if (!key) {
     return {
       summary: "AI klíč nebyl nalezen v prostředí (process.env.GEMINI_API_KEY).",
       occupancyRate: "0 %",
@@ -26,7 +27,7 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
     };
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: key });
   const resData = (reservations || []).map(r => ({
     start: r.startDate,
     end: r.endDate,
@@ -69,11 +70,12 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
  * Generování smlouvy na míru přes AI s modelem Gemini 3 Flash
  */
 export const generateContractTemplate = async (details: any) => {
-  if (!isAiConfigured()) {
+  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  if (!key) {
     return "Chyba: process.env.GEMINI_API_KEY není definován. Smlouvu nelze vygenerovat.";
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: key });
 
   const prompt = `Jsi právní asistent pro půjčovnu obytných vozů v ČR. 
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
