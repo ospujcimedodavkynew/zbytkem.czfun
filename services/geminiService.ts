@@ -1,13 +1,22 @@
 
 import { GoogleGenAI } from "@google/genai";
 
+const getApiKey = () => {
+  // Zkusíme všechny možné zdroje klíče
+  const key = process.env.GEMINI_API_KEY || 
+              import.meta.env.VITE_GEMINI_API_KEY || 
+              (typeof process !== 'undefined' ? process.env.API_KEY : '') ||
+              '';
+  return key;
+};
+
 /**
  * Zkontroluje, zda je AI klíč dostupný v prostředí
  */
 export const isAiConfigured = () => {
-  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  const key = getApiKey();
   if (!key) {
-    console.warn("GEMINI_API_KEY is not defined in process.env or import.meta.env");
+    console.warn("GEMINI_API_KEY is not defined in any environment source");
   } else {
     console.log("GEMINI_API_KEY is defined (starts with: " + key.substring(0, 4) + "...)");
   }
@@ -18,10 +27,10 @@ export const isAiConfigured = () => {
  * AI analýza trendů rezervací s využitím modelu Gemini 3 Flash
  */
 export const analyzeReservationTrends = async (reservations: any[]) => {
-  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  const key = getApiKey();
   if (!key) {
     return {
-      summary: "AI klíč nebyl nalezen v prostředí (process.env.GEMINI_API_KEY).",
+      summary: "AI klíč nebyl nalezen v prostředí. Nastavte GEMINI_API_KEY v nastavení.",
       occupancyRate: "0 %",
       recommendation: "Pro aktivaci analýzy nastavte API klíč."
     };
@@ -70,9 +79,9 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
  * Generování smlouvy na míru přes AI s modelem Gemini 3 Flash
  */
 export const generateContractTemplate = async (details: any) => {
-  const key = process.env.GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+  const key = getApiKey();
   if (!key) {
-    return "Chyba: process.env.GEMINI_API_KEY není definován. Smlouvu nelze vygenerovat.";
+    return "Chyba: GEMINI_API_KEY není definován v prostředí. Smlouvu nelze vygenerovat.";
   }
 
   const ai = new GoogleGenAI({ apiKey: key });
