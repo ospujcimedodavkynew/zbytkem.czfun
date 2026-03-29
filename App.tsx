@@ -428,7 +428,8 @@ const App: React.FC = () => {
         last_name: data.lastName,
         email: data.email,
         phone: data.phone,
-        address: data.address
+        address: data.address,
+        id_number: data.idNumber
       }).select().single();
       
       if (cErr) throw cErr;

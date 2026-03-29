@@ -91,11 +91,12 @@ export const generateContractTemplate = async (details: any) => {
     Vytvoř profesionální, právně závaznou smlouvu o nájmu dopravního prostředku (obytného vozu) s těmito detaily:
     
     PRONAJÍMATEL: Milan Gula, Teslova Brno, IČO 07031653
-    NÁJEMCE: ${details.customerName}, adresa: ${details.customerAddress}, email: ${details.customerEmail}, telefon: ${details.customerPhone}
-    VOZIDLO: ${details.vehicleName}, SPZ: ${details.licensePlate}
+    NÁJEMCE: ${details.customerName}, adresa: ${details.customerAddress}, email: ${details.customerEmail}, telefon: ${details.customerPhone}, číslo OP/Pas: ${details.idNumber}
+    VOZIDLO: ${details.vehicleName}, SPZ: ${details.licensePlate}, Délka: 6980 cm
     TERMÍN: od ${details.startDate} do ${details.endDate}
     CENA: ${details.price}
     KAUCE: ${details.deposit}
+    DOPLŇKOVÉ SLUŽBY: ${details.selectedItems || 'Žádné'}
     
     Smlouva musí obsahovat:
     - Jasné vymezení předmětu nájmu
@@ -103,6 +104,7 @@ export const generateContractTemplate = async (details: any) => {
     - Sankce za pozdní vrácení nebo nadměrné znečištění
     - Postup při nehodě
     - Místo předání: Brno - Bohunice
+    - Seznam doplňkových služeb a jejich ceny (pokud jsou vybrány)
     
     Piš česky, formálně a strukturovaně.`;
 

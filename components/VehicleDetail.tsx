@@ -16,7 +16,7 @@ const VehicleDetail: React.FC<VehicleDetailProps> = ({ vehicle, onBack, onBook }
     { label: 'Podvozek', value: 'Renault Master' },
     { label: 'Motor', value: '2.3 dCi 145 HP' },
     { label: 'Převodovka', value: 'Manuální 6st.' },
-    { label: 'Délka / Šířka / Výška', value: '7.47m / 2.37m / 3.06m' },
+    { label: 'Délka / Šířka / Výška', value: '6.98m / 2.37m / 3.06m' },
     { label: 'Počet míst (jízda/spaní)', value: '4 / 4' },
     { label: 'Váha', value: '3 500 kg (skupina B)' },
     { label: 'Nádrž na čistou vodu', value: '100 L' },

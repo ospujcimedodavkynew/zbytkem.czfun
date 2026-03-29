@@ -184,18 +184,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const customer = customers.find(c => c.id === res.customerId);
     const vehicle = vehicles.find(v => v.id === res.vehicleId);
 
+    const selectedItemsText = res.selectedAddOns?.map(addon => {
+      const item = inventoryItems.find(i => i.id === addon.itemId);
+      return item ? `${item.name} (${addon.quantity}x) - ${formatCurrency(item.pricePerDay * addon.quantity)}` : '';
+    }).filter(Boolean).join(', ') || 'Žádné';
+
     try {
       const contractText = await generateContractTemplate({
         customerName: `${customer?.firstName} ${customer?.lastName}`,
         customerAddress: customer?.address || 'Neuvedena',
         customerEmail: customer?.email || '',
         customerPhone: customer?.phone || 'Neuveden',
+        idNumber: customer?.idNumber || 'Neuvedeno',
         vehicleName: vehicle?.name || 'Obytný vůz',
         licensePlate: vehicle?.licensePlate || '',
         startDate: formatDate(res.startDate),
         endDate: formatDate(res.endDate),
         price: formatCurrency(res.totalPrice),
-        deposit: formatCurrency(res.deposit)
+        deposit: formatCurrency(res.deposit),
+        selectedItems: selectedItemsText
       });
 
       setViewingContract({

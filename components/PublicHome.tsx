@@ -45,11 +45,11 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
   const faqs = [
     {
       q: "Co je všechno v ceně pronájmu?",
-      a: "V ceně je kompletní vybavení pro 5 osob: lůžkoviny, ručníky, plně vybavená kuchyň (nádobí, příbory, hrnce), kempingový nábytek (stůl + 5 židlí), markýza, vyrovnávací klíny, kabel pro připojení k el. síti, hadice na vodu a chemie do WC. Vůz má dálniční známku pro ČR a havarijní pojištění s asistencí po celé Evropě."
+      a: "V ceně pronájmu je zahrnuto: vozidlo, propanbutanové lahve, příslušenství, sada nádobí, markýza, kabel na připojení v campu. Vůz má dálniční známku pro ČR a havarijní pojištění s asistencí po celé Evropě."
     },
     {
       q: "Jaké jsou rozměry a hmotnost Ahorn TU Plus?",
-      a: "Ahorn TU Plus (2022) má délku 7,48 m, šířku 2,35 m a výšku 2,95 m. Provozní hmotnost je cca 3050 kg, doložnost tedy cca 450 kg do limitu 3500 kg (skupina B). Díky motoru 2.3 dCi s výkonem 165 kW (chip) je jízda velmi svižná i v kopcích."
+      a: "Ahorn TU Plus (2022) má délku 6980 cm (6,98 m), šířku 2,35 m a výšku 2,95 m. Provozní hmotnost je cca 3050 kg, doložnost tedy cca 450 kg do limitu 3500 kg (skupina B). Díky motoru 2.3 dCi s výkonem 165 kW (chip) je jízda velmi svižná i v kopcích."
     },
     {
       q: "Jak funguje spaní pro 5 osob?",
@@ -91,7 +91,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     {
       title: "Jízda a rozměry",
       icon: "🚐",
-      content: "Vůz je vysoký 3 metry a dlouhý 7 metrů. Pozor na podjezdy a větve! Při couvání vždy využívejte kameru a ideálně i pomocníka venku. Nezapomeňte před jízdou zavřít všechna okna a zajistit skříňky."
+      content: "Vůz je vysoký 3 metry a dlouhý 6,98 metru. Pozor na podjezdy a větve! Při couvání vždy využívejte kameru a ideálně i pomocníka venku. Nezapomeňte před jízdou zavřít všechna okna a zajistit skříňky."
     }
   ];
 
@@ -402,7 +402,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Váha (sk. B)</div>
                 </div>
                 <div className={`p-6 rounded-3xl border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
-                  <div className={`font-black text-2xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>7.4 m</div>
+                  <div className={`font-black text-2xl ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>6.98 m</div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Délka vozu</div>
                 </div>
                 <div className={`p-6 rounded-3xl border transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>

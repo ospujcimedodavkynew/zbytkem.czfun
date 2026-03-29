@@ -25,6 +25,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
     email: '',
     phone: '',
     address: '',
+    idNumber: '',
     deliveryAddress: '',
     deliveryTime: '',
     note: '',
@@ -294,7 +295,10 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
                 <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
-              <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+                <input type="text" name="idNumber" placeholder="Číslo OP / Pas" required value={formData.idNumber} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
+              </div>
               
               {isDeliverySelected && (
                 <div className="p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/20 space-y-3 animate-in slide-in-from-left-2">
