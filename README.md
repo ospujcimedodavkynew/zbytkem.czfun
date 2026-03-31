@@ -23,7 +23,7 @@ Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů
 - `services/geminiService.ts`: Logika pro AI funkce.
 
 ## 📍 Předání vozu
-- **Místo**: Parkoviště Teslova, Brno - Bohunice.
+- **Místo**: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
 - **Vozidlo**: Ahorn TU Plus, model 2021.
 
 ## 📧 Automatizace

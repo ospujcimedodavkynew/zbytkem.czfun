@@ -110,7 +110,7 @@ export const generateContractTemplate = async (details: any) => {
     - Smluvní limit kilometrů: 300 km na každý den nájmu. Celkový limit za dobu nájmu je počet dní x 300 km.
     - Sankce za překročení limitu kilometrů, pozdní vrácení nebo nadměrné znečištění
     - Postup při nehodě
-    - Místo předání: Brno - Bohunice
+    - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
     - Seznam doplňkových služeb a jejich ceny (pokud jsou vybrány)
     
     Piš česky, formálně a strukturovaně.`;

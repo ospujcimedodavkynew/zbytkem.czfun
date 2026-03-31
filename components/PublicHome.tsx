@@ -672,9 +672,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 <MapPin className="w-4 h-4" />
                 KDE NÁS NAJDETE
               </div>
-              <h2 className={`text-4xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Brno - Bohunice</h2>
+              <h2 className={`text-4xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Teslova, Brno</h2>
               <p className={`text-lg mb-8 font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Naše základna se nachází v Brně - Bohunicích s výbornou dostupností z dálnice D1. 
+                Naše základna se nachází na parkovišti Teslova v Brně s výbornou dostupností z dálnice D1. 
                 Při převzetí vozu u nás můžete zdarma zaparkovat své osobní auto v hlídaném areálu.
               </p>
               <div className="space-y-4">
@@ -684,7 +684,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </div>
                   <div>
                     <p className={`font-black uppercase tracking-widest text-[10px] mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Adresa předání</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Brno - Bohunice (přesná adresa v potvrzení)</p>
+                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu</p>
                   </div>
                 </div>
                 <div className={`flex items-center gap-4 p-6 rounded-[2rem] border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100 shadow-premium'}`}>
@@ -698,7 +698,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 </div>
               </div>
               <a 
-                href="https://maps.google.com/?q=Brno+Bohunice" 
+                href="https://maps.google.com/?q=Teslova+Brno+Obytkem" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 mt-10 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl"
@@ -709,7 +709,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
             </div>
             <div className="h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-slate-800">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2608.234567890123!2d16.56789012345678!3d49.16789012345678!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4712945678901234%3A0x1234567890123456!2sBohunice%2C+Brno!5e0!3m2!1scs!2scz!4v1234567890123" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2608.123456789!2d16.578901234567!3d49.178901234567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4712945678901234%3A0x1234567890123456!2sTeslova%2C+Brno!5e0!3m2!1scs!2scz!4v1234567890123" 
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
@@ -809,7 +809,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       )}
 
       {/* Floating Buttons */}
-      <div className="fixed bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-24 md:bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         <motion.a
           href="https://wa.me/420776333301"
           target="_blank"
