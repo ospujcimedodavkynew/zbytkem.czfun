@@ -42,7 +42,9 @@ export const analyzeReservationTrends = async (reservations: any[]) => {
     start: r.startDate,
     end: r.endDate,
     price: r.totalPrice,
-    status: r.status
+    status: r.status,
+    destination: r.destination,
+    mileage: r.estimatedMileage
   }));
 
   const prompt = `Analyzuj tyto rezervace obytného vozu pro sezónu 2026 a vrať odpověď v JSON formátu:
@@ -93,10 +95,12 @@ export const generateContractTemplate = async (details: any) => {
     PRONAJÍMATEL: Milan Gula, Teslova Brno, IČO 07031653
     NÁJEMCE: ${details.customerName}, adresa: ${details.customerAddress}, email: ${details.customerEmail}, telefon: ${details.customerPhone}, číslo OP/Pas: ${details.idNumber}
     VOZIDLO: ${details.vehicleName}, SPZ: ${details.licensePlate}, Délka: 6980 cm
-    TERMÍN: od ${details.startDate} do ${details.endDate}
+    TERMÍN: od ${details.startDate} v ${details.pickupTime} do ${details.endDate} v ${details.returnTime}
     CENA: ${details.price}
     KAUCE: ${details.deposit}
     DOPLŇKOVÉ SLUŽBY: ${details.selectedItems || 'Žádné'}
+    CÍL CESTY: ${details.destination || 'Neuveden'}
+    PŘEDPOKLÁDANÝ NÁJEZD: ${details.estimatedMileage || 'Neuveden'} km
     
     Smlouva musí obsahovat:
     - Jasné vymezení předmětu nájmu

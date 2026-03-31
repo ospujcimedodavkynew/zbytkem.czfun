@@ -28,6 +28,10 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
     idNumber: '',
     deliveryAddress: '',
     deliveryTime: '',
+    pickupTime: '09:00',
+    returnTime: '17:00',
+    estimatedMileage: '',
+    destination: '',
     note: '',
     selectedAddOns: [] as { itemId: string; quantity: number }[]
   });
@@ -196,12 +200,36 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                   <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
                     {formData.startDate ? formatDate(formData.startDate) : 'Vyberte v kalendáři'}
                   </div>
+                  {formData.startDate && (
+                    <div className="mt-1">
+                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Čas vyzvednutí</label>
+                      <input 
+                        type="time" 
+                        name="pickupTime" 
+                        value={formData.pickupTime} 
+                        onChange={handleChange} 
+                        className="input-ultimate w-full px-3 py-1.5 text-xs font-bold" 
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vrácení</label>
                   <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
                     {formData.endDate ? formatDate(formData.endDate) : 'Vyberte v kalendáři'}
                   </div>
+                  {formData.endDate && (
+                    <div className="mt-1">
+                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Čas vrácení</label>
+                      <input 
+                        type="time" 
+                        name="returnTime" 
+                        value={formData.returnTime} 
+                        onChange={handleChange} 
+                        className="input-ultimate w-full px-3 py-1.5 text-xs font-bold" 
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -329,6 +357,30 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 </div>
               )}
 
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detaily cesty</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    type="text" 
+                    name="destination" 
+                    placeholder="Cíl cesty (např. Alpy, Chorvatsko...)" 
+                    required 
+                    value={formData.destination} 
+                    onChange={handleChange} 
+                    className="input-ultimate w-full px-4 py-3 font-medium text-sm" 
+                  />
+                  <input 
+                    type="number" 
+                    name="estimatedMileage" 
+                    placeholder="Předpokládaný nájezd (km)" 
+                    required 
+                    value={formData.estimatedMileage} 
+                    onChange={handleChange} 
+                    className="input-ultimate w-full px-4 py-3 font-medium text-sm" 
+                  />
+                </div>
+              </div>
+
               <textarea name="note" placeholder="Poznámka..." value={formData.note} onChange={handleChange} className="input-ultimate w-full px-4 py-3 h-20 font-medium text-sm"></textarea>
             </div>
           )}
@@ -343,7 +395,12 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 </div>
                 <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Termín</span>
-                  <span className="text-white text-xs">{formatDate(formData.startDate)} - {formatDate(formData.endDate)} ({days} dní)</span>
+                  <span className="text-white text-xs">{formatDate(formData.startDate)} ({formData.pickupTime}) - {formatDate(formData.endDate)} ({formData.returnTime})</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
+                  <span>Cíl a nájezd</span>
+                  <span className="text-white text-xs">{formData.destination} (cca {formData.estimatedMileage} km)</span>
                 </div>
                 
                 {isDeliverySelected && (

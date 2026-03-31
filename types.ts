@@ -85,6 +85,10 @@ export interface Reservation {
   selectedAddOns?: { itemId: string; quantity: number }[];
   deliveryAddress?: string;
   deliveryTime?: string;
+  pickupTime?: string;
+  returnTime?: string;
+  estimatedMileage?: number;
+  destination?: string;
 }
 
 export interface SavedContract {

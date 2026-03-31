@@ -200,6 +200,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         licensePlate: vehicle?.licensePlate || '',
         startDate: formatDate(res.startDate),
         endDate: formatDate(res.endDate),
+        pickupTime: res.pickupTime || '09:00',
+        returnTime: res.returnTime || '17:00',
+        destination: res.destination || 'Neuveden',
+        estimatedMileage: res.estimatedMileage || 'Neuveden',
         price: formatCurrency(res.totalPrice),
         deposit: formatCurrency(res.deposit),
         selectedItems: selectedItemsText
@@ -1087,6 +1091,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             Dovoz: {res.deliveryAddress} ({res.deliveryTime})
                           </div>
                         )}
+                        {res.destination && (
+                          <div className="mt-1 flex items-center gap-1 text-[9px] text-slate-500 font-black uppercase">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A2 2 0 013 15.483V6a2 2 0 011.223-1.842l5-2.5a2 2 0 011.554 0l5 2.5A2 2 0 0117 6v9.483a2 2 0 01-1.223 1.842L10.33 20a2 2 0 01-1.33 0z"></path></svg>
+                            Cíl: {res.destination}
+                          </div>
+                        )}
                       </td>
                       <td className="px-8 py-6 text-sm font-medium">
                         {formatDate(res.startDate)} - {formatDate(res.endDate)}
@@ -1503,8 +1513,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <div className="font-black text-slate-900">{vehicle?.name}</div>
                           <div className="text-sm text-slate-500 font-medium">{vehicle?.licensePlate}</div>
                           <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
-                            <div className="font-black text-brand-primary">{formatDate(res.startDate)} - {formatDate(res.endDate)}</div>
+                            <div className="font-black text-brand-primary">
+                              {formatDate(res.startDate)} ({res.pickupTime || '09:00'}) - {formatDate(res.endDate)} ({res.returnTime || '17:00'})
+                            </div>
                             <div className="text-[10px] font-black bg-slate-200 px-2 py-0.5 rounded text-slate-600 uppercase">{calculateDays(res.startDate, res.endDate)} dní</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Cíl a nájezd</label>
+                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cíl cesty:</span>
+                            <span className="font-black text-slate-900">{res.destination || 'Neuveden'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Předpokládaný nájezd:</span>
+                            <span className="font-black text-slate-900">{res.estimatedMileage ? `${res.estimatedMileage} km` : 'Neuveden'}</span>
                           </div>
                         </div>
                       </div>

@@ -282,6 +282,10 @@ const App: React.FC = () => {
             customerNote: r.customer_note,
             deliveryAddress: r.delivery_address,
             deliveryTime: r.delivery_time,
+            pickupTime: r.pickup_time,
+            returnTime: r.return_time,
+            estimatedMileage: r.estimated_mileage,
+            destination: r.destination,
             selectedAddOns: r.selected_add_ons || []
           })));
         }
@@ -409,7 +413,11 @@ const App: React.FC = () => {
       customerNote: data.note,
       selectedAddOns: data.selectedAddOns,
       deliveryAddress: data.deliveryAddress,
-      deliveryTime: data.deliveryTime
+      deliveryTime: data.deliveryTime,
+      pickupTime: data.pickupTime,
+      returnTime: data.returnTime,
+      estimatedMileage: Number(data.estimatedMileage),
+      destination: data.destination
     };
 
     // Update local state and localStorage immediately for demo mode
@@ -445,7 +453,11 @@ const App: React.FC = () => {
         customer_note: data.note,
         selected_add_ons: data.selectedAddOns,
         delivery_address: data.deliveryAddress,
-        delivery_time: data.deliveryTime
+        delivery_time: data.deliveryTime,
+        pickup_time: data.pickupTime,
+        return_time: data.returnTime,
+        estimated_mileage: Number(data.estimatedMileage),
+        destination: data.destination
       });
       
       if (rErr) throw rErr;
