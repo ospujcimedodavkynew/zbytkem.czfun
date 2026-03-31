@@ -7,6 +7,7 @@ const getApiKey = () => {
   const key = (typeof process !== 'undefined' && process.env.GEMINI_API_KEY) || 
               import.meta.env.VITE_GEMINI_API_KEY || 
               (typeof process !== 'undefined' && process.env.API_KEY) ||
+              (typeof window !== 'undefined' && (window as any).process?.env?.GEMINI_API_KEY) ||
               '';
   return key;
 };
@@ -114,16 +115,23 @@ export const generateContractTemplate = async (details: any) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.1-pro-preview',
       contents: [{ parts: [{ text: prompt }] }],
       config: {
         systemInstruction: "Vytvářej pouze text smlouvy bez úvodních řečí. Používej profesionální právní češtinu. Důležité: Vždy používej přesný název vozu uvedený v zadání (Ahorn TU Plus), nikdy nepoužívej název 'Laika'."
       }
     });
     
-    return response.text || "Nepodařilo se vygenerovat text smlouvy.";
-  } catch (error) {
-    console.error("AI Contract error:", error);
-    return "Chyba při generování smlouvy přes AI. Ověřte nastavení GEMINI_API_KEY.";
+    if (!response.text) {
+      throw new Error("Model vrátil prázdnou odpověď.");
+    }
+    
+    return response.text;
+  } catch (error: any) {
+    console.error("AI Contract error details:", error);
+    if (error.message?.includes("API_KEY_INVALID")) {
+      return "Chyba: Neplatný API klíč Gemini. Zkontrolujte nastavení v prostředí.";
+    }
+    return `Chyba při generování smlouvy přes AI: ${error.message || 'Neznámá chyba'}. Ověřte nastavení GEMINI_API_KEY.`;
   }
 };

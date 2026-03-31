@@ -174,19 +174,22 @@ const App: React.FC = () => {
       const [
         { data: vData, error: vError },
         { data: maintData, error: maintError },
-        { data: invData, error: invError }
+        { data: invData, error: invError },
+        { data: rDataPublic, error: rErrorPublic }
       ] = await Promise.all([
         supabase.from('vehicles').select('*'),
         supabase.from('maintenance_tasks').select('*'),
-        supabase.from('inventory_items').select('*')
+        supabase.from('inventory_items').select('*'),
+        supabase.from('reservations').select('*') // Načítáme vše pro kalendář
       ]);
 
       if (vError) console.warn("Chyba při načítání vozů:", vError.message);
       if (maintError) console.warn("Chyba při načítání údržby:", maintError.message);
       if (invError) console.warn("Chyba při načítání inventáře:", invError.message);
+      if (rErrorPublic) console.warn("Chyba při načítání rezervací (veřejné):", rErrorPublic.message);
 
       if (vData && vData.length > 0) {
-        console.log(`Načteno ${vData.length} vozů.`);
+        // ... mapping logic ...
         const mappedVehicles = vData.map(v => ({
           id: v.id,
           name: v.name?.includes('Laika') ? 'Ahorn TU Plus (Model 2022)' : (v.name || 'Obytný vůz'),
@@ -204,7 +207,28 @@ const App: React.FC = () => {
           equipment: v.equipment || []
         }));
         setVehicles(mappedVehicles);
-        localStorage.setItem('obytkem_vehicles_v3', JSON.stringify(mappedVehicles));
+      }
+
+      if (rDataPublic) {
+        setReservations(rDataPublic.map(r => ({
+          id: r.id,
+          vehicleId: r.vehicle_id,
+          customerId: r.customer_id,
+          startDate: r.start_date,
+          endDate: r.end_date,
+          totalPrice: Number(r.total_price),
+          deposit: Number(r.deposit),
+          status: r.status as ReservationStatus,
+          createdAt: r.created_at,
+          customerNote: r.customer_note,
+          deliveryAddress: r.delivery_address,
+          deliveryTime: r.delivery_time,
+          pickupTime: r.pickup_time,
+          returnTime: r.return_time,
+          estimatedMileage: r.estimated_mileage,
+          destination: r.destination,
+          selectedAddOns: r.selected_add_ons || []
+        })));
       }
 
       if (maintData) {
@@ -247,48 +271,18 @@ const App: React.FC = () => {
       if (isAdmin) {
         console.log("Načítám administrátorská data na pozadí...");
         const [
-          { data: rData, error: rError },
           { data: cData, error: cError },
           { data: hData, error: hError },
           { data: retData, error: retError },
           { data: mData, error: mError },
           { data: sContracts, error: sError }
         ] = await Promise.all([
-          supabase.from('reservations').select('*').order('created_at', { ascending: false }),
           supabase.from('customers').select('*'),
           supabase.from('handover_protocols').select('*'),
           supabase.from('return_protocols').select('*'),
           supabase.from('messages').select('*').order('created_at', { ascending: false }),
           supabase.from('saved_contracts').select('*').order('created_at', { ascending: false })
         ]);
-
-        if (rError) console.warn("Chyba při načítání rezervací:", rError.message);
-        
-        if (rData) {
-          console.log(`Načteno ${rData.length} rezervací.`);
-          if (rData.length > 0) {
-            console.log("Reservation columns:", Object.keys(rData[0]));
-          }
-          setReservations(rData.map(r => ({
-            id: r.id,
-            vehicleId: r.vehicle_id,
-            customerId: r.customer_id,
-            startDate: r.start_date,
-            endDate: r.end_date,
-            totalPrice: Number(r.total_price),
-            deposit: Number(r.deposit),
-            status: r.status as ReservationStatus,
-            createdAt: r.created_at,
-            customerNote: r.customer_note,
-            deliveryAddress: r.delivery_address,
-            deliveryTime: r.delivery_time,
-            pickupTime: r.pickup_time,
-            returnTime: r.return_time,
-            estimatedMileage: r.estimated_mileage,
-            destination: r.destination,
-            selectedAddOns: r.selected_add_ons || []
-          })));
-        }
 
         if (cData) setCustomers(cData.map(c => ({
           id: c.id,
@@ -431,20 +425,56 @@ const App: React.FC = () => {
     }
 
     try {
-      const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
-        first_name: data.firstName,
-        last_name: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        id_number: data.idNumber
-      }).select().single();
+      console.log("Kontrola existujícího zákazníka...");
+      let customerId;
       
-      if (cErr) throw cErr;
+      // Zkusíme najít zákazníka podle emailu
+      const { data: existingCustomer, error: findErr } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (findErr) {
+        console.warn("Chyba při hledání zákazníka:", findErr);
+      }
+
+      if (existingCustomer) {
+        customerId = existingCustomer.id;
+        console.log("Nalezen existující zákazník, ID:", customerId);
+        
+        // Volitelně můžeme aktualizovat údaje zákazníka
+        await supabase.from('customers').update({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+          address: data.address,
+          id_number: data.idNumber
+        }).eq('id', customerId);
+      } else {
+        console.log("Vytvářím nového zákazníka...");
+        const { data: newCustomerData, error: cErr } = await supabase.from('customers').insert({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          id_number: data.idNumber
+        }).select().single();
+        
+        if (cErr) {
+          console.error("Chyba při ukládání zákazníka:", cErr);
+          throw new Error(`Nepodařilo se uložit údaje o zákazníkovi: ${cErr.message}`);
+        }
+        customerId = newCustomerData.id;
+        console.log("Nový zákazník vytvořen, ID:", customerId);
+      }
+
+      console.log("Odesílám rezervaci do Supabase...");
 
       const { error: rErr } = await supabase.from('reservations').insert({
         vehicle_id: data.vehicleId,
-        customer_id: newCustomerData.id,
+        customer_id: customerId,
         start_date: data.startDate,
         end_date: data.endDate,
         total_price: data.totalPrice,
@@ -452,20 +482,26 @@ const App: React.FC = () => {
         status: ReservationStatus.PENDING,
         customer_note: data.note,
         selected_add_ons: data.selectedAddOns,
-        delivery_address: data.deliveryAddress,
-        delivery_time: data.deliveryTime,
-        pickup_time: data.pickupTime,
-        return_time: data.returnTime,
-        estimated_mileage: Number(data.estimatedMileage),
-        destination: data.destination
+        delivery_address: data.deliveryAddress || null,
+        delivery_time: data.deliveryTime || null,
+        pickup_time: data.pickupTime || null,
+        return_time: data.returnTime || null,
+        estimated_mileage: data.estimatedMileage ? Number(data.estimatedMileage) : null,
+        destination: data.destination || null
       });
       
-      if (rErr) throw rErr;
+      if (rErr) {
+        console.error("Chyba při ukládání rezervace:", rErr);
+        throw new Error(`Nepodařilo se uložit rezervaci: ${rErr.message}`);
+      }
+
+      console.log("Rezervace úspěšně uložena do DB.");
       await fetchData();
       setView('confirmation');
     } catch (err: any) {
-      console.error("DB error:", err.message);
-      setView('confirmation');
+      console.error("KRITICKÁ CHYBA DB:", err);
+      alert("Omlouváme se, ale rezervaci se nepodařilo uložit do databáze. Prosím kontaktujte nás telefonicky. Detail chyby: " + (err.message || "Neznámá chyba"));
+      // V případě chyby neukazujeme potvrzení, ale zůstáváme na formuláři, aby uživatel mohl zkusit znovu nebo nás kontaktovat
     } finally {
       setIsSubmitting(false);
     }
