@@ -61,7 +61,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     },
     {
       q: "Kde si mohu vůz vyzvednout?",
-      a: "Vyzvednutí probíhá v Brně - Bohunicích. Přesnou adresu a instrukce k parkování vašeho vozu obdržíte po potvrzení rezervace. Možnost parkování vašeho osobního vozu v našem hlídaném areálu po dobu pronájmu zdarma."
+      a: "Vyzvednutí probíhá na našem parkovišti Obytkem.cz v Brně na ulici Teslova (po pravé straně od vjezdu). Možnost parkování vašeho osobního vozu v našem hlídaném areálu po dobu pronájmu zdarma. Najdete nás i na Google Maps jako Obytkem.cz."
     }
   ];
 
@@ -698,7 +698,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 </div>
               </div>
               <a 
-                href="https://maps.google.com/?q=Teslova+Brno+Obytkem" 
+                href="https://share.google/6M5XW9rgNIyoFMlfq" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 mt-10 bg-slate-900 text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl"
@@ -797,6 +797,17 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 <div className={`font-black text-xs uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>— {rev.name}</div>
               </div>
             ))}
+          </div>
+          <div className="mt-12 text-center">
+            <a 
+              href="https://share.google/6M5XW9rgNIyoFMlfq" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-brand-primary'}`}
+            >
+              Zobrazit všech 40+ recenzí na Google
+              <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </section>

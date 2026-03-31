@@ -24,6 +24,7 @@ Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů
 
 ## 📍 Předání vozu
 - **Místo**: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
+- **Google Maps**: https://share.google/6M5XW9rgNIyoFMlfq
 - **Vozidlo**: Ahorn TU Plus, model 2021.
 
 ## 📧 Automatizace

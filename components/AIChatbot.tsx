@@ -59,7 +59,7 @@ const AIChatbot: React.FC = () => {
           - Cena se pohybuje od 2500 Kč do 3400 Kč za den dle sezóny.
           - Vratná kauce je 25 000 Kč.
           - Limit kilometrů je 300 km/den, nad limit se doplácí.
-          - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
+          - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu. Odkaz na Google Mapy: https://share.google/6M5XW9rgNIyoFMlfq
           - Vybavení: kuchyňka, sprcha, WC, topení, markýza, držák na kola.
           
           Odpovídej stručně, jasně a česky. Pokud se zákazník ptá na něco, co nevíš, odkaž ho na telefonní kontakt nebo email pujcimedodavky@gmail.com.`,

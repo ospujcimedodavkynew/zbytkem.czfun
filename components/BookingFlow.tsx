@@ -399,6 +399,11 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
                 </div>
                 
                 <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
+                  <span>Místo předání</span>
+                  <span className="text-white text-xs">Teslova, Brno</span>
+                </div>
+                
+                <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[8px]">
                   <span>Cíl a nájezd</span>
                   <span className="text-white text-xs">{formData.destination} (cca {formData.estimatedMileage} km)</span>
                 </div>
