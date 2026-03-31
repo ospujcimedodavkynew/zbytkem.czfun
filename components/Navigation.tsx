@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, LogOut, Menu, X, ChevronRight } from 'lucide-react';
+import { User, LogOut, Menu, X, ChevronRight, Download } from 'lucide-react';
 import Logo from './Logo';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface NavigationProps {
   isAdmin: boolean;
@@ -13,6 +14,7 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo, onLogout }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const { isInstallable, isIOS, isStandalone, handleInstallClick } = usePWAInstall();
 
   const navLinks = [
     { label: 'Domů', onClick: () => onNavigate('home') },
@@ -23,6 +25,15 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
     { label: 'FAQ', onClick: () => onScrollTo('faq') },
     { label: 'Kontakt', onClick: () => onScrollTo('contact') },
   ];
+
+  const handleInstall = () => {
+    if (isIOS) {
+      alert('Pro instalaci na iPhone klepněte na tlačítko "Sdílet" (čtvereček se šipkou nahoru) a zvolte "Přidat na plochu".');
+    } else {
+      handleInstallClick();
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl">
@@ -108,6 +119,20 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
                   <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-white transition-colors" />
                 </button>
               ))}
+              
+              {/* PWA Install Link in Mobile Menu */}
+              {!isStandalone && (
+                <button 
+                  onClick={handleInstall}
+                  className="w-full text-left px-6 py-4 rounded-2xl bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-all flex justify-between items-center group border border-brand-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Download className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase tracking-widest">Stáhnout aplikaci</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-brand-primary/30 group-hover:text-white transition-colors" />
+                </button>
+              )}
               <div className="pt-4 space-y-4">
                 <button
                   onClick={() => { onNavigate('admin'); setIsMobileMenuOpen(false); }}

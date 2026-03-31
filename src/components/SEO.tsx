@@ -71,7 +71,7 @@ const SEO: React.FC<SEOProps> = ({ title, description, image, url }) => {
         "longitude": "16.5714042"
       },
       "priceRange": "CZK",
-      "telephone": "+420XXXXXXXXX"
+      "telephone": "+420776333301"
     });
   }, [fullTitle, description, url, image]);
 

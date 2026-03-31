@@ -809,38 +809,38 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       )}
 
       {/* Floating Buttons */}
-      <div className="fixed bottom-8 right-8 z-[100] flex flex-col gap-4 pointer-events-none">
+      <div className="fixed bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         <motion.button
           onClick={() => setIsDarkMode(!isDarkMode)}
           initial={{ opacity: 0, scale: 0.8, x: 20 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className={`pointer-events-auto w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-colors ${isDarkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'}`}
+          className={`pointer-events-auto w-11 h-11 rounded-full shadow-2xl flex items-center justify-center transition-colors ${isDarkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'}`}
         >
-          {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </motion.button>
         <motion.a
-          href="https://wa.me/420777123456"
+          href="https://wa.me/420776333301"
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, scale: 0.8, x: 20 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="pointer-events-auto w-14 h-14 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-green-600 transition-colors"
+          className="pointer-events-auto w-11 h-11 bg-green-500 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-green-600 transition-colors"
         >
-          <MessageCircle className="w-7 h-7" />
+          <MessageCircle className="w-5 h-5" />
         </motion.a>
         <motion.a
-          href="tel:+420777123456"
+          href="tel:+420776333301"
           initial={{ opacity: 0, scale: 0.8, x: 20 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="pointer-events-auto w-14 h-14 bg-orange-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-orange-700 transition-colors"
+          className="pointer-events-auto w-11 h-11 bg-orange-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-orange-700 transition-colors"
         >
-          <Phone className="w-6 h-6" />
+          <Phone className="w-5 h-5" />
         </motion.a>
         <motion.button
           onClick={() => onBookNow(mainVehicle.id)}
@@ -848,28 +848,28 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           animate={{ opacity: 1, scale: 1, x: 0 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="pointer-events-auto w-14 h-14 bg-brand-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-brand-secondary transition-colors"
+          className="pointer-events-auto w-11 h-11 bg-brand-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-brand-secondary transition-colors"
         >
-          <CalendarIcon className="w-6 h-6" />
+          <CalendarIcon className="w-5 h-5" />
         </motion.button>
       </div>
 
       {/* Sticky Mobile Bar */}
-      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-[90] border-t p-4 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.05)] transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/90 border-slate-800 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl border-slate-100'}`}>
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-[90] border-t p-3 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.05)] transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/90 border-slate-800 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl border-slate-100'}`}>
         <div>
-          <div className={`text-[10px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>Cena od</div>
-          <div className={`text-lg font-black ${isDarkMode ? 'text-white' : 'text-brand-primary'}`}>{formatCurrency(mainVehicle.basePrice)} <span className="text-[10px] text-slate-400">/ den</span></div>
+          <div className={`text-[9px] font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>Cena od</div>
+          <div className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-brand-primary'}`}>{formatCurrency(mainVehicle.basePrice)} <span className="text-[9px] text-slate-400">/ den</span></div>
         </div>
         <div className="flex gap-2">
           <a 
-            href="https://wa.me/420777123456"
-            className="w-12 h-12 bg-green-500 text-white rounded-xl flex items-center justify-center"
+            href="https://wa.me/420776333301"
+            className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center"
           >
-            <MessageCircle className="w-6 h-6" />
+            <MessageCircle className="w-5 h-5" />
           </a>
           <button 
             onClick={() => onBookNow(mainVehicle.id)}
-            className="btn-ultimate-primary px-8 py-3 text-[10px]"
+            className="btn-ultimate-primary px-6 py-2.5 text-[9px]"
           >
             Rezervovat
           </button>

@@ -12,6 +12,8 @@ import VehicleDetail from './components/VehicleDetail';
 import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
+import AIChatbot from './components/AIChatbot';
+import InstallBanner from './components/InstallBanner';
 import Logo from './components/Logo';
 import { MOCK_VEHICLES, MOCK_RESERVATIONS, MOCK_CUSTOMERS, MOCK_MAINTENANCE, MOCK_INVENTORY } from './mockData';
 import { Vehicle, Reservation, ReservationStatus, Customer, SavedContract, HandoverProtocol, ReturnProtocol, Message, MaintenanceTask, InventoryItem } from './types';
@@ -51,6 +53,18 @@ const App: React.FC = () => {
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(MOCK_MAINTENANCE);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleUpdateMessageStatus = async (id: string, status: Message['status']) => {
     if (!supabase) return;
@@ -757,6 +771,13 @@ const App: React.FC = () => {
   return (
     <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
       <SEO title={seo.title} description={seo.description} />
+      
+      {!isOnline && (
+        <div className="bg-red-600 text-white py-1 px-4 text-center text-[10px] font-black uppercase tracking-widest animate-pulse">
+          Pracujete v offline režimu. Některé funkce mohou být omezené.
+        </div>
+      )}
+
       {view === 'home' && lastBooking && !isAdmin && (
         <div className="bg-slate-900 text-white py-3 px-4 animate-in slide-in-from-top duration-700 border-b border-white/5">
           <div className="max-w-7xl mx-auto flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
@@ -777,6 +798,9 @@ const App: React.FC = () => {
           onLogout={handleLogout} 
         />
       )}
+      
+      {!isEmbedded && !isAdmin && <AIChatbot />}
+      {!isEmbedded && !isAdmin && <InstallBanner />}
       
       <main className={`flex-grow overflow-x-hidden ${!isEmbedded ? 'pt-32' : ''}`}>
         {isLoading ? (

@@ -101,12 +101,14 @@ export const generateContractTemplate = async (details: any) => {
     KAUCE: ${details.deposit}
     DOPLŇKOVÉ SLUŽBY: ${details.selectedItems || 'Žádné'}
     CÍL CESTY: ${details.destination || 'Neuveden'}
-    PŘEDPOKLÁDANÝ NÁJEZD: ${details.estimatedMileage || 'Neuveden'} km
+    PŘEDPOKLÁDANÝ NÁJEZD (informace od nájemce): ${details.estimatedMileage || 'Neuveden'} km
+    SMLUVNÍ LIMIT KM: 300 km / den (nad tento limit se doplácí dle ceníku)
     
     Smlouva musí obsahovat:
     - Jasné vymezení předmětu nájmu
     - Podmínky užívání (zákaz kouření, zákaz zvířat bez souhlasu)
-    - Sankce za pozdní vrácení nebo nadměrné znečištění
+    - Smluvní limit kilometrů: 300 km na každý den nájmu. Celkový limit za dobu nájmu je počet dní x 300 km.
+    - Sankce za překročení limitu kilometrů, pozdní vrácení nebo nadměrné znečištění
     - Postup při nehodě
     - Místo předání: Brno - Bohunice
     - Seznam doplňkových služeb a jejich ceny (pokud jsou vybrány)
