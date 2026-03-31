@@ -83,7 +83,7 @@ const AIChatbot: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-8 left-6 z-50">
+    <div className="hidden md:block fixed bottom-8 left-6 z-50">
       <AnimatePresence>
         {isOpen && (
           <motion.div

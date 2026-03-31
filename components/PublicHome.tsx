@@ -828,7 +828,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           animate={{ opacity: 1, scale: 1, x: 0 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          className="pointer-events-auto w-11 h-11 bg-orange-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-orange-700 transition-colors"
+          className="hidden md:flex pointer-events-auto w-11 h-11 bg-orange-600 text-white rounded-full shadow-2xl items-center justify-center hover:bg-orange-700 transition-colors"
         >
           <Phone className="w-5 h-5" />
         </motion.a>
@@ -841,18 +841,12 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           <div className={`text-base font-black ${isDarkMode ? 'text-white' : 'text-brand-primary'}`}>{formatCurrency(mainVehicle.basePrice)} <span className="text-[9px] text-slate-400">/ den</span></div>
         </div>
         <div className="flex gap-2">
-          <a 
-            href="https://wa.me/420776333301"
-            className="w-10 h-10 bg-green-500 text-white rounded-xl flex items-center justify-center"
+          <button 
+            onClick={() => onBookNow(mainVehicle.id)}
+            className="btn-ultimate-primary px-6 py-2.5 text-[9px]"
           >
-            <MessageCircle className="w-5 h-5" />
-          </a>
-          <a 
-            href="tel:+420776333301"
-            className="w-10 h-10 bg-orange-600 text-white rounded-xl flex items-center justify-center"
-          >
-            <Phone className="w-5 h-5" />
-          </a>
+            Rezervovat
+          </button>
         </div>
       </div>
     </div>
