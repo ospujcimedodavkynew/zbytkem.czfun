@@ -115,7 +115,7 @@ export const generateContractTemplate = async (details: any) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: [{ parts: [{ text: prompt }] }],
       config: {
         systemInstruction: "Vytvářej pouze text smlouvy bez úvodních řečí. Používej profesionální právní češtinu. Důležité: Vždy používej přesný název vozu uvedený v zadání (Ahorn TU Plus), nikdy nepoužívej název 'Laika'."
