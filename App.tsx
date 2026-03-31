@@ -796,6 +796,8 @@ const App: React.FC = () => {
           onNavigate={handleNavigate} 
           onScrollTo={handleScrollTo} 
           onLogout={handleLogout} 
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
         />
       )}
       

@@ -810,16 +810,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
 
       {/* Floating Buttons */}
       <div className="fixed bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
-        <motion.button
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          initial={{ opacity: 0, scale: 0.8, x: 20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className={`pointer-events-auto w-11 h-11 rounded-full shadow-2xl flex items-center justify-center transition-colors ${isDarkMode ? 'bg-white text-slate-900' : 'bg-slate-900 text-white'}`}
-        >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </motion.button>
         <motion.a
           href="https://wa.me/420776333301"
           target="_blank"
@@ -842,16 +832,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         >
           <Phone className="w-5 h-5" />
         </motion.a>
-        <motion.button
-          onClick={() => onBookNow(mainVehicle.id)}
-          initial={{ opacity: 0, scale: 0.8, x: 20 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="pointer-events-auto w-11 h-11 bg-brand-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-brand-secondary transition-colors"
-        >
-          <CalendarIcon className="w-5 h-5" />
-        </motion.button>
       </div>
 
       {/* Sticky Mobile Bar */}
@@ -867,12 +847,12 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           >
             <MessageCircle className="w-5 h-5" />
           </a>
-          <button 
-            onClick={() => onBookNow(mainVehicle.id)}
-            className="btn-ultimate-primary px-6 py-2.5 text-[9px]"
+          <a 
+            href="tel:+420776333301"
+            className="w-10 h-10 bg-orange-600 text-white rounded-xl flex items-center justify-center"
           >
-            Rezervovat
-          </button>
+            <Phone className="w-5 h-5" />
+          </a>
         </div>
       </div>
     </div>

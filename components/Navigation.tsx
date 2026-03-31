@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, LogOut, Menu, X, ChevronRight, Download } from 'lucide-react';
+import { User, LogOut, Menu, X, ChevronRight, Download, Sun, Moon } from 'lucide-react';
 import Logo from './Logo';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
@@ -10,9 +10,11 @@ interface NavigationProps {
   onNavigate: (view: 'home' | 'admin' | 'booking' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist') => void;
   onScrollTo: (sectionId: string) => void;
   onLogout: () => void;
+  isDarkMode: boolean;
+  setIsDarkMode: (isDark: boolean) => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo, onLogout }) => {
+const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo, onLogout, isDarkMode, setIsDarkMode }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const { isInstallable, isIOS, isStandalone, handleInstallClick } = usePWAInstall();
 
@@ -64,6 +66,15 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`p-2 rounded-full transition-colors ${isDarkMode ? 'text-white hover:bg-white/10' : 'text-slate-900 hover:bg-slate-100'}`}
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </motion.button>
+
             <motion.button
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
@@ -133,6 +144,18 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
                   <ChevronRight className="w-4 h-4 text-brand-primary/30 group-hover:text-white transition-colors" />
                 </button>
               )}
+
+              {/* Dark Mode Toggle in Mobile Menu */}
+              <button 
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`w-full text-left px-6 py-4 rounded-2xl transition-all flex justify-between items-center group ${isDarkMode ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-900'}`}
+              >
+                <div className="flex items-center gap-3">
+                  {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  <span className="text-xs font-black uppercase tracking-widest">{isDarkMode ? 'Světlý režim' : 'Tmavý režim'}</span>
+                </div>
+                <ChevronRight className="w-4 h-4 opacity-30 group-hover:opacity-100 transition-opacity" />
+              </button>
               <div className="pt-4 space-y-4">
                 <button
                   onClick={() => { onNavigate('admin'); setIsMobileMenuOpen(false); }}
