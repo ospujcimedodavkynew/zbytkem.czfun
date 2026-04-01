@@ -111,7 +111,28 @@ const App: React.FC = () => {
     const resizeObserver = new ResizeObserver(reportHeight);
     resizeObserver.observe(document.body);
 
+    const vehicleIdParam = urlParams.get('vehicleId');
+    const contractIdParam = urlParams.get('contractId');
+    
+    console.log("App mounted. URL Params:", { 
+      view: initialViewParam, 
+      vehicleId: vehicleIdParam, 
+      contractId: contractIdParam 
+    });
+    
+    if (initialViewParam === 'widget') {
+      setView('widget');
+      if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
+    } else if (initialViewParam === 'calendar') {
+      setView('calendar');
+    } else if ((initialViewParam === 'contract' || initialViewParam === 'contract-public') && contractIdParam) {
+      console.log("Setting view to contract-public with ID:", contractIdParam);
+      setSelectedContractId(contractIdParam);
+      setView('contract-public');
+    }
+
     // Initial session check
+    let authSubscription: { unsubscribe: () => void } | null = null;
     if (supabase) {
       console.log("Supabase inicializován, kontroluji relaci...");
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -136,27 +157,13 @@ const App: React.FC = () => {
           if (view === 'admin') setView('home');
         }
       });
-
-      return () => {
-        subscription.unsubscribe();
-        resizeObserver.disconnect();
-      };
+      authSubscription = subscription;
     }
 
-    const vehicleIdParam = urlParams.get('vehicleId');
-    const contractIdParam = urlParams.get('contractId');
-    
-    if (initialViewParam === 'widget') {
-      setView('widget');
-      if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
-    } else if (initialViewParam === 'calendar') {
-      setView('calendar');
-    } else if (initialViewParam === 'contract' && contractIdParam) {
-      setSelectedContractId(contractIdParam);
-      setView('contract-public');
-    }
-    
-    return () => resizeObserver.disconnect();
+    return () => {
+      if (authSubscription) authSubscription.unsubscribe();
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // Separate effect for data fetching
