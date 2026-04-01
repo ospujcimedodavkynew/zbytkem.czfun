@@ -148,13 +148,15 @@ const App: React.FC = () => {
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+        console.log("Auth state change:", _event, session?.user?.email);
         if (session) {
           setUser(session.user);
           setIsAdmin(true);
         } else {
           setUser(null);
           setIsAdmin(false);
-          if (view === 'admin') setView('home');
+          // Use functional update to avoid stale closure
+          setView(prev => prev === 'admin' ? 'home' : prev);
         }
       });
       authSubscription = subscription;
@@ -228,7 +230,7 @@ const App: React.FC = () => {
           minDays: v.min_days || 3,
           deposit: Number(v.deposit || 0),
           kmLimitPerDay: v.km_limit_per_day || 300,
-          extraKmPrice: Number(v.extra_km_price || 0),
+          extraKmPrice: Number(v.extra_km_price || 5),
           images: v.images || [],
           isActive: v.is_active !== false,
           seasonalPricing: (v.seasonal_pricing && v.seasonal_pricing.length > 0) ? v.seasonal_pricing : DEFAULT_SEASONS,

@@ -102,13 +102,14 @@ export const generateContractTemplate = async (details: any) => {
     DOPLŇKOVÉ SLUŽBY: ${details.selectedItems || 'Žádné'}
     CÍL CESTY: ${details.destination || 'Neuveden'}
     PŘEDPOKLÁDANÝ NÁJEZD (informace od nájemce): ${details.estimatedMileage || 'Neuveden'} km
-    SMLUVNÍ LIMIT KM: 300 km / den (nad tento limit se doplácí dle ceníku)
+    SMLUVNÍ LIMIT KM: 300 km / den (nad tento limit se doplácí 5 Kč / km)
     
     Smlouva musí obsahovat:
     - Jasné vymezení předmětu nájmu
     - Podmínky užívání (zákaz kouření, zákaz zvířat bez souhlasu)
     - Smluvní limit kilometrů: 300 km na každý den nájmu. Celkový limit za dobu nájmu je počet dní x 300 km.
-    - Sankce za překročení limitu kilometrů, pozdní vrácení nebo nadměrné znečištění
+    - Sankce za překročení limitu kilometrů je 5 Kč za každý ujetý kilometr nad limit.
+    - Sankce za pozdní vrácení nebo nadměrné znečištění
     - Postup při nehodě
     - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
     - Seznam doplňkových služeb a jejich ceny (pokud jsou vybrány)

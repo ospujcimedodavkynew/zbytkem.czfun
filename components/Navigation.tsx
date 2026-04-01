@@ -118,7 +118,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="md:hidden absolute top-full left-0 right-0 mt-4 glass rounded-[2.5rem] p-8 shadow-ultimate border border-white/20 overflow-hidden"
+            className="md:hidden absolute top-full left-0 right-0 mt-4 glass rounded-[2.5rem] p-8 shadow-ultimate border border-white/20 overflow-y-auto max-h-[80vh] no-scrollbar"
           >
             <div className="space-y-4">
               {navLinks.map((link) => (

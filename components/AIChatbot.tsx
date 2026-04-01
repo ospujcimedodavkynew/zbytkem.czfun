@@ -58,7 +58,7 @@ const AIChatbot: React.FC = () => {
           - Vůz je pro 5 osob na jízdu i spaní.
           - Cena se pohybuje od 2500 Kč do 3400 Kč za den dle sezóny.
           - Vratná kauce je 25 000 Kč.
-          - Limit kilometrů je 300 km/den, nad limit se doplácí.
+          - Limit kilometrů je 300 km/den, nad limit se doplácí 5 Kč/km.
           - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu. Odkaz na Google Mapy: https://share.google/6M5XW9rgNIyoFMlfq
           - Vybavení: kuchyňka, sprcha, WC, topení, markýza, držák na kola.
           

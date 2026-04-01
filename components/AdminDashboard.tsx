@@ -308,10 +308,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (!hp) return 0;
     
     const days = calculateDays(res.startDate, res.endDate);
-    const limit = days * 300;
+    const vehicle = vehicles.find(v => v.id === res.vehicleId);
+    const limit = days * (vehicle?.kmLimitPerDay || 300);
     const driven = (Number(protocolFormData.returnMileage) || 0) - hp.mileage;
     const extra = Math.max(0, driven - limit);
-    return extra * 5;
+    return extra * (vehicle?.extraKmPrice || 5);
   };
 
   const handleSaveProtocol = () => {
@@ -375,7 +376,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      <div className="flex space-x-2 mb-8 p-1 bg-slate-100 rounded-2xl w-fit border border-slate-200 overflow-x-auto">
+      <div className="flex w-full overflow-x-auto gap-2 mb-8 p-1 bg-slate-100 rounded-2xl border border-slate-200 no-scrollbar">
         {(['reservations', 'calendar', 'customers', 'contracts', 'stats', 'messages', 'protocols', 'fleet', 'pricing', 'maintenance', 'inventory', 'advisor', 'widget'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
             {tab === 'reservations' ? 'Rezervace' : 

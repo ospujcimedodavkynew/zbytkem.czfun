@@ -153,7 +153,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div className="text-left reveal-up">
-            <h1 className={`text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-8 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <h1 className={`text-4xl sm:text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-8 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Svoboda na <br/>
               <span className="text-orange-600">čtyřech kolech.</span>
             </h1>
