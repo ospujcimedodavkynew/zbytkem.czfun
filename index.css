@@ -211,3 +211,87 @@ body.is-embedded {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  body {
+    background: white !important;
+    font-size: 11pt !important;
+    color: black !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  .min-h-screen {
+    min-height: auto !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  .max-w-4xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* Contract specific print adjustments */
+  .bg-white {
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  h1 {
+    font-size: 18pt !important;
+    margin-bottom: 0.5cm !important;
+  }
+
+  h3 {
+    font-size: 10pt !important;
+    margin-bottom: 0.2cm !important;
+  }
+
+  p, div {
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+  }
+
+  .prose {
+    max-width: 100% !important;
+  }
+
+  .prose p, .prose div {
+    font-size: 10pt !important;
+    margin-bottom: 0.3cm !important;
+  }
+
+  /* Ensure signatures stay together if possible */
+  .mt-24 {
+    margin-top: 2cm !important;
+    page-break-inside: avoid;
+  }
+
+  /* Grid adjustments for print */
+  .grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1cm !important;
+  }
+
+  /* Hide shadows and rounded corners that look bad on paper */
+  .rounded-\[2\.5rem\], .rounded-xl, .rounded-2xl {
+    border-radius: 0 !important;
+  }
+
+  .shadow-xl, .shadow-lg, .shadow-sm {
+    box-shadow: none !important;
+  }
+}

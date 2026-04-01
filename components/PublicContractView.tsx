@@ -1,11 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { FileText, Printer, Download, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { SavedContract, Reservation, Customer, Vehicle } from '../types';
 import { supabase } from '../lib/supabase';
 import { formatDate, formatCurrency } from '../utils/format';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface PublicContractViewProps {
   contractId: string;
@@ -19,6 +20,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const contractRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchContractData = async () => {
@@ -73,26 +75,47 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    if (!contract) return;
+  const handleDownloadPDF = async () => {
+    if (!contract || !contractRef.current) return;
     
-    const doc = new jsPDF();
-    const margin = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = pageWidth - (margin * 2);
-    
-    doc.setFontSize(18);
-    doc.text("Smlouva o nájmu obytného vozu", margin, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Vytvořeno: ${formatDate(contract.createdAt)}`, margin, 30);
-    doc.text(`ID Smlouvy: ${contract.id}`, margin, 35);
-    
-    doc.setFontSize(12);
-    const splitText = doc.splitTextToSize(contract.content, textWidth);
-    doc.text(splitText, margin, 50);
-    
-    doc.save(`Smlouva_Obytkem_${contract.customerName.replace(/\s+/g, '_')}.pdf`);
+    setLoading(true); // Show loader while generating
+    try {
+      const element = contractRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+      
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`Smlouva_Obytkem_${contract.customerName.replace(/\s+/g, '_')}.pdf`);
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -150,6 +173,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
 
         {/* Contract Content */}
         <motion.div 
+          ref={contractRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[2.5rem] p-8 md:p-16 shadow-xl border border-slate-200 print:shadow-none print:border-none print:p-0"
