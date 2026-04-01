@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Plus, Minus, HelpCircle, Calendar as Calenda
 import { Vehicle, Reservation, ReservationStatus } from '../types';
 import { formatCurrency } from '../utils/format';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import VideoGuides from './VideoGuides';
 
 interface PublicHomeProps {
   vehicles: Vehicle[];
@@ -528,6 +529,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         </div>
       </section>
 
+      {/* Video Guides Section */}
+      <VideoGuides isDarkMode={isDarkMode} />
+
       {/* FAQ Section */}
       <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12 text-center">
@@ -664,7 +668,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Map Section */}
-      <section className={`py-20 px-4 transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <section id="contact" className={`py-20 px-4 transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -820,7 +824,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       )}
 
       {/* Floating Buttons */}
-      <div className="fixed bottom-24 md:bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-32 md:bottom-8 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         <motion.a
           href="https://wa.me/420776333301"
           target="_blank"

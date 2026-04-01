@@ -1340,6 +1340,83 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
+        {activeTab === 'contracts' && (
+          <div className="p-10 space-y-8 animate-in fade-in duration-500">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-black">Uložené smlouvy</h2>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Správa a odesílání nájemních smluv</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6">
+              {savedContracts.length === 0 ? (
+                <div className="p-20 text-center bg-slate-50 rounded-[3rem] border border-dashed border-slate-200">
+                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-sm mx-auto mb-6">
+                    <svg className="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900 mb-2">Zatím žádné smlouvy</h3>
+                  <p className="text-slate-400 font-medium max-w-xs mx-auto">Smlouvy se vygenerují automaticky v detailu rezervace.</p>
+                </div>
+              ) : (
+                savedContracts.map(contract => {
+                  const reservation = reservations.find(r => r.id === contract.reservationId);
+                  const customer = customers.find(c => c.id === (reservation?.customerId || ''));
+                  const publicUrl = `${window.location.origin}/?view=contract&contractId=${contract.id}`;
+
+                  return (
+                    <div key={contract.id} className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:bg-white hover:shadow-xl transition-all duration-500">
+                      <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-brand-primary group-hover:text-white transition-colors">
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Smlouva ze dne {formatDate(contract.createdAt)}</div>
+                          <div className="font-black text-slate-900 text-lg">{contract.customerName}</div>
+                          <div className="text-xs text-slate-500 font-bold mt-1">Rezervace: {contract.reservationId}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 w-full md:w-auto">
+                        <button 
+                          onClick={() => setViewingContract({
+                            content: contract.content,
+                            customer: contract.customerName,
+                            resId: contract.reservationId
+                          })}
+                          className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all"
+                        >
+                          Náhled
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const mailtoUrl = `mailto:${customer?.email || ''}?subject=Nájemní smlouva - Obytkem.cz&body=Dobrý den, v příloze nebo na odkazu níže naleznete vaši nájemní smlouvu k nahlédnutí a podpisu.%0D%0A%0D%0AOdkaz na smlouvu: ${publicUrl}%0D%0A%0D%0AS pozdravem,%0D%0AObytkem.cz`;
+                            window.location.href = mailtoUrl;
+                          }}
+                          className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                          Odeslat e-mailem
+                        </button>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(publicUrl);
+                            alert('Odkaz na smlouvu byl zkopírován do schránky.');
+                          }}
+                          className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all"
+                          title="Kopírovat odkaz pro zákazníka"
+                        >
+                          Kopírovat odkaz
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'widget' && (
           <div className="p-10 space-y-10 animate-in fade-in duration-500">
             <div className="max-w-3xl">

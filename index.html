@@ -28,6 +28,49 @@
     <meta property="twitter:image" content="https://obytkem.cz/wp-content/uploads/logo.png">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CarRental",
+      "name": "Obytkem.cz",
+      "image": "https://obytkem.cz/wp-content/uploads/logo.png",
+      "@id": "https://obytkem.cz",
+      "url": "https://obytkem.cz",
+      "telephone": "+420776333301",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Teslova",
+        "addressLocality": "Brno",
+        "postalCode": "61200",
+        "addressCountry": "CZ"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 49.1789,
+        "longitude": 16.5789
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "sameAs": [
+        "https://www.pujcimedodavky.cz",
+        "https://share.google/6M5XW9rgNIyoFMlfq"
+      ]
+    }
+    </script>
 </head>
 <body>
     <div id="root"></div>

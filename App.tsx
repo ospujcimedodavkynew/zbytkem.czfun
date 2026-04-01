@@ -12,6 +12,7 @@ import VehicleDetail from './components/VehicleDetail';
 import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
+import PublicContractView from './components/PublicContractView';
 import AIChatbot from './components/AIChatbot';
 import InstallBanner from './components/InstallBanner';
 import Logo from './components/Logo';
@@ -29,7 +30,8 @@ export const DEFAULT_SEASONS = [
 
 const App: React.FC = () => {
   console.log("App component rendering...");
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'contract-public'>('home');
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -142,11 +144,16 @@ const App: React.FC = () => {
     }
 
     const vehicleIdParam = urlParams.get('vehicleId');
+    const contractIdParam = urlParams.get('contractId');
+    
     if (initialViewParam === 'widget') {
       setView('widget');
       if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
     } else if (initialViewParam === 'calendar') {
       setView('calendar');
+    } else if (initialViewParam === 'contract' && contractIdParam) {
+      setSelectedContractId(contractIdParam);
+      setView('contract-public');
     }
     
     return () => resizeObserver.disconnect();
@@ -990,6 +997,18 @@ const App: React.FC = () => {
               <ConfirmationPage 
                 onBackHome={() => setView('home')} 
                 isEmbedded={isEmbedded} 
+              />
+            )}
+            {view === 'contract-public' && selectedContractId && (
+              <PublicContractView 
+                contractId={selectedContractId} 
+                onBack={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('view');
+                  url.searchParams.delete('contractId');
+                  window.history.pushState({}, '', url);
+                  setView('home');
+                }} 
               />
             )}
           </>

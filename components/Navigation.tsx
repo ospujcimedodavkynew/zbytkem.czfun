@@ -22,6 +22,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
     { label: 'Domů', onClick: () => onNavigate('home') },
     { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
     { label: 'Ceník', onClick: () => onScrollTo('pricing') },
+    { label: 'Návody', onClick: () => onScrollTo('video-guides') },
     { label: 'Blog', onClick: () => onNavigate('blog') },
     { label: 'Checklist', onClick: () => onNavigate('checklist') },
     { label: 'FAQ', onClick: () => onScrollTo('faq') },
