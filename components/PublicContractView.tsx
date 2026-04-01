@@ -7,20 +7,25 @@ import { supabase } from '../lib/supabase';
 import { formatDate, formatCurrency } from '../utils/format';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import SignatureCanvas from 'react-signature-canvas';
 
 interface PublicContractViewProps {
   contractId: string;
   onBack?: () => void;
+  isAdmin?: boolean;
 }
 
-const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onBack }) => {
+const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onBack, isAdmin }) => {
   const [contract, setContract] = useState<SavedContract | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [signing, setSigning] = useState(false);
   const contractRef = useRef<HTMLDivElement>(null);
+  const signatureRef = useRef<SignatureCanvas>(null);
+  const adminSignatureRef = useRef<SignatureCanvas>(null);
 
   useEffect(() => {
     const fetchContractData = async () => {
@@ -45,7 +50,10 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
           reservationId: contractData.reservation_id,
           customerName: contractData.customer_name,
           createdAt: contractData.created_at,
-          content: contractData.content
+          content: contractData.content,
+          adminSignature: contractData.admin_signature,
+          customerSignature: contractData.customer_signature,
+          signedAt: contractData.signed_at
         });
 
         // Fetch reservation and related data
@@ -87,7 +95,16 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
+        windowHeight: element.scrollHeight,
+        onclone: (clonedDoc) => {
+          // Ensure signatures are visible in the clone
+          const signatures = clonedDoc.querySelectorAll('img');
+          signatures.forEach(img => {
+            if (img.src.startsWith('data:image')) {
+              img.style.display = 'block';
+            }
+          });
+        }
       });
       
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -116,6 +133,84 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveSignature = async () => {
+    if (!signatureRef.current || !contract) return;
+    if (signatureRef.current.isEmpty()) {
+      alert("Prosím, nejdříve se podepište.");
+      return;
+    }
+
+    setSigning(true);
+    try {
+      if (!supabase) throw new Error("Supabase is not initialized");
+      const signatureData = signatureRef.current.getTrimmedCanvas().toDataURL('image/png');
+      
+      const { error: updateError } = await supabase
+        .from('saved_contracts')
+        .update({
+          customer_signature: signatureData,
+          signed_at: new Date().toISOString()
+        })
+        .eq('id', contract.id);
+
+      if (updateError) throw updateError;
+
+      setContract(prev => prev ? {
+        ...prev,
+        customerSignature: signatureData,
+        signedAt: new Date().toISOString()
+      } : null);
+
+    } catch (err: any) {
+      console.error("Error saving signature:", err);
+      alert("Nepodařilo se uložit podpis. Zkuste to prosím znovu.");
+    } finally {
+      setSigning(false);
+    }
+  };
+
+  const handleSaveAdminSignature = async () => {
+    if (!adminSignatureRef.current || !contract) return;
+    if (adminSignatureRef.current.isEmpty()) {
+      alert("Prosím, nejdříve se podepište.");
+      return;
+    }
+
+    setSigning(true);
+    try {
+      if (!supabase) throw new Error("Supabase is not initialized");
+      const signatureData = adminSignatureRef.current.getTrimmedCanvas().toDataURL('image/png');
+      
+      const { error: updateError } = await supabase
+        .from('saved_contracts')
+        .update({
+          admin_signature: signatureData
+        })
+        .eq('id', contract.id);
+
+      if (updateError) throw updateError;
+
+      setContract(prev => prev ? {
+        ...prev,
+        adminSignature: signatureData
+      } : null);
+
+    } catch (err: any) {
+      console.error("Error saving admin signature:", err);
+      alert("Nepodařilo se uložit podpis. Zkuste to prosím znovu.");
+    } finally {
+      setSigning(false);
+    }
+  };
+
+  const clearSignature = () => {
+    signatureRef.current?.clear();
+  };
+
+  const clearAdminSignature = () => {
+    adminSignatureRef.current?.clear();
   };
 
   if (loading) {
@@ -202,7 +297,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
               <div className="space-y-1 text-sm">
                 <p className="font-black text-slate-900">Milan Gula - Obytkem.cz</p>
                 <p className="text-slate-500">Teslova, Brno</p>
-                <p className="text-slate-500">IČO: 09477033</p>
+                <p className="text-slate-500">IČO: 07031653</p>
                 <p className="text-slate-500">Tel: +420 776 333 301</p>
                 <p className="text-slate-500">Email: pujcimedodavky@gmail.com</p>
               </div>
@@ -231,16 +326,112 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
           </div>
 
           {/* Signatures */}
-          <div className="mt-24 grid grid-cols-2 gap-12 pt-12 border-t border-slate-100">
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-slate-100">
             <div className="text-center">
-              <div className="h-24 border-b border-slate-200 mb-4"></div>
+              <div className="h-32 border-b border-slate-200 mb-4 flex items-center justify-center overflow-hidden">
+                {contract.adminSignature ? (
+                  <img src={contract.adminSignature} alt="Podpis pronajímatele" className="max-h-full object-contain" />
+                ) : (
+                  <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest">Čeká na podpis</span>
+                )}
+              </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Podpis pronajímatele</p>
+              <p className="text-[9px] text-slate-400 mt-1">Milan Gula</p>
             </div>
             <div className="text-center">
-              <div className="h-24 border-b border-slate-200 mb-4"></div>
+              <div className="h-32 border-b border-slate-200 mb-4 flex items-center justify-center overflow-hidden">
+                {contract.customerSignature ? (
+                  <img src={contract.customerSignature} alt="Podpis nájemce" className="max-h-full object-contain" />
+                ) : (
+                  <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest">Čeká na podpis</span>
+                )}
+              </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Podpis nájemce</p>
+              <p className="text-[9px] text-slate-400 mt-1">{contract.customerName}</p>
+              {contract.signedAt && (
+                <p className="text-[8px] text-slate-400 mt-1">Podepsáno: {formatDate(contract.signedAt)}</p>
+              )}
             </div>
           </div>
+
+          {/* Signature Pad for Admin - Only visible to admin if not signed */}
+          {isAdmin && !contract.adminSignature && (
+            <div className="mt-12 p-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 print:hidden">
+              <h3 className="text-lg font-black text-slate-900 mb-4 text-center">Váš podpis (Milan Gula)</h3>
+              <div className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-inner">
+                <SignatureCanvas 
+                  ref={adminSignatureRef}
+                  penColor="#0f172a"
+                  canvasProps={{
+                    className: "w-full h-48 cursor-crosshair"
+                  }}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={clearAdminSignature}
+                  className="flex-1 py-3 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+                >
+                  Vymazat
+                </button>
+                <button 
+                  onClick={handleSaveAdminSignature}
+                  disabled={signing}
+                  className="flex-[2] py-3 px-6 bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {signing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Ukládám...
+                    </>
+                  ) : (
+                    "Uložit můj podpis"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Signature Pad for Customer - Hidden on Print */}
+          {!contract.customerSignature && (
+            <div className="mt-12 p-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 print:hidden">
+              <h3 className="text-lg font-black text-slate-900 mb-4 text-center">Zde se podepište (prstem nebo myší)</h3>
+              <div className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-inner">
+                <SignatureCanvas 
+                  ref={signatureRef}
+                  penColor="#0f172a"
+                  canvasProps={{
+                    className: "w-full h-48 cursor-crosshair"
+                  }}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={clearSignature}
+                  className="flex-1 py-3 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+                >
+                  Vymazat
+                </button>
+                <button 
+                  onClick={handleSaveSignature}
+                  disabled={signing}
+                  className="flex-[2] py-3 px-6 bg-brand-primary text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-brand-primary/90 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {signing ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Ukládám...
+                    </>
+                  ) : (
+                    "Odeslat podpis"
+                  )}
+                </button>
+              </div>
+              <p className="mt-4 text-[9px] text-slate-400 text-center uppercase tracking-widest font-medium">
+                Kliknutím na "Odeslat podpis" stvrzujete souhlas s obsahem smlouvy.
+              </p>
+            </div>
+          )}
 
           {/* Footer */}
           <div className="mt-12 text-center">

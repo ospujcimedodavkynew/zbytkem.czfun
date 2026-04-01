@@ -97,6 +97,9 @@ export interface SavedContract {
   customerName: string;
   createdAt: string;
   content: string;
+  adminSignature?: string; // Base64 image
+  customerSignature?: string; // Base64 image
+  signedAt?: string; // ISO format
 }
 
 export interface MaintenanceTask {

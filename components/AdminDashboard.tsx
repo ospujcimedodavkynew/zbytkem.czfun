@@ -16,6 +16,7 @@ import {
   addMonths, subMonths, isWithinInterval, parseISO, startOfDay 
 } from 'date-fns';
 import { cs } from 'date-fns/locale';
+import SignatureCanvas from 'react-signature-canvas';
 
 interface AdminDashboardProps {
   reservations: Reservation[];
@@ -39,6 +40,7 @@ interface AdminDashboardProps {
   onAddInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
   onDeleteInventoryItem: (id: string) => void;
   onLogout: () => void;
+  onViewContract: (id: string) => void;
   onRefresh?: () => void;
 }
 
@@ -64,6 +66,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onAddInventoryItem,
   onDeleteInventoryItem,
   onLogout,
+  onViewContract,
   onRefresh
 }) => {
   const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing' | 'customers' | 'contracts'>('reservations');
@@ -74,6 +77,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
+  const adminSignatureRef = useRef<SignatureCanvas>(null);
   
   // --- Stats Calculations ---
   const statsData = useMemo(() => {
@@ -1373,20 +1377,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <div>
                           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Smlouva ze dne {formatDate(contract.createdAt)}</div>
                           <div className="font-black text-slate-900 text-lg">{contract.customerName}</div>
-                          <div className="text-xs text-slate-500 font-bold mt-1">Rezervace: {contract.reservationId}</div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <div className="text-xs text-slate-500 font-bold">Rezervace: {contract.reservationId}</div>
+                            {contract.customerSignature ? (
+                              <div className="px-2 py-0.5 bg-green-50 text-green-600 rounded-md text-[8px] font-black uppercase tracking-widest border border-green-100 flex items-center gap-1">
+                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                                Podepsáno
+                              </div>
+                            ) : (
+                              <div className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-md text-[8px] font-black uppercase tracking-widest border border-amber-100">
+                                Čeká na podpis
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-3 w-full md:w-auto">
                         <button 
-                          onClick={() => setViewingContract({
-                            content: contract.content,
-                            customer: contract.customerName,
-                            resId: contract.reservationId
-                          })}
+                          onClick={() => onViewContract(contract.id)}
                           className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all"
                         >
-                          Náhled
+                          Zobrazit / Podepsat
                         </button>
                         <button 
                           onClick={() => {
@@ -1703,23 +1715,49 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex-grow overflow-y-auto bg-slate-50 p-10 rounded-3xl border border-slate-100 mb-8 font-serif leading-relaxed text-slate-700 whitespace-pre-wrap">
               {viewingContract.content}
             </div>
+
+            {/* Admin Signature Pad */}
+            <div className="mb-8 p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Váš podpis (Milan Gula)</h3>
+              <div className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-inner">
+                <SignatureCanvas 
+                  ref={adminSignatureRef}
+                  penColor="#0f172a"
+                  canvasProps={{
+                    className: "w-full h-32 cursor-crosshair"
+                  }}
+                />
+              </div>
+              <div className="text-center">
+                <button 
+                  onClick={() => adminSignatureRef.current?.clear()}
+                  className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  Vymazat podpis
+                </button>
+              </div>
+            </div>
+
             <div className="flex gap-4">
               <button onClick={handlePrintContract} className="flex-1 py-5 bg-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all">Vytisknout Smlouvu</button>
               <button 
                 onClick={() => {
+                  const adminSig = adminSignatureRef.current?.isEmpty() ? undefined : adminSignatureRef.current?.getTrimmedCanvas().toDataURL('image/png');
+                  
                   onSaveContract({
                     id: crypto.randomUUID(),
                     reservationId: viewingContract.resId,
                     customerName: viewingContract.customer,
                     createdAt: new Date().toISOString(),
-                    content: viewingContract.content
+                    content: viewingContract.content,
+                    adminSignature: adminSig
                   });
                   setViewingContract(null);
-                  alert('Smlouva byla uložena.');
+                  alert('Smlouva byla uložena s vaším podpisem.');
                 }}
                 className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
               >
-                Uložit Smlouvu
+                Uložit a podepsat
               </button>
               <button onClick={() => setViewingContract(null)} className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Zavřít</button>
             </div>

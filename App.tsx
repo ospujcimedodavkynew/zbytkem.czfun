@@ -366,7 +366,10 @@ const App: React.FC = () => {
           reservationId: s.reservation_id,
           customerName: s.customer_name,
           createdAt: s.created_at,
-          content: s.content
+          content: s.content,
+          adminSignature: s.admin_signature,
+          customerSignature: s.customer_signature,
+          signedAt: s.signed_at
         })));
       }
     } catch (error: any) {
@@ -664,7 +667,10 @@ const App: React.FC = () => {
         id: contract.id,
         reservation_id: contract.reservationId,
         customer_name: contract.customerName,
-        content: contract.content
+        content: contract.content,
+        admin_signature: contract.adminSignature,
+        customer_signature: contract.customerSignature,
+        signed_at: contract.signedAt
       });
       if (error) console.error("Chyba při ukládání smlouvy:", error.message);
     }
@@ -997,6 +1003,10 @@ const App: React.FC = () => {
                 onAddInventoryItem={handleAddInventoryItem}
                 onDeleteInventoryItem={handleDeleteInventoryItem}
                 onLogout={handleLogout}
+                onViewContract={(id) => {
+                  setSelectedContractId(id);
+                  setView('contract-public');
+                }}
                 onRefresh={fetchData} 
               />
             )}
@@ -1009,6 +1019,7 @@ const App: React.FC = () => {
             {view === 'contract-public' && selectedContractId && (
               <PublicContractView 
                 contractId={selectedContractId} 
+                isAdmin={isAdmin}
                 onBack={() => {
                   const url = new URL(window.location.href);
                   url.searchParams.delete('view');
