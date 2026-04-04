@@ -7,7 +7,7 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface NavigationProps {
   isAdmin: boolean;
-  onNavigate: (view: 'home' | 'admin' | 'booking' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist') => void;
+  onNavigate: (view: 'home' | 'admin' | 'booking' | 'blog' | 'vehicle-detail' | 'checklist') => void;
   onScrollTo: (sectionId: string) => void;
   onLogout: () => void;
   isDarkMode: boolean;
@@ -22,7 +22,6 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
     { label: 'Domů', onClick: () => onNavigate('home') },
     { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
     { label: 'Ceník', onClick: () => onScrollTo('pricing') },
-    { label: 'Návody', onClick: () => onScrollTo('video-guides') },
     { label: 'Blog', onClick: () => onNavigate('blog') },
     { label: 'Checklist', onClick: () => onNavigate('checklist') },
     { label: 'FAQ', onClick: () => onScrollTo('faq') },

@@ -9,7 +9,6 @@ import ConfirmationPage from './components/ConfirmationPage';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
 import TravelBlog from './components/TravelBlog';
 import VehicleDetail from './components/VehicleDetail';
-import GuidesDetail from './components/GuidesDetail';
 import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
 import PublicContractView from './components/PublicContractView';
@@ -30,7 +29,7 @@ export const DEFAULT_SEASONS = [
 
 const App: React.FC = () => {
   console.log("App component rendering...");
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator' | 'contract-public'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'checklist' | 'calculator' | 'contract-public'>('home');
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
@@ -959,7 +958,6 @@ const App: React.FC = () => {
                 onBook={() => setView('booking')} 
               />
             )}
-            {view === 'guides' && <GuidesDetail onBack={() => setView('home')} />}
             {view === 'home' && (
               <PublicHome 
                 vehicles={vehicles} 
@@ -1052,7 +1050,6 @@ const App: React.FC = () => {
                 <button onClick={() => handleScrollTo('fleet')} className="hover:text-brand-primary transition-colors">Naše vozy</button>
                 <button onClick={() => handleScrollTo('pricing')} className="hover:text-brand-primary transition-colors">Ceník</button>
                 <button onClick={() => handleScrollTo('faq')} className="hover:text-brand-primary transition-colors">FAQ</button>
-                <button onClick={() => handleScrollTo('guides')} className="hover:text-brand-primary transition-colors">Návody</button>
                 <button onClick={() => setView('admin')} className="hover:text-brand-primary transition-colors">Administrace</button>
               </div>
 

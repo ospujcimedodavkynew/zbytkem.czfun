@@ -5,14 +5,13 @@ import { ChevronLeft, ChevronRight, Plus, Minus, HelpCircle, Calendar as Calenda
 import { Vehicle, Reservation, ReservationStatus } from '../types';
 import { formatCurrency } from '../utils/format';
 import AvailabilityCalendar from './AvailabilityCalendar';
-import VideoGuides from './VideoGuides';
 
 interface PublicHomeProps {
   vehicles: Vehicle[];
   reservations: Reservation[];
   onBookNow: (vehicleId: string, startDate?: string) => void;
   onScrollTo: (sectionId: string) => void;
-  onNavigate: (view: 'blog' | 'vehicle-detail' | 'guides' | 'checklist' | 'calculator') => void;
+  onNavigate: (view: 'blog' | 'vehicle-detail' | 'checklist' | 'calculator') => void;
   isDarkMode: boolean;
   setIsDarkMode: (isDark: boolean) => void;
 }
@@ -73,29 +72,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
     { category: "Ostatní", items: ["Sluneční brýle", "Osobní léky", "Repelent", "Baterka/Čelovka"] }
   ];
 
-  const guides = [
-    {
-      title: "WC a odpadní voda",
-      icon: "🚽",
-      content: "Kazeta WC se nachází v servisním otvoru zvenčí. Po naplnění ji vyjměte, vyprázdněte na určeném místě (v kempu) a doplňte chemii. Šedá voda (z dřezu a sprchy) se vypouští ventilem pod vozem."
-    },
-    {
-      title: "Elektřina a plyn",
-      icon: "⚡",
-      content: "Vůz má vlastní baterii dobíjenou solárem. Pro 230V zásuvky a klimatizaci se musíte připojit kabelem v kempu. Plyn slouží pro vaření, topení a ohřev vody (vždy mějte otevřenou lahev)."
-    },
-    {
-      title: "Voda a doplňování",
-      icon: "💧",
-      content: "Nádrž na čistou vodu (100L) se plní zvenčí hadicí. Stav vody uvidíte na kontrolním panelu nad dveřmi. Vždy používejte pitnou vodu z ověřených zdrojů."
-    },
-    {
-      title: "Jízda a rozměry",
-      icon: "🚐",
-      content: "Vůz je vysoký 3 metry a dlouhý 6,98 metru. Pozor na podjezdy a větve! Při couvání vždy využívejte kameru a ideálně i pomocníka venku. Nezapomeňte před jízdou zavřít všechna okna a zajistit skříňky."
-    }
-  ];
-
   const renderMiniCalendar = () => {
     const today = new Date();
     const displayDate = today.getFullYear() < 2026 ? new Date(2026, 6, 1) : today;
@@ -150,8 +126,8 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
   return (
     <div className={`space-y-0 overflow-x-hidden transition-colors duration-500 ${isDarkMode ? 'dark bg-slate-950 text-white' : 'bg-white text-slate-900'}`}>
       {/* Hero Section with Integrated Calendar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-20">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-16 items-center">
           <div className="text-left reveal-up">
             <h1 className={`text-4xl sm:text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-8 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Svoboda na <br/>
@@ -233,9 +209,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       </section>
 
       {/* Why Choose Us Section */}
-      <section className={`py-20 px-4 transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      <section className={`py-12 md:py-20 px-4 transition-colors duration-500 ${isDarkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {[
               {
                 icon: <MapPin className="w-6 h-6" />,
@@ -262,7 +238,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 color: "purple"
               }
             ].map((item, i) => (
-              <div key={i} className={`p-8 rounded-[2.5rem] border space-y-4 transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-xl'}`}>
+              <div key={i} className={`p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border space-y-4 transition-all ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-xl'}`}>
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
                   item.color === 'blue' ? 'bg-blue-100 text-blue-600' :
                   item.color === 'green' ? 'bg-green-100 text-green-600' :
@@ -271,15 +247,15 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                 }`}>
                   {item.icon}
                 </div>
-                <h3 className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
+                <h3 className={`text-lg md:text-xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
                 <p className={`text-sm font-medium leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>{item.desc}</p>
               </div>
             ))}
           </div>
 
-          <div className={`mt-20 p-10 rounded-[3rem] transition-colors ${isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-slate-900 text-white'}`}>
+          <div className={`mt-12 md:mt-20 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] transition-colors ${isDarkMode ? 'bg-slate-900 border border-slate-800' : 'bg-slate-900 text-white'}`}>
             <div className="max-w-3xl">
-              <h2 className={`text-3xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-white'}`}>Co u nás získáváte?</h2>
+              <h2 className={`text-2xl md:text-3xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-white'}`}>Co u nás získáváte?</h2>
               <p className={`font-medium mb-8 leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>
                 Působíme v Brně a okolí, ale naše vozy brázdí silnice po celé Evropě. Při pronájmu u nás získáváte:
               </p>
@@ -529,9 +505,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
         </div>
       </section>
 
-      {/* Video Guides Section */}
-      <VideoGuides isDarkMode={isDarkMode} />
-
       {/* FAQ Section */}
       <section id="faq" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
         <div className="mb-12 text-center">
@@ -566,31 +539,6 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Guides Section */}
-      <section id="guides" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-padding scroll-mt-24">
-        <div className="mb-12 text-center">
-          <h2 className="gradient-text">Návody pro začátečníky</h2>
-          <p className="text-slate-500 mt-4 font-medium">Vše, co potřebujete vědět pro vaši první cestu</p>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {guides.map((guide, idx) => (
-            <div key={idx} className="card-ultimate p-8">
-              <div className="text-4xl mb-6">{guide.icon}</div>
-              <h3 className="text-lg font-bold text-slate-900 mb-4">{guide.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed font-medium mb-6">
-                {guide.content}
-              </p>
-              <button 
-                onClick={() => onNavigate('guides')}
-                className="text-[11px] font-bold text-brand-primary uppercase tracking-wider hover:text-blue-700 transition-colors"
-              >
-                Zobrazit detail návodu →
-              </button>
             </div>
           ))}
         </div>

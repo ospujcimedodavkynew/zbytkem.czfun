@@ -354,21 +354,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex justify-between items-center mb-10">
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-12">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Administrace</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Administrace</h1>
           <p className="text-slate-500 font-medium">Vítejte, Milan Gula</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 w-full md:w-auto">
           {onRefresh && (
-            <button onClick={onRefresh} className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors" title="Obnovit data">
+            <button onClick={onRefresh} className="p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors flex-1 md:flex-none flex justify-center" title="Obnovit data">
               <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             </button>
           )}
           <button 
             onClick={onLogout} 
-            className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-100 transition-all"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-100 transition-all flex-[2] md:flex-none"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
             Odhlásit
@@ -1066,10 +1066,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-100 text-left">
                 <tr>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Klient</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Termín</th>
-                  <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                  <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Akce</th>
+                  <th className="px-4 md:px-8 py-3 md:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Klient</th>
+                  <th className="px-4 md:px-8 py-3 md:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Termín</th>
+                  <th className="px-4 md:px-8 py-3 md:py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="px-4 md:px-8 py-3 md:py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Akce</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -1079,7 +1079,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   const rp = returnProtocols.find(p => p.reservationId === res.id);
                   return (
                     <tr key={res.id} className="hover:bg-slate-50/50">
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-4 md:py-6">
                         <div 
                           className="font-black text-slate-900 cursor-pointer hover:text-brand-primary"
                           onClick={() => {
@@ -1103,10 +1103,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         )}
                       </td>
-                      <td className="px-8 py-6 text-sm font-medium">
+                      <td className="px-4 md:px-8 py-4 md:py-6 text-sm font-medium">
                         {formatDate(res.startDate)} - {formatDate(res.endDate)}
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-4 md:px-8 py-4 md:py-6">
                         <select 
                           value={res.status} 
                           onChange={(e) => onUpdateStatus(res.id, e.target.value as ReservationStatus)}
@@ -1117,7 +1117,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           {Object.values(ReservationStatus).map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                       </td>
-                      <td className="px-8 py-6 text-right space-x-3">
+                      <td className="px-4 md:px-8 py-4 md:py-6 text-right space-x-3">
                         {res.status === ReservationStatus.CONFIRMED && !hp && (
                           <button onClick={() => openProtocolModal('handover', res.id)} className="text-[10px] font-black text-green-600 hover:text-green-800 uppercase">Předat vůz</button>
                         )}
@@ -1566,7 +1566,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[3rem] shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-300"
+            className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300"
           >
             {(() => {
               const res = reservations.find(r => r.id === viewingReservationId);
@@ -1575,23 +1575,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               const vehicle = vehicles.find(v => v.id === res.vehicleId);
               
               return (
-                <div className="p-12 space-y-10">
+                <div className="p-6 md:p-12 space-y-6 md:space-y-10">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight">Detail rezervace</h2>
+                      <h2 className="text-2xl md:text-3xl font-black tracking-tight">Detail rezervace</h2>
                       <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">ID: {res.id}</p>
                     </div>
-                    <button onClick={() => setViewingReservationId(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors">
-                      <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button onClick={() => setViewingReservationId(null)} className="p-2 md:p-3 hover:bg-slate-100 rounded-full transition-colors">
+                      <svg className="w-6 h-6 md:w-8 md:h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-12">
-                    <div className="space-y-8">
+                  <div className="grid md:grid-cols-2 gap-6 md:gap-12">
+                    <div className="space-y-6 md:space-y-8">
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Zákazník</label>
-                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                          <div className="font-black text-slate-900 text-lg">{customer?.firstName} {customer?.lastName}</div>
+                        <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="font-black text-slate-900 text-base md:text-lg">{customer?.firstName} {customer?.lastName}</div>
                           <div className="text-sm text-slate-500 font-medium mt-1">{customer?.email}</div>
                           <div className="text-sm text-slate-500 font-medium">{customer?.phone}</div>
                           <div className="text-sm text-slate-500 font-medium mt-2">{customer?.address}</div>
@@ -1599,11 +1599,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vozidlo a termín</label>
-                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
                           <div className="font-black text-slate-900">{vehicle?.name}</div>
                           <div className="text-sm text-slate-500 font-medium">{vehicle?.licensePlate}</div>
-                          <div className="mt-3 pt-3 border-t border-slate-200 flex justify-between items-center">
-                            <div className="font-black text-brand-primary">
+                          <div className="mt-3 pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div className="font-black text-brand-primary text-xs md:text-sm">
                               {formatDate(res.startDate)} ({res.pickupTime || '09:00'}) - {formatDate(res.endDate)} ({res.returnTime || '17:00'})
                             </div>
                             <div className="text-[10px] font-black bg-slate-200 px-2 py-0.5 rounded text-slate-600 uppercase">{calculateDays(res.startDate, res.endDate)} dní</div>
@@ -1612,23 +1612,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Cíl a nájezd</label>
-                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cíl cesty:</span>
-                            <span className="font-black text-slate-900">{res.destination || 'Neuveden'}</span>
+                            <span className="font-black text-slate-900 text-sm">{res.destination || 'Neuveden'}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Předpokládaný nájezd:</span>
-                            <span className="font-black text-slate-900">{res.estimatedMileage ? `${res.estimatedMileage} km` : 'Neuveden'}</span>
+                            <span className="font-black text-slate-900 text-sm">{res.estimatedMileage ? `${res.estimatedMileage} km` : 'Neuveden'}</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-8">
+                    <div className="space-y-6 md:space-y-8">
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Doplňkové služby a dovoz</label>
-                        <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                        <div className="p-4 md:p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
                           {res.selectedAddOns && res.selectedAddOns.length > 0 ? (
                             <div className="space-y-2">
                               {res.selectedAddOns.map(addon => {
@@ -1657,12 +1657,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                       <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Finanční souhrn</label>
-                        <div className="p-5 bg-slate-900 rounded-2xl text-white">
+                        <div className="p-4 md:p-5 bg-slate-900 rounded-2xl text-white">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-xs font-bold text-slate-400">Celková cena:</span>
-                            <span className="text-2xl font-black text-brand-primary">{formatCurrency(res.totalPrice)}</span>
+                            <span className="text-xl md:text-2xl font-black text-brand-primary">{formatCurrency(res.totalPrice)}</span>
                           </div>
-                          <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+                          <div className="flex justify-between items-center pt-2 border-t border-white/10">
                             <span className="text-xs font-bold text-slate-400">Vratná kauce:</span>
                             <span className="text-sm font-black text-white">{formatCurrency(res.deposit)}</span>
                           </div>
@@ -1671,7 +1671,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-10 border-t border-slate-100 flex justify-end gap-4">
+                  <div className="pt-6 md:pt-10 border-t border-slate-100 flex flex-wrap gap-4">
                     <button 
                       onClick={() => setViewingReservationId(null)}
                       className="px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all"
