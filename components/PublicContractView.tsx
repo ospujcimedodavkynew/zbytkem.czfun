@@ -330,7 +330,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
             <div className="text-center">
               <div className="h-32 border-b border-slate-200 mb-4 flex items-center justify-center overflow-hidden">
                 {contract.adminSignature ? (
-                  <img src={contract.adminSignature} alt="Podpis pronajímatele" className="max-h-full object-contain" />
+                  <img src={contract.adminSignature} alt="Podpis pronajímatele" className="max-h-full object-contain" referrerPolicy="no-referrer" />
                 ) : (
                   <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest">Čeká na podpis</span>
                 )}
@@ -341,7 +341,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
             <div className="text-center">
               <div className="h-32 border-b border-slate-200 mb-4 flex items-center justify-center overflow-hidden">
                 {contract.customerSignature ? (
-                  <img src={contract.customerSignature} alt="Podpis nájemce" className="max-h-full object-contain" />
+                  <img src={contract.customerSignature} alt="Podpis nájemce" className="max-h-full object-contain" referrerPolicy="no-referrer" />
                 ) : (
                   <span className="text-slate-300 text-[10px] font-black uppercase tracking-widest">Čeká na podpis</span>
                 )}

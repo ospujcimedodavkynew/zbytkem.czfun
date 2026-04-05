@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://rezervace.obytkem.cz/sitemap.xml

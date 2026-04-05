@@ -1134,7 +1134,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
                   {editingVehicle.images?.map((img, idx) => (
                     <div key={idx} className="relative aspect-video rounded-xl overflow-hidden group border border-slate-200">
-                      <img src={img} className="w-full h-full object-cover" alt={`Vůz ${idx + 1}`} />
+                      <img src={img} className="w-full h-full object-cover" alt={`Vůz ${idx + 1}`} referrerPolicy="no-referrer" />
                       <button 
                         onClick={() => {
                           const newImages = [...(editingVehicle.images || [])];

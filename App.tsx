@@ -773,23 +773,57 @@ const App: React.FC = () => {
 
   // SEO Metadata mapping
   const getSEOMetadata = () => {
+    const siteUrl = "https://rezervace.obytkem.cz";
     switch (view) {
       case 'home':
-        return { title: 'Půjčovna obytných vozů Brno', description: 'Pronájem moderních obytných vozů Ahorn Canada v Brně. Cestujte svobodně a komfortně po celé Evropě. Online rezervace.' };
+        return { 
+          title: 'Půjčovna obytných vozů Brno | Pronájem karavanů', 
+          description: 'Pronájem moderních obytných vozů Ahorn Canada v Brně. Homologováno pro 5 osob, skvělá výbava, parkování zdarma, férové ceny a online rezervace.',
+          url: siteUrl
+        };
       case 'booking':
-        return { title: 'Rezervace vozu', description: 'Zarezervujte si svůj termín pro nezapomenutelnou dovolenou v obytném voze.' };
+        return { 
+          title: 'Rezervace vozu | Obytkem.cz', 
+          description: 'Zarezervujte si svůj termín pro nezapomenutelnou dovolenou v obytném voze. Jednoduchý a rychlý proces rezervace.',
+          url: `${siteUrl}/?view=booking`
+        };
       case 'calendar':
-        return { title: 'Kalendář obsazenosti', description: 'Přehled volných termínů pro naše obytné vozy.' };
+        return { 
+          title: 'Kalendář obsazenosti | Obytkem.cz', 
+          description: 'Přehled volných termínů pro naše obytné vozy. Naplánujte si svou cestu včas.',
+          url: `${siteUrl}/?view=calendar`
+        };
       case 'blog':
-        return { title: 'Cestovatelský blog', description: 'Inspirace, tipy na cesty a rady pro život v karavanu.' };
+        return { 
+          title: 'Cestovatelský blog | Tipy na cesty obytňákem', 
+          description: 'Inspirace, tipy na cesty a rady pro život v karavanu. Kam vyrazit a co neminout.',
+          url: `${siteUrl}/?view=blog`
+        };
       case 'vehicle-detail':
-        return { title: selectedVehicle?.name || 'Náš obytný vůz', description: 'Detailní informace o voze Ahorn Canada TU Plus. Vybavení, technické parametry a fotogalerie.' };
+        return { 
+          title: `${selectedVehicle?.name || 'Náš obytný vůz'} | Detail vozu`, 
+          description: 'Detailní informace o voze Ahorn Canada TU Plus. Vybavení, technické parametry a fotogalerie našeho prémiového vozu.',
+          url: `${siteUrl}/?view=vehicle-detail&vehicleId=${selectedVehicleId}`,
+          image: selectedVehicle?.images?.[0]
+        };
       case 'calculator':
-        return { title: 'Kalkulačka ceny', description: 'Spočítejte si přesnou cenu pronájmu včetně všech doplňků a pojištění.' };
+        return { 
+          title: 'Kalkulačka ceny pronájmu | Obytkem.cz', 
+          description: 'Spočítejte si přesnou cenu pronájmu včetně všech doplňků a pojištění. Žádné skryté poplatky.',
+          url: `${siteUrl}/?view=calculator`
+        };
       case 'checklist':
-        return { title: 'Checklist na cesty', description: 'Seznam věcí, které si nezapomenout vzít s sebou na cestu obytným vozem.' };
+        return { 
+          title: 'Checklist na cesty | Co s sebou do karavanu', 
+          description: 'Seznam věcí, které si nezapomenout vzít s sebou na cestu obytným vozem. Buďte připraveni na vše.',
+          url: `${siteUrl}/?view=checklist`
+        };
       default:
-        return { title: 'Půjčovna obytných vozů', description: 'Pronájem moderních obytných vozů Ahorn Canada.' };
+        return { 
+          title: 'Půjčovna obytných vozů Brno', 
+          description: 'Pronájem moderních obytných vozů Ahorn Canada.',
+          url: siteUrl
+        };
     }
   };
 
@@ -797,7 +831,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
-      <SEO title={seo.title} description={seo.description} />
+      <SEO title={seo.title} description={seo.description} url={seo.url} image={seo.image} />
       
       {!isOnline && (
         <div className="bg-red-600 text-white py-1 px-4 text-center text-[10px] font-black uppercase tracking-widest animate-pulse">
@@ -894,7 +928,7 @@ const App: React.FC = () => {
                           <div className="relative overflow-hidden rounded-3xl w-full lg:w-80 h-48 shrink-0 bg-slate-100">
                             <img 
                               src={vehicle.images && vehicle.images.length > 0 ? vehicle.images[0] : 'https://picsum.photos/seed/camper/800/600'} 
-                              alt={vehicle.name} 
+                              alt={`Rezervovat vůz ${vehicle.name}`} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
                               referrerPolicy="no-referrer"
                             />
@@ -1046,7 +1080,9 @@ const App: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-center gap-16 mb-16">
               <div className="flex flex-col items-center md:items-start gap-6">
-                <Logo light className="justify-center md:justify-start scale-110 origin-left" />
+                <a href="https://www.obytkem.cz" className="hover:opacity-80 transition-opacity">
+                  <Logo light className="justify-center md:justify-start scale-110 origin-left" />
+                </a>
                 <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] max-w-xs text-center md:text-left leading-loose">
                   Půjčovna obytných vozů v Brně.<br />Svoboda na čtyřech kolech.
                 </p>
@@ -1078,7 +1114,7 @@ const App: React.FC = () => {
             
             <div className="pt-10 border-t border-white/5 text-center">
               <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.4em]">
-                © 2026 OBYTKEM.CZ • MILAN GULA • BRNO
+                © 2026 <a href="https://www.obytkem.cz" className="hover:text-brand-primary transition-colors">OBYTKEM.CZ</a> • MILAN GULA • BRNO
               </p>
             </div>
           </div>

@@ -40,14 +40,15 @@ const VehicleDetail: React.FC<VehicleDetailProps> = ({ vehicle, onBack, onBook }
           <div className="card-ultimate overflow-hidden p-0 border-none shadow-ultimate">
             <img 
               src={vehicle.images?.[0] || 'https://picsum.photos/seed/camper/1200/800'} 
-              alt={vehicle.name}
+              alt={`Obytný vůz ${vehicle.name} - hlavní pohled`}
               className="w-full h-auto"
+              referrerPolicy="no-referrer"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             {vehicle.images?.slice(1, 5).map((img, i) => (
               <div key={i} className="card-ultimate overflow-hidden p-0 border-none shadow-ultimate">
-                <img src={img} alt={`${vehicle.name} detail ${i}`} className="w-full h-auto" />
+                <img src={img} alt={`${vehicle.name} - detailní pohled ${i + 1}`} className="w-full h-auto" referrerPolicy="no-referrer" />
               </div>
             ))}
           </div>

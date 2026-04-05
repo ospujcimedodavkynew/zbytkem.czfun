@@ -300,7 +300,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               >
                 <img 
                   src={img} 
-                  alt={`Ahorn TU Plus ${idx + 1}`} 
+                  alt={`Obytný vůz Ahorn TU Plus - exteriér a interiér ${idx + 1}`} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
@@ -336,7 +336,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           <div className="relative aspect-video rounded-[3rem] overflow-hidden shadow-2xl group cursor-pointer border-8 border-white/10">
             <img 
               src={mainVehicle.images?.[0]} 
-              alt="Video Thumbnail" 
+              alt="Video prohlídka obytného vozu Ahorn Canada TU Plus" 
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
@@ -707,7 +707,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               <div className={`p-4 rounded-[2.5rem] shadow-premium border rotate-2 hover:rotate-0 transition-all duration-500 ${isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100'}`}>
                 <img 
                   src="https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Půjčovna dodávek Brno" 
+                  alt="Půjčovna dodávek Brno - sesterský projekt PujcimeDodavky.cz" 
                   className="rounded-[2rem] w-full h-64 object-cover"
                   referrerPolicy="no-referrer"
                 />
@@ -767,7 +767,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
       {/* Gallery Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out" onClick={() => setSelectedImage(null)}>
-           <img src={selectedImage} className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300" />
+           <img src={selectedImage} alt="Detailní pohled na obytný vůz" className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300" referrerPolicy="no-referrer" />
         </div>
       )}
 

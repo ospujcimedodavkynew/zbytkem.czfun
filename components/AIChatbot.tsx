@@ -69,6 +69,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ vehicles }) => {
           Tvým úkolem je pomáhat zákazníkům s dotazy. 
           
           Základní informace o nás:
+          - Hlavní web: https://www.obytkem.cz
           - Nabízíme vůz ${vehicle?.name || 'Ahorn Canada TU Plus'}.
           - Vůz je pro 5 osob na jízdu i spaní.
           - Cena se pohybuje ${priceRange} za den dle sezóny.

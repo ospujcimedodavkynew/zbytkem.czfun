@@ -42,6 +42,31 @@ const SEO: React.FC<SEOProps> = ({ title, description, image, url }) => {
     updateMeta('og:url', url || siteUrl);
     updateMeta('og:image', image || defaultImage);
 
+    // Twitter Tags
+    const updateTwitterMeta = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('name', name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    updateTwitterMeta('twitter:card', 'summary_large_image');
+    updateTwitterMeta('twitter:title', fullTitle);
+    updateTwitterMeta('twitter:description', description);
+    updateTwitterMeta('twitter:image', image || defaultImage);
+
+    // Canonical Link
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', url || siteUrl);
+
     // Aktualizace strukturovaných dat (JSON-LD)
     let scriptEl = document.getElementById('json-ld-seo') as HTMLScriptElement;
     if (!scriptEl) {

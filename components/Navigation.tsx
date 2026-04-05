@@ -19,7 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
   const { isInstallable, isIOS, isStandalone, handleInstallClick } = usePWAInstall();
 
   const navLinks = [
-    { label: 'Domů', onClick: () => onNavigate('home') },
+    { label: 'Hlavní web', onClick: () => window.location.href = 'https://www.obytkem.cz' },
     { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
     { label: 'Ceník', onClick: () => onScrollTo('pricing') },
     { label: 'Blog', onClick: () => onNavigate('blog') },
@@ -42,14 +42,14 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
       <div className="glass border border-white/20 shadow-ultimate rounded-[2rem] px-6 md:px-10 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <motion.div 
+          <motion.a 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="flex-shrink-0 cursor-pointer"
-            onClick={() => onNavigate('home')}
+            href="https://www.obytkem.cz"
           >
             <Logo />
-          </motion.div>
+          </motion.a>
           
           {/* Desktop Links */}
           <div className="hidden md:flex items-center bg-slate-50/50 rounded-full px-2 py-1 border border-slate-100">
