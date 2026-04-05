@@ -271,7 +271,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
           ref={contractRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2.5rem] p-8 md:p-16 shadow-xl border border-slate-200 print:shadow-none print:border-none print:p-0"
+          className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-16 shadow-xl border border-slate-200 print:shadow-none print:border-none print:p-0"
         >
           {/* Logo & Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 pb-12 border-b border-slate-100">
@@ -363,7 +363,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
                   ref={adminSignatureRef}
                   penColor="#0f172a"
                   canvasProps={{
-                    className: "w-full h-48 cursor-crosshair"
+                    className: "w-full h-32 md:h-48 cursor-crosshair"
                   }}
                 />
               </div>
@@ -401,7 +401,7 @@ const PublicContractView: React.FC<PublicContractViewProps> = ({ contractId, onB
                   ref={signatureRef}
                   penColor="#0f172a"
                   canvasProps={{
-                    className: "w-full h-48 cursor-crosshair"
+                    className: "w-full h-32 md:h-48 cursor-crosshair"
                   }}
                 />
               </div>

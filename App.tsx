@@ -664,7 +664,7 @@ const App: React.FC = () => {
 
   const handleSaveContract = async (contract: SavedContract) => {
     if (supabase) {
-      const { error } = await supabase.from('saved_contracts').insert({
+      const { error } = await supabase.from('saved_contracts').upsert({
         id: contract.id,
         reservation_id: contract.reservationId,
         customer_name: contract.customerName,
@@ -675,7 +675,13 @@ const App: React.FC = () => {
       });
       if (error) console.error("Chyba při ukládání smlouvy:", error.message);
     }
-    setSavedContracts(prev => [...prev, contract]);
+    setSavedContracts(prev => {
+      const exists = prev.find(c => c.id === contract.id);
+      if (exists) {
+        return prev.map(c => c.id === contract.id ? contract : c);
+      }
+      return [...prev, contract];
+    });
   };
 
   const handleBookNow = (vehicleId: string, startDate?: string) => {
@@ -822,7 +828,7 @@ const App: React.FC = () => {
         />
       )}
       
-      {!isEmbedded && !isAdmin && <AIChatbot />}
+      {!isEmbedded && !isAdmin && <AIChatbot vehicles={vehicles} />}
       {!isEmbedded && !isAdmin && <InstallBanner />}
       
       <main className={`flex-grow overflow-x-hidden ${!isEmbedded ? 'pt-32' : ''}`}>
@@ -950,7 +956,7 @@ const App: React.FC = () => {
             )}
             {view === 'blog' && <TravelBlog onBack={() => setView('home')} />}
             {view === 'checklist' && <Checklist onBack={() => setView('home')} />}
-            {view === 'calculator' && <CostCalculator onBack={() => setView('home')} />}
+            {view === 'calculator' && <CostCalculator vehicles={vehicles} onBack={() => setView('home')} />}
             {view === 'vehicle-detail' && selectedVehicle && (
               <VehicleDetail 
                 vehicle={selectedVehicle} 

@@ -64,7 +64,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     customerId: 'c1',
     startDate: '2026-07-10',
     endDate: '2026-07-20',
-    totalPrice: 34000,
+    totalPrice: 37400,
     deposit: 25000,
     status: ReservationStatus.CONFIRMED,
     createdAt: '2026-01-15T10:00:00Z'

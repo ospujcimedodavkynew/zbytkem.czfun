@@ -23,6 +23,10 @@ export const getMonthName = (monthIndex: number): string => {
 export const calculateDays = (start: string, end: string): number => {
   const s = new Date(start);
   const e = new Date(end);
+  // Set both to midnight to avoid DST issues and partial day differences
+  s.setHours(0, 0, 0, 0);
+  e.setHours(0, 0, 0, 0);
   const diffTime = Math.abs(e.getTime() - s.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // Add 1 to include both start and end day as requested by user
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };

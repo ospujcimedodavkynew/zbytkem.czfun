@@ -1,15 +1,20 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from "@google/genai";
 import { MessageCircle, X, Send, Bot, User, Loader2 } from 'lucide-react';
+import { Vehicle } from '../types';
 
 interface Message {
   role: 'user' | 'bot';
   text: string;
 }
 
-const AIChatbot: React.FC = () => {
+interface AIChatbotProps {
+  vehicles: Vehicle[];
+}
+
+const AIChatbot: React.FC<AIChatbotProps> = ({ vehicles }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'bot', text: 'Dobrý den! Jsem váš AI asistent pro Obytkem.cz. Jak vám mohu dnes pomoci s výběrem vozu nebo rezervací?' }
@@ -17,6 +22,16 @@ const AIChatbot: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const vehicle = vehicles[0];
+  const priceRange = useMemo(() => {
+    if (!vehicle) return 'od 2500 Kč do 3400 Kč';
+    const prices = vehicle.seasonalPricing.map(s => s.pricePerDay);
+    if (prices.length === 0) return `${vehicle.basePrice} Kč`;
+    const min = Math.min(...prices, vehicle.basePrice);
+    const max = Math.max(...prices, vehicle.basePrice);
+    return `od ${min} Kč do ${max} Kč`;
+  }, [vehicle]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,11 +69,11 @@ const AIChatbot: React.FC = () => {
           Tvým úkolem je pomáhat zákazníkům s dotazy. 
           
           Základní informace o nás:
-          - Nabízíme vůz Ahorn Canada TU Plus (Model 2022).
+          - Nabízíme vůz ${vehicle?.name || 'Ahorn Canada TU Plus'}.
           - Vůz je pro 5 osob na jízdu i spaní.
-          - Cena se pohybuje od 2500 Kč do 3400 Kč za den dle sezóny.
-          - Vratná kauce je 25 000 Kč.
-          - Limit kilometrů je 300 km/den, nad limit se doplácí 5 Kč/km.
+          - Cena se pohybuje ${priceRange} za den dle sezóny.
+          - Vratná kauce je ${vehicle?.deposit || 25000} Kč.
+          - Limit kilometrů je ${vehicle?.kmLimitPerDay || 300} km/den, nad limit se doplácí ${vehicle?.extraKmPrice || 5} Kč/km.
           - Místo předání: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu. Odkaz na Google Mapy: https://share.google/6M5XW9rgNIyoFMlfq
           - Vybavení: kuchyňka, sprcha, WC, topení, markýza, držák na kola.
           

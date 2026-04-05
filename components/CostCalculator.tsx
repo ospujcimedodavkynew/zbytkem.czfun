@@ -1,21 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Calculator, Fuel, Calendar, MapPin, Info, ArrowRight } from 'lucide-react';
+import { Vehicle } from '../types';
 
 interface CostCalculatorProps {
   onBack: () => void;
+  vehicles: Vehicle[];
 }
 
-const CostCalculator: React.FC<CostCalculatorProps> = ({ onBack }) => {
+const CostCalculator: React.FC<CostCalculatorProps> = ({ onBack, vehicles }) => {
   const [days, setDays] = useState(7);
   const [distance, setDistance] = useState(1000);
   const [season, setSeason] = useState<'low' | 'mid' | 'high'>('mid');
   
-  const prices = {
-    low: 2900,
-    mid: 3500,
-    high: 4200
-  };
+  const prices = useMemo(() => {
+    const vehicle = vehicles[0];
+    if (!vehicle) return { low: 2500, mid: 2900, high: 3400 };
+
+    const low = vehicle.seasonalPricing.find(s => s.name.toLowerCase().includes('vedlejší') || s.name.toLowerCase().includes('pozdní'))?.pricePerDay || 2500;
+    const mid = vehicle.seasonalPricing.find(s => s.name.toLowerCase().includes('střední'))?.pricePerDay || 2900;
+    const high = vehicle.seasonalPricing.find(s => s.name.toLowerCase().includes('hlavní'))?.pricePerDay || 3400;
+
+    return { low, mid, high };
+  }, [vehicles]);
 
   const fuelConsumption = 11; // liters per 100km
   const fuelPrice = 38; // CZK per liter

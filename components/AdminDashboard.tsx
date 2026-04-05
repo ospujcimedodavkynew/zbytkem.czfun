@@ -71,7 +71,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'reservations' | 'fleet' | 'advisor' | 'protocols' | 'widget' | 'calendar' | 'stats' | 'messages' | 'maintenance' | 'inventory' | 'pricing' | 'customers' | 'contracts'>('reservations');
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
-  const [viewingContract, setViewingContract] = useState<{content: string, customer: string, resId: string} | null>(null);
+  const [viewingContract, setViewingContract] = useState<{id?: string, content: string, customer: string, resId: string} | null>(null);
   const [viewingReservationId, setViewingReservationId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
@@ -213,7 +213,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         selectedItems: selectedItemsText
       });
 
+      const existingContract = savedContracts.find(c => c.reservationId === res.id);
       setViewingContract({
+        id: existingContract?.id,
         content: contractText,
         customer: `${customer?.firstName} ${customer?.lastName}`,
         resId: res.id
@@ -1005,62 +1007,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
-        {activeTab === 'contracts' && (
-          <div className="p-10 space-y-8 animate-in fade-in duration-500">
-            <h2 className="text-2xl font-black">Uložené smlouvy</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {savedContracts.length > 0 ? (
-                savedContracts.map(contract => (
-                  <div key={contract.id} className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm flex flex-col">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <h3 className="font-black text-slate-900">{contract.customerName}</h3>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{formatDate(contract.createdAt)}</p>
-                      </div>
-                      <div className="p-3 bg-slate-50 rounded-2xl">
-                        <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                      </div>
-                    </div>
-                    <div className="mt-auto flex gap-3">
-                      <button 
-                        onClick={() => setViewingContract({
-                          content: contract.content,
-                          customer: contract.customerName,
-                          resId: contract.reservationId
-                        })}
-                        className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-800 transition-all"
-                      >
-                        Zobrazit
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const blob = new Blob([contract.content], { type: 'text/plain' });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement('a');
-                          a.href = url;
-                          a.download = `smlouva-${contract.customerName}-${contract.reservationId}.txt`;
-                          a.click();
-                        }}
-                        className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full p-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
-                    <svg className="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                  </div>
-                  <h3 className="text-xl font-black text-slate-900 mb-2">Zatím žádné smlouvy</h3>
-                  <p className="text-slate-400 font-medium max-w-xs">Vygenerujte smlouvu u konkrétní rezervace a uložte ji pro pozdější nahlédnutí.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {activeTab === 'reservations' && (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -1399,17 +1345,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onClick={() => onViewContract(contract.id)}
                           className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all"
                         >
-                          Zobrazit / Podepsat
+                          Náhled
+                        </button>
+                        <button 
+                          onClick={() => setViewingContract({
+                            id: contract.id,
+                            content: contract.content,
+                            customer: contract.customerName,
+                            resId: contract.reservationId
+                          })}
+                          className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all"
+                        >
+                          Podepsat
                         </button>
                         <button 
                           onClick={() => {
                             const mailtoUrl = `mailto:${customer?.email || ''}?subject=Nájemní smlouva - Obytkem.cz&body=Dobrý den, v příloze nebo na odkazu níže naleznete vaši nájemní smlouvu k nahlédnutí a podpisu.%0D%0A%0D%0AOdkaz na smlouvu: ${publicUrl}%0D%0A%0D%0AS pozdravem,%0D%0AObytkem.cz`;
                             window.location.href = mailtoUrl;
                           }}
-                          className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                          className="flex-1 md:flex-none px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                          Odeslat e-mailem
+                          E-mail
                         </button>
                         <button 
                           onClick={() => {
@@ -1713,29 +1670,31 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
               <button onClick={() => setViewingContract(null)} className="p-2 text-slate-400 hover:text-slate-600"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div className="flex-grow overflow-y-auto bg-slate-50 p-10 rounded-3xl border border-slate-100 mb-8 font-serif leading-relaxed text-slate-700 whitespace-pre-wrap">
-              {viewingContract.content}
-            </div>
-
-            {/* Admin Signature Pad */}
-            <div className="mb-8 p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Váš podpis (Milan Gula)</h3>
-              <div className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-inner">
-                <SignatureCanvas 
-                  ref={adminSignatureRef}
-                  penColor="#0f172a"
-                  canvasProps={{
-                    className: "w-full h-32 cursor-crosshair"
-                  }}
-                />
+            <div className="flex-grow overflow-y-auto bg-slate-50 p-6 md:p-10 rounded-3xl border border-slate-100 mb-8 font-serif leading-relaxed text-slate-700 whitespace-pre-wrap">
+              <div className="mb-8">
+                {viewingContract.content}
               </div>
-              <div className="text-center">
-                <button 
-                  onClick={() => adminSignatureRef.current?.clear()}
-                  className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
-                >
-                  Vymazat podpis
-                </button>
+
+              {/* Admin Signature Pad */}
+              <div className="p-6 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Váš podpis (Milan Gula)</h3>
+                <div className="bg-white rounded-2xl border border-slate-200 mb-4 overflow-hidden shadow-inner">
+                  <SignatureCanvas 
+                    ref={adminSignatureRef}
+                    penColor="#0f172a"
+                    canvasProps={{
+                      className: "w-full h-32 cursor-crosshair"
+                    }}
+                  />
+                </div>
+                <div className="text-center">
+                  <button 
+                    onClick={() => adminSignatureRef.current?.clear()}
+                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                  >
+                    Vymazat podpis
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1746,7 +1705,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   const adminSig = adminSignatureRef.current?.isEmpty() ? undefined : adminSignatureRef.current?.getTrimmedCanvas().toDataURL('image/png');
                   
                   onSaveContract({
-                    id: crypto.randomUUID(),
+                    id: viewingContract.id || crypto.randomUUID(),
                     reservationId: viewingContract.resId,
                     customerName: viewingContract.customer,
                     createdAt: new Date().toISOString(),
