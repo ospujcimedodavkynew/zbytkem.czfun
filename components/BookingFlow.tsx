@@ -187,46 +187,46 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className={isEmbedded ? 'p-5' : 'p-10'}>
+        <form onSubmit={handleSubmit} className={isEmbedded ? 'p-4 sm:p-6' : 'p-5 sm:p-10'}>
           {step === 1 && (
-            <div className={`space-y-4 animate-in fade-in duration-500`}>
+            <div className={`space-y-6 animate-in fade-in duration-500`}>
               <div>
                 <h3 className="text-lg font-black text-slate-900">Termín cesty</h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vyzvednutí</label>
-                  <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
+                  <div className={`input-ultimate w-full px-4 py-3 font-bold text-sm flex items-center ${error && formData.startDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
                     {formData.startDate ? formatDate(formData.startDate) : 'Vyberte v kalendáři'}
                   </div>
                   {formData.startDate && (
-                    <div className="mt-1">
-                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Čas vyzvednutí</label>
+                    <div className="mt-2">
+                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1 ml-1">Čas vyzvednutí</label>
                       <input 
                         type="time" 
                         name="pickupTime" 
                         value={formData.pickupTime} 
                         onChange={handleChange} 
-                        className="input-ultimate w-full px-3 py-1.5 text-xs font-bold" 
+                        className="input-ultimate w-full px-4 py-2 text-xs font-bold" 
                       />
                     </div>
                   )}
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vrácení</label>
-                  <div className={`input-ultimate w-full px-3 py-2.5 font-bold text-sm flex items-center ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
+                  <div className={`input-ultimate w-full px-4 py-3 font-bold text-sm flex items-center ${error && formData.endDate ? 'border-red-100 bg-red-50 text-red-900' : 'bg-slate-50'}`}>
                     {formData.endDate ? formatDate(formData.endDate) : 'Vyberte v kalendáři'}
                   </div>
                   {formData.endDate && (
-                    <div className="mt-1">
-                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Čas vrácení</label>
+                    <div className="mt-2">
+                      <label className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block mb-1 ml-1">Čas vrácení</label>
                       <input 
                         type="time" 
                         name="returnTime" 
                         value={formData.returnTime} 
                         onChange={handleChange} 
-                        className="input-ultimate w-full px-3 py-1.5 text-xs font-bold" 
+                        className="input-ultimate w-full px-4 py-2 text-xs font-bold" 
                       />
                     </div>
                   )}
@@ -315,15 +315,15 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
           {step === 3 && (
             <div className="space-y-4 animate-in fade-in duration-500">
               <h3 className="text-lg font-black text-slate-900">Vaše údaje</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="text" name="firstName" placeholder="Jméno" required value={formData.firstName} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
                 <input type="text" name="lastName" placeholder="Příjmení" required value={formData.lastName} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="email" name="email" placeholder="E-mail" required value={formData.email} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
                 <input type="tel" name="phone" placeholder="Telefon" required value={formData.phone} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input type="text" name="address" placeholder="Adresa bydliště" required value={formData.address} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
                 <input type="text" name="idNumber" placeholder="Číslo OP / Pas" required value={formData.idNumber} onChange={handleChange} className="input-ultimate w-full px-4 py-3 font-medium text-sm" />
               </div>
@@ -453,18 +453,18 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
             </div>
           )}
 
-          <div className="mt-6 flex justify-between items-center">
-            {step > 1 ? (
-              <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-2 text-slate-400 font-black uppercase text-[10px] hover:text-brand-primary transition-colors">Zpět</button>
-            ) : (
-              <div></div>
-            )}
+          <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex w-full sm:w-auto justify-between sm:justify-start gap-4 order-2 sm:order-1">
+              {step > 1 && (
+                <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-3 text-slate-400 font-black uppercase text-[10px] hover:text-brand-primary transition-colors">Zpět</button>
+              )}
+            </div>
             <button 
               type="submit" 
               disabled={step === 1 && (!!error || !formData.startDate || !formData.endDate)}
-              className="btn-ultimate-primary px-8 py-4 text-[10px] tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-30"
+              className="btn-ultimate-primary w-full sm:w-auto px-10 py-5 text-[10px] tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-30 order-1 sm:order-2"
             >
-              {step === 4 ? 'Odeslat' : 'Další'}
+              {step === 4 ? 'Odeslat rezervaci' : 'Pokračovat'}
             </button>
           </div>
         </form>

@@ -33,9 +33,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight"
+          className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight px-2"
         >
-          Naplánujte si svou <br />
+          Naplánujte si svou <br className="hidden sm:block" />
           <span className="gradient-text">svobodu na cestách</span>
         </motion.h1>
         <motion.p 
@@ -74,9 +74,9 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
             </div>
 
             {/* Info Section */}
-            <div className="flex-grow space-y-8">
+            <div className="flex-grow space-y-8 w-full">
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center lg:justify-start gap-3">
                   <span className="px-3 py-1 bg-green-500/10 text-green-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-green-500/20">
                     K dispozici
                   </span>
@@ -87,7 +87,7 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
                     ))}
                   </div>
                 </div>
-                <p className="text-slate-600 font-medium leading-relaxed text-lg">
+                <p className="text-slate-600 font-medium leading-relaxed text-base md:text-lg text-center lg:text-left">
                   {vehicle.description}
                 </p>
               </div>
@@ -123,22 +123,22 @@ const PublicHome: React.FC<PublicHomeProps> = ({ vehicles, reservations, onBookN
               </div>
 
               <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-8">
-                <div>
+                <div className="text-center sm:text-left">
                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Cena pronájmu od</div>
                   <div className="text-3xl font-black text-slate-900">
                     {formatCurrency(vehicle.basePrice)} <span className="text-xs text-slate-400 font-black uppercase tracking-widest ml-1">/ den</span>
                   </div>
                 </div>
-                <div className="flex gap-4 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                   <button 
                     onClick={() => onNavigate('calculator')}
-                    className="btn-ultimate-secondary flex-grow sm:flex-grow-0 px-8 py-4 text-[10px] font-black uppercase tracking-widest"
+                    className="btn-ultimate-secondary w-full sm:w-auto px-8 py-4 text-[10px] font-black uppercase tracking-widest"
                   >
                     Kalkulačka
                   </button>
                   <button 
                     onClick={() => onBookNow(vehicle.id)}
-                    className="btn-ultimate-primary flex-grow sm:flex-grow-0 px-10 py-5 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand-primary/20 flex items-center justify-center gap-3"
+                    className="btn-ultimate-primary w-full sm:w-auto px-10 py-5 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand-primary/20 flex items-center justify-center gap-3"
                   >
                     Rezervovat nyní
                     <ArrowRight size={16} />

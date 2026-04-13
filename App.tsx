@@ -813,7 +813,7 @@ const App: React.FC = () => {
   const seo = getSEOMetadata();
 
   return (
-    <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
+    <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden pb-[env(safe-area-inset-bottom)]`}>
       <SEO 
         title={seo.title} 
         description={seo.description} 

@@ -121,9 +121,9 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
     };
 
     return (
-      <div className={`${isEmbedded ? 'rounded-none border-none shadow-none' : 'p-6 md:p-8 rounded-[2rem] border transition-all'} ${isEmbedded ? 'p-0' : isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-xl'} animate-in fade-in duration-500`}>
-        <div className={`flex justify-between items-center ${isEmbedded ? 'mb-4' : 'mb-8'}`}>
-          <h3 className={`${isEmbedded ? 'text-[10px]' : 'text-xl'} font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+      <div className={`${isEmbedded ? 'rounded-none border-none shadow-none' : 'p-4 sm:p-8 rounded-[2rem] border transition-all'} ${isEmbedded ? 'p-0' : isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100 shadow-xl'} animate-in fade-in duration-500`}>
+        <div className={`flex justify-between items-center ${isEmbedded ? 'mb-4' : 'mb-6 sm:mb-8'}`}>
+          <h3 className={`${isEmbedded ? 'text-[10px]' : 'text-base sm:text-xl'} font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             {date.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}
           </h3>
           <div className="flex gap-1">
@@ -216,8 +216,8 @@ const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       {!isEmbedded && (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
           <div>
-            <h2 className={`text-3xl font-black tracking-tight flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-              <CalendarIcon className="w-8 h-8 text-brand-primary" />
+            <h2 className={`text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              <CalendarIcon className="w-6 h-6 sm:w-8 h-8 text-brand-primary" />
               Dostupnost vozů
             </h2>
             <p className={`font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Podívejte se na volné termíny v sezóně 2026</p>
