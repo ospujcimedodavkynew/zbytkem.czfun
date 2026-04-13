@@ -7,9 +7,6 @@ import BookingFlow from './components/BookingFlow';
 import AdminDashboard from './components/AdminDashboard';
 import ConfirmationPage from './components/ConfirmationPage';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
-import TravelBlog from './components/TravelBlog';
-import VehicleDetail from './components/VehicleDetail';
-import Checklist from './components/Checklist';
 import CostCalculator from './components/CostCalculator';
 import PublicContractView from './components/PublicContractView';
 import AIChatbot from './components/AIChatbot';
@@ -29,7 +26,7 @@ export const DEFAULT_SEASONS = [
 
 const App: React.FC = () => {
   console.log("App component rendering...");
-  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'blog' | 'vehicle-detail' | 'checklist' | 'calculator' | 'contract-public'>('home');
+  const [view, setView] = useState<'home' | 'admin' | 'booking' | 'confirmation' | 'widget' | 'calendar' | 'calculator' | 'contract-public'>('home');
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [initialStartDate, setInitialStartDate] = useState<string | null>(null);
@@ -779,50 +776,36 @@ const App: React.FC = () => {
         return { 
           title: 'Půjčovna obytných vozů Brno | Pronájem karavanů', 
           description: 'Pronájem moderních obytných vozů Ahorn Canada v Brně. Homologováno pro 5 osob, skvělá výbava, parkování zdarma, férové ceny a online rezervace.',
-          url: siteUrl
+          url: 'https://www.obytkem.cz',
+          noindex: true
         };
       case 'booking':
         return { 
           title: 'Rezervace vozu | Obytkem.cz', 
           description: 'Zarezervujte si svůj termín pro nezapomenutelnou dovolenou v obytném voze. Jednoduchý a rychlý proces rezervace.',
-          url: `${siteUrl}/?view=booking`
+          url: `${siteUrl}/?view=booking`,
+          noindex: false
         };
       case 'calendar':
         return { 
           title: 'Kalendář obsazenosti | Obytkem.cz', 
           description: 'Přehled volných termínů pro naše obytné vozy. Naplánujte si svou cestu včas.',
-          url: `${siteUrl}/?view=calendar`
-        };
-      case 'blog':
-        return { 
-          title: 'Cestovatelský blog | Tipy na cesty obytňákem', 
-          description: 'Inspirace, tipy na cesty a rady pro život v karavanu. Kam vyrazit a co neminout.',
-          url: `${siteUrl}/?view=blog`
-        };
-      case 'vehicle-detail':
-        return { 
-          title: `${selectedVehicle?.name || 'Náš obytný vůz'} | Detail vozu`, 
-          description: 'Detailní informace o voze Ahorn Canada TU Plus. Vybavení, technické parametry a fotogalerie našeho prémiového vozu.',
-          url: `${siteUrl}/?view=vehicle-detail&vehicleId=${selectedVehicleId}`,
-          image: selectedVehicle?.images?.[0]
+          url: `${siteUrl}/?view=calendar`,
+          noindex: true
         };
       case 'calculator':
         return { 
           title: 'Kalkulačka ceny pronájmu | Obytkem.cz', 
           description: 'Spočítejte si přesnou cenu pronájmu včetně všech doplňků a pojištění. Žádné skryté poplatky.',
-          url: `${siteUrl}/?view=calculator`
-        };
-      case 'checklist':
-        return { 
-          title: 'Checklist na cesty | Co s sebou do karavanu', 
-          description: 'Seznam věcí, které si nezapomenout vzít s sebou na cestu obytným vozem. Buďte připraveni na vše.',
-          url: `${siteUrl}/?view=checklist`
+          url: `${siteUrl}/?view=calculator`,
+          noindex: false
         };
       default:
         return { 
           title: 'Půjčovna obytných vozů Brno', 
           description: 'Pronájem moderních obytných vozů Ahorn Canada.',
-          url: siteUrl
+          url: 'https://www.obytkem.cz',
+          noindex: true
         };
     }
   };
@@ -831,7 +814,13 @@ const App: React.FC = () => {
 
   return (
     <div className={`${isEmbedded ? 'min-h-0' : 'min-h-screen'} flex flex-col ${isEmbedded ? 'bg-transparent' : 'bg-slate-50'} overflow-x-hidden`}>
-      <SEO title={seo.title} description={seo.description} url={seo.url} image={seo.image} />
+      <SEO 
+        title={seo.title} 
+        description={seo.description} 
+        url={seo.url} 
+        image={(seo as any).image} 
+        noindex={seo.noindex} 
+      />
       
       {!isOnline && (
         <div className="bg-red-600 text-white py-1 px-4 text-center text-[10px] font-black uppercase tracking-widest animate-pulse">
@@ -988,16 +977,7 @@ const App: React.FC = () => {
                 />
               </div>
             )}
-            {view === 'blog' && <TravelBlog onBack={() => setView('home')} />}
-            {view === 'checklist' && <Checklist onBack={() => setView('home')} />}
             {view === 'calculator' && <CostCalculator vehicles={vehicles} onBack={() => setView('home')} />}
-            {view === 'vehicle-detail' && selectedVehicle && (
-              <VehicleDetail 
-                vehicle={selectedVehicle} 
-                onBack={() => setView('home')} 
-                onBook={() => setView('booking')} 
-              />
-            )}
             {view === 'home' && (
               <PublicHome 
                 vehicles={vehicles} 
@@ -1089,9 +1069,9 @@ const App: React.FC = () => {
               </div>
               
               <div className="flex flex-wrap justify-center gap-10 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                <button onClick={() => handleScrollTo('fleet')} className="hover:text-brand-primary transition-colors">Naše vozy</button>
-                <button onClick={() => handleScrollTo('pricing')} className="hover:text-brand-primary transition-colors">Ceník</button>
-                <button onClick={() => handleScrollTo('faq')} className="hover:text-brand-primary transition-colors">FAQ</button>
+                <button onClick={() => setView('home')} className="hover:text-brand-primary transition-colors">Nová rezervace</button>
+                <button onClick={() => setView('calculator')} className="hover:text-brand-primary transition-colors">Kalkulačka</button>
+                <button onClick={() => setView('confirmation')} className="hover:text-brand-primary transition-colors">Moje rezervace</button>
                 <button onClick={() => setView('admin')} className="hover:text-brand-primary transition-colors">Administrace</button>
               </div>
 

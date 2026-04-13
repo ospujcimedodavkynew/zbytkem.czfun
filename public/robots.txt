@@ -1,3 +1,9 @@
 User-agent: *
+Disallow: /?view=blog
+Disallow: /?view=vehicle-detail
+Disallow: /?view=home
+Allow: /?view=booking
+Allow: /?view=calculator
 Allow: /
+
 Sitemap: https://rezervace.obytkem.cz/sitemap.xml

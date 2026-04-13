@@ -7,7 +7,7 @@ import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface NavigationProps {
   isAdmin: boolean;
-  onNavigate: (view: 'home' | 'admin' | 'booking' | 'blog' | 'vehicle-detail' | 'checklist') => void;
+  onNavigate: (view: 'home' | 'admin' | 'booking' | 'confirmation' | 'calculator' | 'widget' | 'calendar' | 'contract-public') => void;
   onScrollTo: (sectionId: string) => void;
   onLogout: () => void;
   isDarkMode: boolean;
@@ -20,12 +20,9 @@ const Navigation: React.FC<NavigationProps> = ({ isAdmin, onNavigate, onScrollTo
 
   const navLinks = [
     { label: 'Hlavní web', onClick: () => window.location.href = 'https://www.obytkem.cz' },
-    { label: 'Naše vozy', onClick: () => onScrollTo('fleet') },
-    { label: 'Ceník', onClick: () => onScrollTo('pricing') },
-    { label: 'Blog', onClick: () => onNavigate('blog') },
-    { label: 'Checklist', onClick: () => onNavigate('checklist') },
-    { label: 'FAQ', onClick: () => onScrollTo('faq') },
-    { label: 'Kontakt', onClick: () => onScrollTo('contact') },
+    { label: 'Nová rezervace', onClick: () => onNavigate('home') },
+    { label: 'Kalkulačka', onClick: () => onNavigate('calculator') },
+    { label: 'Moje rezervace', onClick: () => onNavigate('confirmation') },
   ];
 
   const handleInstall = () => {

@@ -5,9 +5,10 @@ interface SEOProps {
   description: string;
   image?: string;
   url?: string;
+  noindex?: boolean;
 }
 
-const SEO: React.FC<SEOProps> = ({ title, description, image, url }) => {
+const SEO: React.FC<SEOProps> = ({ title, description, image, url, noindex }) => {
   const siteTitle = "Obytkem.cz";
   const fullTitle = `${title} | ${siteTitle}`;
   const siteUrl = "https://rezervace.obytkem.cz";
@@ -16,6 +17,15 @@ const SEO: React.FC<SEOProps> = ({ title, description, image, url }) => {
   useEffect(() => {
     // Aktualizace titulku
     document.title = fullTitle;
+
+    // Robots meta tag (noindex)
+    let metaRobots = document.querySelector('meta[name="robots"]');
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.setAttribute('name', 'robots');
+      document.head.appendChild(metaRobots);
+    }
+    metaRobots.setAttribute('content', noindex ? 'noindex, nofollow' : 'index, follow');
 
     // Aktualizace meta popisku
     let metaDescription = document.querySelector('meta[name="description"]');
