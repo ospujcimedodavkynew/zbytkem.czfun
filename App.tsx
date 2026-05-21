@@ -551,6 +551,65 @@ const App: React.FC = () => {
     localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updated));
   };
 
+  const handleUpdateReservation = async (res: Reservation) => {
+    console.log("Updating reservation:", res.id);
+    if (supabase) {
+      const { error } = await supabase.from('reservations').update({
+        start_date: res.startDate,
+        end_date: res.endDate,
+        total_price: res.totalPrice,
+        deposit: res.deposit,
+        status: res.status,
+        customer_note: res.customerNote,
+        selected_add_ons: res.selectedAddOns,
+        delivery_address: res.deliveryAddress,
+        delivery_time: res.deliveryTime,
+        pickup_time: res.pickupTime,
+        return_time: res.returnTime,
+        estimated_mileage: res.estimatedMileage,
+        destination: res.destination
+      }).eq('id', res.id);
+      if (error) {
+        console.error("Error updating reservation:", error.message);
+        alert("Chyba při ukládání změny: " + error.message);
+      }
+    }
+    const updated = reservations.map(r => r.id === res.id ? res : r);
+    setReservations(updated);
+    localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updated));
+  };
+
+  const handleCreateReservation = async (res: Reservation) => {
+    console.log("Creating reservation for customer:", res.customerId);
+    if (supabase) {
+      const { error } = await supabase.from('reservations').insert({
+        id: res.id,
+        vehicle_id: res.vehicleId,
+        customer_id: res.customerId,
+        start_date: res.startDate,
+        end_date: res.endDate,
+        total_price: res.totalPrice,
+        deposit: res.deposit,
+        status: res.status,
+        customer_note: res.customerNote,
+        selected_add_ons: res.selectedAddOns,
+        delivery_address: res.deliveryAddress,
+        delivery_time: res.deliveryTime,
+        pickup_time: res.pickupTime,
+        return_time: res.returnTime,
+        estimated_mileage: res.estimatedMileage,
+        destination: res.destination
+      });
+      if (error) {
+        console.error("Error creating reservation:", error.message);
+        alert("Chyba při vytváření rezervace: " + error.message);
+      }
+    }
+    const updated = [res, ...reservations];
+    setReservations(updated);
+    localStorage.setItem('obytkem_reservations_v3', JSON.stringify(updated));
+  };
+
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
     console.log("Updating vehicle:", updatedVehicle.id);
     try {
@@ -1018,6 +1077,8 @@ const App: React.FC = () => {
                 onUpdateMessageStatus={handleUpdateMessageStatus}
                 onDeleteMessage={handleDeleteMessage}
                 onDeleteReservation={handleDeleteReservation} 
+                onUpdateReservation={handleUpdateReservation}
+                onCreateReservation={handleCreateReservation}
                 onUpdateVehicle={handleUpdateVehicle}
                 onUpdateInventoryItem={handleUpdateInventoryItem}
                 onAddInventoryItem={handleAddInventoryItem}

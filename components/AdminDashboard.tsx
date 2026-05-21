@@ -35,6 +35,8 @@ interface AdminDashboardProps {
   onUpdateMessageStatus: (id: string, status: Message['status']) => void;
   onDeleteMessage: (id: string) => void;
   onDeleteReservation: (id: string) => void;
+  onUpdateReservation: (res: Reservation) => void;
+  onCreateReservation: (res: Reservation) => void;
   onUpdateVehicle: (vehicle: Vehicle) => void;
   onUpdateInventoryItem: (item: InventoryItem) => void;
   onAddInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
@@ -61,6 +63,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateMessageStatus,
   onDeleteMessage,
   onDeleteReservation,
+  onUpdateReservation,
+  onCreateReservation,
   onUpdateVehicle,
   onUpdateInventoryItem,
   onAddInventoryItem,
@@ -73,6 +77,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [generatingContractId, setGeneratingContractId] = useState<string | null>(null);
   const [viewingContract, setViewingContract] = useState<{id?: string, content: string, customer: string, resId: string} | null>(null);
   const [viewingReservationId, setViewingReservationId] = useState<string | null>(null);
+  const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [activeProtocolEdit, setActiveProtocolEdit] = useState<{type: 'handover' | 'return', reservationId: string} | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<{summary: string, occupancyRate: string, recommendation: string} | null>(null);
@@ -216,7 +221,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const existingContract = savedContracts.find(c => c.reservationId === res.id);
       setViewingContract({
         id: existingContract?.id,
-        content: contractText,
+        content: existingContract?.content || contractText,
         customer: `${customer?.firstName} ${customer?.lastName}`,
         resId: res.id
       });
@@ -232,9 +237,60 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
     printWindow.document.write(`
-      <html><head><title>Smlouva - ${viewingContract.customer}</title>
-      <style>body{font-family:sans-serif;padding:40px;line-height:1.5;font-size:12px;}h1{color:#0f172a;}pre{white-space:pre-wrap;font-family:inherit;}</style></head>
-      <body><h1>Smlouva o nájmu - obytkem.cz</h1><pre>${viewingContract.content}</pre></body></html>
+      <html>
+        <head>
+          <title>Smlouva - ${viewingContract.customer}</title>
+          <style>
+            @page { size: A4; margin: 20mm; }
+            body { 
+              font-family: serif; 
+              padding: 0; 
+              line-height: 1.6; 
+              font-size: 11pt; 
+              color: #1e293b;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #334155;
+              padding-bottom: 10px;
+            }
+            .header h1 { margin: 0; font-size: 18pt; color: #0f172a; }
+            .content { white-space: pre-wrap; margin-bottom: 50px; }
+            .signatures { 
+              display: grid; 
+              grid-template-columns: 1fr 1fr; 
+              gap: 50px; 
+              margin-top: 50px;
+            }
+            .sig-box { 
+              border-top: 1px solid #94a3b8; 
+              padding-top: 10px; 
+              text-align: center;
+              font-size: 9pt;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+            }
+            .sig-img { max-height: 80px; display: block; margin: 0 auto 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>SMLOUVA O NÁJMU DOPRAVNÍHO PROSTŘEDKU</h1>
+            <p>obytkem.cz - Milan Gula</p>
+          </div>
+          <div class="content">${viewingContract.content}</div>
+          <div class="signatures">
+            <div class="sig-box">
+              Pronajímatel (Milan Gula)
+            </div>
+            <div class="sig-box">
+              Nájemce (${viewingContract.customer})
+            </div>
+          </div>
+        </body>
+      </html>
     `);
     printWindow.document.close();
     printWindow.print();
@@ -946,7 +1002,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       
                       <div className="lg:col-span-2 space-y-6">
                         <div className="p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm">
-                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Historie rezervací</h3>
+                        <div className="flex justify-between items-center mb-6">
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Historie rezervací</h3>
+                          <button 
+                            onClick={() => setEditingReservation({
+                              id: crypto.randomUUID(),
+                              vehicleId: vehicles[0]?.id || '',
+                              customerId: customer.id,
+                              startDate: new Date().toISOString().split('T')[0],
+                              endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                              totalPrice: 0,
+                              deposit: 25000,
+                              status: ReservationStatus.PENDING,
+                              createdAt: new Date().toISOString()
+                            })}
+                            className="text-[10px] font-black text-brand-primary uppercase hover:underline"
+                          >
+                            + Nová rezervace
+                          </button>
+                        </div>
                           <div className="space-y-4">
                             {customerReservations.length > 0 ? (
                               customerReservations.map(res => (
@@ -989,7 +1063,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <td className="px-8 py-6 font-black text-slate-900">{customer.firstName} {customer.lastName}</td>
                           <td className="px-8 py-6 text-sm font-bold text-slate-500">{customer.email}</td>
                           <td className="px-8 py-6 text-sm font-bold text-slate-500">{customer.phone}</td>
-                          <td className="px-8 py-6 text-right">
+                          <td className="px-8 py-6 text-right space-x-4">
+                            <button 
+                              onClick={() => setEditingReservation({
+                                id: crypto.randomUUID(),
+                                vehicleId: vehicles[0]?.id || '',
+                                customerId: customer.id,
+                                startDate: new Date().toISOString().split('T')[0],
+                                endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                totalPrice: 0,
+                                deposit: 25000,
+                                status: ReservationStatus.PENDING,
+                                createdAt: new Date().toISOString()
+                              })}
+                              className="text-[10px] font-black text-green-600 hover:underline uppercase tracking-widest"
+                            >
+                              + Rezervace
+                            </button>
                             <button 
                               onClick={() => setSelectedCustomerId(customer.id)}
                               className="text-[10px] font-black text-brand-primary hover:underline uppercase tracking-widest"
@@ -1075,6 +1165,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           className="text-[10px] font-black text-brand-primary hover:text-brand-primary/80 uppercase"
                         >
                           Detail
+                        </button>
+                        <button 
+                          onClick={() => setEditingReservation(res)}
+                          className="text-[10px] font-black text-slate-900 hover:text-slate-700 uppercase"
+                        >
+                          Upravit
                         </button>
                         <button 
                           disabled={generatingContractId === res.id}
@@ -1670,10 +1766,70 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
               <button onClick={() => setViewingContract(null)} className="p-2 text-slate-400 hover:text-slate-600"><svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
-            <div className="flex-grow overflow-y-auto bg-slate-50 p-6 md:p-10 rounded-3xl border border-slate-100 mb-8 font-serif leading-relaxed text-slate-700 whitespace-pre-wrap">
-              <div className="mb-8">
-                {viewingContract.content}
+            <div className="flex-grow overflow-y-auto bg-slate-100 p-6 md:p-12 rounded-[2rem] border border-slate-200 mb-8 flex flex-col items-center">
+              <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[15mm] md:p-[25mm] rounded-sm transform transition-all border border-slate-200">
+                <div className="mb-8 text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between items-center border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span>Editor Smlouvy (A4 Náhled)</span>
+                  </div>
+                  <span className="text-brand-primary">AI Powered Document v2.0</span>
+                </div>
+                
+                <textarea 
+                  className="w-full min-h-[800px] bg-transparent border-none outline-none resize-none font-serif leading-relaxed text-slate-800 focus:ring-0 whitespace-pre-wrap text-[14px]"
+                  value={viewingContract.content}
+                  onChange={(e) => setViewingContract({...viewingContract, content: e.target.value})}
+                  placeholder="Obsah smlouvy..."
+                />
+
+                <div className="mt-12 pt-8 border-t border-slate-100 grid grid-cols-2 gap-12">
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Pronajímatel</p>
+                    <div className="h-24 border-b-2 border-slate-200 flex items-end justify-center p-2 italic text-slate-400 text-sm">
+                      Milan Gula / Obytkem.cz
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Nájemce</p>
+                    <div className="h-24 border-b-2 border-slate-200 flex items-end justify-center p-2 italic text-slate-300 text-sm">
+                      Místo pro podpis klienta
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Document Tools */}
+              <div className="mt-8 flex gap-3 flex-wrap justify-center">
+                <button 
+                  onClick={() => {
+                    const clause = "\n\nSANKCE ZA POZDNÍ VRÁCENÍ: V případě prodlení s vrácením vozidla je nájemce povinen uhradit smluvní pokutu ve výši 2.000 Kč za každou započatou hodinu prodlení.";
+                    setViewingContract({...viewingContract, content: viewingContract.content + clause});
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-brand-primary transition-all shadow-sm"
+                >
+                  + Pozdní vrácení
+                </button>
+                <button 
+                  onClick={() => {
+                    const clause = "\n\nDOMÁCÍ MAZLÍČCI: Pronajímatel souhlasí s přepravou domácího mazlíčka. Nájemce odpovídá za to, že vozidlo bude vráceno bez stop po zvířeti (chlupy, zápach). V opačném případě bude účtován poplatek za hloubkové čištění 2.500 Kč.";
+                    setViewingContract({...viewingContract, content: viewingContract.content + clause});
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-brand-primary transition-all shadow-sm"
+                >
+                  + Domácí mazlíček
+                </button>
+                <button 
+                  onClick={() => {
+                    const clause = "\n\nÚKLID VOZIDLA: Vozidlo se vrací s vyprázdněnou kazetou WC a odpadní nádrží. Za nevyprázdněnou kazetu WC je účtován poplatek 1.500 Kč.";
+                    setViewingContract({...viewingContract, content: viewingContract.content + clause});
+                  }}
+                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:border-brand-primary transition-all shadow-sm"
+                >
+                  + Čištění / WC
+                </button>
+              </div>
+            </div>
 
               {/* Admin Signature Pad */}
               <div className="p-6 bg-white rounded-3xl border-2 border-dashed border-slate-200">
@@ -1699,7 +1855,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <div className="flex gap-4">
-              <button onClick={handlePrintContract} className="flex-1 py-5 bg-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all">Vytisknout Smlouvu</button>
+              <button onClick={handlePrintContract} className="px-8 py-5 bg-slate-100 text-slate-900 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Tisk
+              </button>
               <button 
                 onClick={() => {
                   const adminSig = adminSignatureRef.current?.isEmpty() ? undefined : adminSignatureRef.current?.getTrimmedCanvas().toDataURL('image/png');
@@ -1713,15 +1872,210 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     adminSignature: adminSig
                   });
                   setViewingContract(null);
-                  alert('Smlouva byla uložena s vaším podpisem.');
+                  alert('Smlouva byla v pořádku uložena.');
                 }}
-                className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-100"
+                className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-brand-primary transition-all shadow-xl shadow-slate-900/20 flex justify-center items-center gap-2"
               >
-                Uložit a podepsat
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                Uložit a podepsat smlouvu
               </button>
-              <button onClick={() => setViewingContract(null)} className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Zavřít</button>
+              <button onClick={() => setViewingContract(null)} className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs hover:bg-slate-200 transition-all">Zavřít</button>
             </div>
           </div>
+        )}
+
+      {/* Reservation Edit / Create Modal */}
+      {editingReservation && (
+        <div className="fixed inset-0 z-[500] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-[3rem] p-8 md:p-12 max-w-4xl w-full max-h-[95vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h2 className="text-2xl md:text-3xl font-black">{reservations.find(r => r.id === editingReservation.id) ? 'Upravit rezervaci' : 'Nová rezervace'}</h2>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">
+                  Zákazník: {customers.find(c => c.id === editingReservation.customerId)?.firstName} {customers.find(c => c.id === editingReservation.customerId)?.lastName}
+                </p>
+              </div>
+              <button onClick={() => setEditingReservation(null)} className="p-2 text-slate-400 hover:text-slate-600">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Vozidlo</label>
+                  <select 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                    value={editingReservation.vehicleId}
+                    onChange={(e) => setEditingReservation({...editingReservation, vehicleId: e.target.value})}
+                  >
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.name} ({v.licensePlate})</option>)}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Datum od</label>
+                    <input 
+                      type="date"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                      value={editingReservation.startDate}
+                      onChange={(e) => setEditingReservation({...editingReservation, startDate: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Datum do</label>
+                    <input 
+                      type="date"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                      value={editingReservation.endDate}
+                      onChange={(e) => setEditingReservation({...editingReservation, endDate: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Čas převzetí</label>
+                    <input 
+                      type="time"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                      value={editingReservation.pickupTime || '09:00'}
+                      onChange={(e) => setEditingReservation({...editingReservation, pickupTime: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Čas vrácení</label>
+                    <input 
+                      type="time"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                      value={editingReservation.returnTime || '17:00'}
+                      onChange={(e) => setEditingReservation({...editingReservation, returnTime: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Cíl cesty</label>
+                  <input 
+                    type="text"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                    value={editingReservation.destination || ''}
+                    onChange={(e) => setEditingReservation({...editingReservation, destination: e.target.value})}
+                    placeholder="Např. Chorvatsko, Rakousko..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Předpokládaný nájezd (km)</label>
+                  <input 
+                    type="number"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                    value={editingReservation.estimatedMileage || ''}
+                    onChange={(e) => setEditingReservation({...editingReservation, estimatedMileage: Number(e.target.value)})}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Dovoz na adresu (volitelné)</label>
+                  <input 
+                    type="text"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none mb-2"
+                    value={editingReservation.deliveryAddress || ''}
+                    onChange={(e) => setEditingReservation({...editingReservation, deliveryAddress: e.target.value})}
+                    placeholder="Ulice, Město..."
+                  />
+                  {editingReservation.deliveryAddress && (
+                    <input 
+                      type="time"
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-900 outline-none"
+                      value={editingReservation.deliveryTime || ''}
+                      onChange={(e) => setEditingReservation({...editingReservation, deliveryTime: e.target.value})}
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Poznámka od zákazníka</label>
+                  <textarea 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-900 outline-none min-h-[100px]"
+                    value={editingReservation.customerNote || ''}
+                    onChange={(e) => setEditingReservation({...editingReservation, customerNote: e.target.value})}
+                  />
+                </div>
+
+                <div className="p-8 bg-slate-900 rounded-[2rem] text-white">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Auto:</span>
+                    <span className="font-black">{(vehicles.find(v => v.id === editingReservation.vehicleId))?.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Počet dní:</span>
+                    <span className="font-black">{calculateDays(editingReservation.startDate, editingReservation.endDate)}</span>
+                  </div>
+                  <div className="space-y-4 mb-8">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Celková cena (Kč)</label>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="number" 
+                        value={editingReservation.totalPrice} 
+                        onChange={e => setEditingReservation({...editingReservation, totalPrice: Number(e.target.value)})} 
+                        className="w-full px-5 py-3 bg-white/10 border border-white/20 rounded-2xl font-black text-2xl text-brand-primary outline-none" 
+                      />
+                      <button 
+                        onClick={() => {
+                          const v = vehicles.find(v => v.id === editingReservation.vehicleId);
+                          if (!v) return;
+                          let total = 0;
+                          const start = new Date(editingReservation.startDate);
+                          const end = new Date(editingReservation.endDate);
+                          for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+                            const dateStr = d.toISOString().split('T')[0];
+                            const season = v.seasonalPricing.find(s => dateStr >= s.startDate && dateStr <= s.endDate);
+                            total += season ? season.pricePerDay : v.basePrice;
+                          }
+                          setEditingReservation({...editingReservation, totalPrice: total});
+                        }}
+                        className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
+                        title="Přepočítat podle ceníku"
+                      >
+                        <svg className="w-5 h-5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-10">
+              <button 
+                onClick={() => {
+                  if (reservations.find(r => r.id === editingReservation.id)) {
+                    onUpdateReservation(editingReservation);
+                  } else {
+                    onCreateReservation(editingReservation);
+                  }
+                  setEditingReservation(null);
+                  alert('Rezervace byla uložena.');
+                }}
+                className="flex-1 py-5 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-brand-primary transition-all shadow-xl shadow-slate-100"
+              >
+                Uložit Rezervaci
+              </button>
+              <button 
+                onClick={() => setEditingReservation(null)}
+                className="px-10 py-5 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs hover:bg-slate-200 transition-all"
+              >
+                Zrušit
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
 
