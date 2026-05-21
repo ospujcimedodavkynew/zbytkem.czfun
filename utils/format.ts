@@ -27,6 +27,6 @@ export const calculateDays = (start: string, end: string): number => {
   s.setHours(0, 0, 0, 0);
   e.setHours(0, 0, 0, 0);
   const diffTime = Math.abs(e.getTime() - s.getTime());
-  // Add 1 to include both start and end day as requested by user
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  // Return number of nights / 24h periods
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };

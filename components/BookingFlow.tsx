@@ -126,7 +126,7 @@ const BookingFlow: React.FC<BookingFlowProps> = ({ vehicle, allReservations, inv
     const daysCount = calculateDays(formData.startDate, formData.endDate);
     
     let total = 0;
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
       const currentDateStr = d.toISOString().split('T')[0];
       const season = vehicle.seasonalPricing.find(s => 
         currentDateStr >= s.startDate && currentDateStr <= s.endDate
