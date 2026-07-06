@@ -15,7 +15,8 @@ import {
   DollarSign
 } from 'lucide-react';
 import { ContractData, CampervanSettings } from '../types';
-import { calculateContractPrice, encodeContract, getStoredSettings } from '../utils/contractUtils';
+import { calculateContractPrice, encodeContract, DEFAULT_SETTINGS } from '../utils/contractUtils';
+import { dbService, isSupabaseConfigured } from '../lib/supabase';
 import SignaturePad from './SignaturePad';
 import ContractDocument from './ContractDocument';
 import Logo from './Logo';
@@ -29,8 +30,12 @@ interface TenantPortalProps {
 
 export default function TenantPortal({ initialContract, onBackToMain }: TenantPortalProps) {
   const [contract, setContract] = useState<Partial<ContractData>>(initialContract);
-  const [settings] = useState<CampervanSettings>(getStoredSettings());
+  const [settings, setSettings] = useState<CampervanSettings>(DEFAULT_SETTINGS);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: Info review, 2: Document review, 3: Signature, 4: Success/Print
+
+  useEffect(() => {
+    dbService.getSettings().then(res => setSettings(res));
+  }, []);
   
   // Input fields for the tenant (to fill out missing data)
   const [tenantName, setTenantName] = useState(contract.tenantName || '');
@@ -94,7 +99,7 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
     setStep(3);
   };
 
-  const handleConfirmSignature = () => {
+  const handleConfirmSignature = async () => {
     if (!signatureImage) {
       alert('Prosím nakreslete svůj podpis do vyznačeného pole.');
       return;
@@ -129,34 +134,24 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       signedIp: '85.160.12.92' // Mock user external IP
     };
 
-    setContract(finalContract);
-    
-    // Save locally to local history as well if the owner is looking at it
     try {
-      const stored = localStorage.getItem('obytkem_contracts');
-      if (stored) {
-        const list: ContractData[] = JSON.parse(stored);
-        const index = list.findIndex(c => c.id === finalContract.id);
-        if (index !== -1) {
-          list[index] = finalContract;
-        } else {
-          list.unshift(finalContract);
-        }
-        localStorage.setItem('obytkem_contracts', JSON.stringify(list));
-      } else {
-        localStorage.setItem('obytkem_contracts', JSON.stringify([finalContract]));
-      }
-    } catch (e) {
-      console.error(e);
-    }
+      const saved = await dbService.saveContract(finalContract);
+      setContract(saved);
 
-    // Generate signed URL link
-    const baseUrl = window.location.origin + window.location.pathname;
-    const encoded = encodeContract(finalContract);
-    const newLink = `${baseUrl}?contract=${encoded}`;
-    setSignedLink(newLink);
-    
-    setStep(4);
+      // Generate signed URL link (shorter link with ID if it's a Supabase UUID)
+      const baseUrl = window.location.origin + window.location.pathname;
+      if (saved.id && saved.id.includes('-')) {
+        setSignedLink(`${baseUrl}?id=${saved.id}`);
+      } else {
+        const encoded = encodeContract(saved);
+        setSignedLink(`${baseUrl}?contract=${encoded}`);
+      }
+
+      setStep(4);
+    } catch (err) {
+      console.error('Error confirming signature:', err);
+      alert('Chyba při podepisování a ukládání smlouvy.');
+    }
     
     // Smooth scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });

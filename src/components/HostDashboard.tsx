@@ -17,11 +17,11 @@ import {
 } from 'lucide-react';
 import { ContractData, CampervanSettings, ReservationInquiry } from '../types';
 import { 
-  getStoredSettings, 
-  saveStoredSettings, 
   encodeContract, 
-  calculateContractPrice 
+  calculateContractPrice,
+  DEFAULT_SETTINGS
 } from '../utils/contractUtils';
+import { dbService, isSupabaseConfigured } from '../lib/supabase';
 import { format } from 'date-fns';
 import { cs } from 'date-fns/locale';
 
@@ -31,7 +31,7 @@ interface HostDashboardProps {
 
 export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [activeTab, setActiveTab] = useState<'contracts' | 'new-contract' | 'settings' | 'inquiries'>('inquiries');
-  const [settings, setSettings] = useState<CampervanSettings>(getStoredSettings());
+  const [settings, setSettings] = useState<CampervanSettings>(DEFAULT_SETTINGS);
   const [contracts, setContracts] = useState<ContractData[]>([]);
   const [inquiries, setInquiries] = useState<ReservationInquiry[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -53,52 +53,55 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [additionalTerms, setAdditionalTerms] = useState('');
 
   // Settings form states
-  const [ownerName, setOwnerName] = useState(settings.ownerName);
-  const [ownerId, setOwnerId] = useState(settings.ownerId);
-  const [ownerAddress, setOwnerAddress] = useState(settings.ownerAddress);
-  const [ownerPhone, setOwnerPhone] = useState(settings.ownerPhone);
-  const [ownerEmail, setOwnerEmail] = useState(settings.ownerEmail);
-  const [ownerBank, setOwnerBank] = useState(settings.ownerBank);
-  const [brand, setBrand] = useState(settings.brand);
-  const [model, setModel] = useState(settings.model);
-  const [plateNumber, setPlateNumber] = useState(settings.plateNumber);
-  const [year, setYear] = useState(settings.year);
-  const [dailyPrice, setDailyPrice] = useState(settings.dailyPrice);
-  const [deposit, setDeposit] = useState(settings.deposit);
-  const [cleaningFee, setCleaningFee] = useState(settings.cleaningFee);
-  const [kmLimitPerDay, setKmLimitPerDay] = useState(settings.kmLimitPerDay);
-  const [kmOverLimitPrice, setKmOverLimitPrice] = useState(settings.kmOverLimitPrice);
+  const [ownerName, setOwnerName] = useState(DEFAULT_SETTINGS.ownerName);
+  const [ownerId, setOwnerId] = useState(DEFAULT_SETTINGS.ownerId);
+  const [ownerAddress, setOwnerAddress] = useState(DEFAULT_SETTINGS.ownerAddress);
+  const [ownerPhone, setOwnerPhone] = useState(DEFAULT_SETTINGS.ownerPhone);
+  const [ownerEmail, setOwnerEmail] = useState(DEFAULT_SETTINGS.ownerEmail);
+  const [ownerBank, setOwnerBank] = useState(DEFAULT_SETTINGS.ownerBank);
+  const [brand, setBrand] = useState(DEFAULT_SETTINGS.brand);
+  const [model, setModel] = useState(DEFAULT_SETTINGS.model);
+  const [plateNumber, setPlateNumber] = useState(DEFAULT_SETTINGS.plateNumber);
+  const [year, setYear] = useState(DEFAULT_SETTINGS.year);
+  const [dailyPrice, setDailyPrice] = useState(DEFAULT_SETTINGS.dailyPrice);
+  const [deposit, setDeposit] = useState(DEFAULT_SETTINGS.deposit);
+  const [cleaningFee, setCleaningFee] = useState(DEFAULT_SETTINGS.cleaningFee);
+  const [kmLimitPerDay, setKmLimitPerDay] = useState(DEFAULT_SETTINGS.kmLimitPerDay);
+  const [kmOverLimitPrice, setKmOverLimitPrice] = useState(DEFAULT_SETTINGS.kmOverLimitPrice);
 
   useEffect(() => {
-    // Load contracts from localStorage
-    const loadContracts = () => {
-      try {
-        const stored = localStorage.getItem('obytkem_contracts');
-        if (stored) {
-          setContracts(JSON.parse(stored));
-        }
-      } catch (err) {
-        console.error('Error loading contracts', err);
-      }
-    };
+    // Load settings from database
+    dbService.getSettings().then(res => {
+      setSettings(res);
+      setOwnerName(res.ownerName);
+      setOwnerId(res.ownerId);
+      setOwnerAddress(res.ownerAddress);
+      setOwnerPhone(res.ownerPhone);
+      setOwnerEmail(res.ownerEmail);
+      setOwnerBank(res.ownerBank);
+      setBrand(res.brand);
+      setModel(res.model);
+      setPlateNumber(res.plateNumber);
+      setYear(res.year);
+      setDailyPrice(res.dailyPrice);
+      setDeposit(res.deposit);
+      setCleaningFee(res.cleaningFee);
+      setKmLimitPerDay(res.kmLimitPerDay);
+      setKmOverLimitPrice(res.kmOverLimitPrice);
+    });
 
-    // Load inquiries from localStorage
-    const loadInquiries = () => {
-      try {
-        const stored = localStorage.getItem('obytkem_inquiries');
-        if (stored) {
-          setInquiries(JSON.parse(stored));
-        }
-      } catch (err) {
-        console.error('Error loading inquiries', err);
-      }
-    };
+    // Load contracts
+    dbService.getContracts().then(res => {
+      setContracts(res);
+    });
 
-    loadContracts();
-    loadInquiries();
+    // Load inquiries
+    dbService.getInquiries().then(res => {
+      setInquiries(res);
+    });
   }, []);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     const updated: CampervanSettings = {
       ownerName,
@@ -117,12 +120,18 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       kmLimitPerDay,
       kmOverLimitPrice
     };
-    setSettings(updated);
-    saveStoredSettings(updated);
-    alert('Nastavení uloženo!');
+    
+    try {
+      const saved = await dbService.saveSettings(updated);
+      setSettings(saved);
+      alert('Nastavení úspěšně uloženo do databáze!');
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      alert('Chyba při ukládání nastavení.');
+    }
   };
 
-  const handleCreateContract = (e: React.FormEvent) => {
+  const handleCreateContract = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tenantName || !startDate || !endDate) {
       alert('Prosím vyplňte alespoň jméno nájemce, začátek a konec nájmu.');
@@ -133,9 +142,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     const depositOverride = customDeposit !== '' ? Number(customDeposit) : settings.deposit;
     const cleaningOverride = customCleaningFee !== '' ? Number(customCleaningFee) : settings.cleaningFee;
 
-    const newContract: ContractData = {
-      id: 'c_' + Math.random().toString(36).substring(2, 11),
-      createdAt: new Date().toISOString(),
+    const newContract: Partial<ContractData> = {
       tenantName,
       tenantBirthDate,
       tenantIdNumber,
@@ -154,38 +161,49 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       isSigned: false
     };
 
-    const updatedContracts = [newContract, ...contracts];
-    setContracts(updatedContracts);
-    localStorage.setItem('obytkem_contracts', JSON.stringify(updatedContracts));
+    try {
+      await dbService.saveContract(newContract);
+      // Reload contracts
+      const updatedList = await dbService.getContracts();
+      setContracts(updatedList);
 
-    // Clear form
-    setTenantName('');
-    setTenantBirthDate('');
-    setTenantIdNumber('');
-    setTenantDlNumber('');
-    setTenantAddress('');
-    setTenantPhone('');
-    setTenantEmail('');
-    setStartDate('');
-    setEndDate('');
-    setCustomDailyPrice('');
-    setCustomDeposit('');
-    setCustomCleaningFee('');
-    setAdditionalTerms('');
+      // Clear form
+      setTenantName('');
+      setTenantBirthDate('');
+      setTenantIdNumber('');
+      setTenantDlNumber('');
+      setTenantAddress('');
+      setTenantPhone('');
+      setTenantEmail('');
+      setStartDate('');
+      setEndDate('');
+      setCustomDailyPrice('');
+      setCustomDeposit('');
+      setCustomCleaningFee('');
+      setAdditionalTerms('');
 
-    // Switch to lists
-    setActiveTab('contracts');
-  };
-
-  const handleDeleteContract = (id: string) => {
-    if (confirm('Opravdu chcete tuto smlouvu smazat?')) {
-      const updated = contracts.filter(c => c.id !== id);
-      setContracts(updated);
-      localStorage.setItem('obytkem_contracts', JSON.stringify(updated));
+      // Switch to lists
+      setActiveTab('contracts');
+    } catch (err) {
+      console.error('Error creating contract:', err);
+      alert('Chyba při ukládání smlouvy.');
     }
   };
 
-  const handleConvertInquiry = (inquiry: ReservationInquiry) => {
+  const handleDeleteContract = async (id: string) => {
+    if (confirm('Opravdu chcete tuto smlouvu smazat?')) {
+      try {
+        await dbService.deleteContract(id);
+        const updated = await dbService.getContracts();
+        setContracts(updated);
+      } catch (err) {
+        console.error('Error deleting contract:', err);
+        alert('Chyba při odstraňování smlouvy.');
+      }
+    }
+  };
+
+  const handleConvertInquiry = async (inquiry: ReservationInquiry) => {
     // Pre-fill fields
     setTenantName(inquiry.name);
     setTenantPhone(inquiry.phone);
@@ -199,35 +217,51 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     setCustomDeposit('');
     setCustomCleaningFee('');
 
-    // Update status to converted
-    const updatedInquiries = inquiries.map(i => 
-      i.id === inquiry.id ? { ...i, status: 'converted' as const } : i
-    );
-    setInquiries(updatedInquiries);
-    localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+    try {
+      // Update status to converted in db
+      await dbService.saveInquiry({ ...inquiry, status: 'converted' });
+      // Reload inquiries
+      const updatedList = await dbService.getInquiries();
+      setInquiries(updatedList);
 
-    // Switch to contract creation
-    setActiveTab('new-contract');
+      // Switch to contract creation
+      setActiveTab('new-contract');
+    } catch (err) {
+      console.error('Error converting inquiry:', err);
+    }
   };
 
-  const handleCancelInquiry = (id: string) => {
-    const updatedInquiries = inquiries.map(i => 
-      i.id === id ? { ...i, status: 'cancelled' as const } : i
-    );
-    setInquiries(updatedInquiries);
-    localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+  const handleCancelInquiry = async (id: string) => {
+    const found = inquiries.find(i => i.id === id);
+    if (!found) return;
+    try {
+      await dbService.saveInquiry({ ...found, status: 'cancelled' });
+      const updatedList = await dbService.getInquiries();
+      setInquiries(updatedList);
+    } catch (err) {
+      console.error('Error cancelling inquiry:', err);
+    }
   };
 
-  const handleDeleteInquiry = (id: string) => {
+  const handleDeleteInquiry = async (id: string) => {
     if (confirm('Opravdu chcete tuto poptávku smazat?')) {
-      const updatedInquiries = inquiries.filter(i => i.id !== id);
-      setInquiries(updatedInquiries);
-      localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+      try {
+        await dbService.deleteInquiry(id);
+        const updatedList = await dbService.getInquiries();
+        setInquiries(updatedList);
+      } catch (err) {
+        console.error('Error deleting inquiry:', err);
+        alert('Chyba při odstraňování poptávky.');
+      }
     }
   };
 
   const getContractLink = (contract: ContractData) => {
     const baseUrl = window.location.origin + window.location.pathname;
+    // If it's a real Supabase UUID, use the shorter ID url
+    if (contract.id && contract.id.includes('-')) {
+      return `${baseUrl}?id=${contract.id}`;
+    }
     const encoded = encodeContract(contract);
     return `${baseUrl}?contract=${encoded}`;
   };

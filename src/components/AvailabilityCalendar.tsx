@@ -9,6 +9,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ContractData, ReservationInquiry } from '../types';
+import { dbService } from '../lib/supabase';
 
 interface AvailabilityCalendarProps {
   startDate: string;
@@ -34,101 +35,19 @@ export default function AvailabilityCalendar({
   const [contracts, setContracts] = useState<ContractData[]>([]);
   const [inquiries, setInquiries] = useState<ReservationInquiry[]>([]);
 
-  // Load and potentially seed sample data
+  // Load contracts and inquiries from database
   useEffect(() => {
-    const loadAndSeed = () => {
-      try {
-        let storedContracts = localStorage.getItem('obytkem_contracts');
-        let storedInquiries = localStorage.getItem('obytkem_inquiries');
-
-        let parsedContracts: ContractData[] = storedContracts ? JSON.parse(storedContracts) : [];
-        let parsedInquiries: ReservationInquiry[] = storedInquiries ? JSON.parse(storedInquiries) : [];
-
-        // Seed with realistic sample bookings if both are completely empty
-        if (parsedContracts.length === 0 && parsedInquiries.length === 0) {
-          const year = 2026;
-          
-          // Confirmed signed contract
-          const seedContract1: ContractData = {
-            id: 'con_seed1',
-            createdAt: new Date(`${year}-06-15T12:00:00Z`).toISOString(),
-            tenantName: 'Jan Novák',
-            tenantBirthDate: '1985-05-12',
-            tenantIdNumber: '123456789',
-            tenantDlNumber: 'AA987654',
-            tenantAddress: 'Podhorská 12, Jablonec n. N.',
-            tenantPhone: '+420 602 123 456',
-            tenantEmail: 'jan.novak@email.cz',
-            startDate: `${year}-07-12`,
-            endDate: `${year}-07-18`,
-            dailyPrice: 3200,
-            deposit: 30000,
-            cleaningFee: 1500,
-            kmLimitPerDay: 300,
-            kmOverLimitPrice: 6,
-            additionalTerms: 'Cesta do Chorvatska, rodinná dovolená.',
-            isSigned: true,
-            signedAt: new Date(`${year}-06-16T10:30:00Z`).toISOString(),
-            signedIp: '192.168.1.50'
-          };
-
-          // Another confirmed contract crossing months
-          const seedContract2: ContractData = {
-            id: 'con_seed2',
-            createdAt: new Date(`${year}-06-20T14:00:00Z`).toISOString(),
-            tenantName: 'Marie Kovářová',
-            tenantBirthDate: '1990-11-22',
-            tenantIdNumber: '987654321',
-            tenantDlNumber: 'BB123456',
-            tenantAddress: 'Václavské nám. 1, Praha 1',
-            tenantPhone: '+420 724 987 654',
-            tenantEmail: 'marie@kovarova.cz',
-            startDate: `${year}-07-28`,
-            endDate: `${year}-08-04`,
-            dailyPrice: 3200,
-            deposit: 30000,
-            cleaningFee: 1500,
-            kmLimitPerDay: 300,
-            kmOverLimitPrice: 6,
-            additionalTerms: 'Jižní Čechy a Lipno.',
-            isSigned: true,
-            signedAt: new Date(`${year}-06-21T08:15:00Z`).toISOString(),
-            signedIp: '192.168.1.102'
-          };
-
-          // Pending inquiry
-          const seedInquiry1: ReservationInquiry = {
-            id: 'inq_seed1',
-            createdAt: new Date(`${year}-07-02T09:00:00Z`).toISOString(),
-            name: 'Pavel Černý',
-            email: 'pavel.cerny@seznam.cz',
-            phone: '+420 777 555 444',
-            startDate: `${year}-08-14`,
-            endDate: `${year}-08-20`,
-            message: 'Dobrý den, chceme jet do Rakouska na kola. Je v autě nosič na 4 kola?',
-            status: 'pending'
-          };
-
-          parsedContracts = [seedContract1, seedContract2];
-          parsedInquiries = [seedInquiry1];
-
-          localStorage.setItem('obytkem_contracts', JSON.stringify(parsedContracts));
-          localStorage.setItem('obytkem_inquiries', JSON.stringify(parsedInquiries));
-        }
-
-        setContracts(parsedContracts);
-        setInquiries(parsedInquiries);
-      } catch (err) {
-        console.error('Error loading contracts/inquiries for calendar', err);
-      }
+    const loadDbData = () => {
+      dbService.getContracts().then(res => setContracts(res));
+      dbService.getInquiries().then(res => setInquiries(res));
     };
 
-    loadAndSeed();
+    loadDbData();
 
-    // Listen for storage changes to refresh the calendar live if needed
-    window.addEventListener('storage', loadAndSeed);
+    // Listen for storage fallback changes or manual sync triggers
+    window.addEventListener('storage', loadDbData);
     return () => {
-      window.removeEventListener('storage', loadAndSeed);
+      window.removeEventListener('storage', loadDbData);
     };
   }, []);
 

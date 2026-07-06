@@ -20,6 +20,7 @@ import TenantPortal from './components/TenantPortal';
 import Logo from './components/Logo';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
 import { decodeContract, getStoredSettings } from './utils/contractUtils';
+import { dbService, isSupabaseConfigured } from './lib/supabase';
 import { ContractData, ReservationInquiry } from './types';
 
 export default function App() {
@@ -38,19 +39,30 @@ export default function App() {
 
   // Sync settings when entering viewMode
   useEffect(() => {
-    setSettings(getStoredSettings());
+    dbService.getSettings().then(res => setSettings(res));
   }, [viewMode]);
 
   // Check URL parameters on mount to support contract signatures directly via links
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const contractParam = params.get('contract');
+    const idParam = params.get('id') || params.get('contractId');
+
     if (contractParam) {
       const decoded = decodeContract(contractParam);
       if (decoded) {
         setTenantContract(decoded);
         setViewMode('tenant');
       }
+    } else if (idParam) {
+      dbService.getContract(idParam).then(contract => {
+        if (contract) {
+          setTenantContract(contract);
+          setViewMode('tenant');
+        } else {
+          alert('Smlouva s tímto ID nebyla v databázi nalezena.');
+        }
+      });
     }
   }, []);
 
@@ -59,16 +71,14 @@ export default function App() {
     setViewMode('tenant');
   };
 
-  const handleSendInquiry = (e: React.FormEvent) => {
+  const handleSendInquiry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inquiryName || !inquiryEmail || !inquiryPhone || !inquiryStartDate || !inquiryEndDate) {
       alert('Prosím vyplňte všechna povinná pole označená hvězdičkou.');
       return;
     }
 
-    const newInquiry: ReservationInquiry = {
-      id: 'inq_' + Math.random().toString(36).substring(2, 11),
-      createdAt: new Date().toISOString(),
+    const newInquiry: Partial<ReservationInquiry> = {
       name: inquiryName,
       email: inquiryEmail,
       phone: inquiryPhone,
@@ -79,10 +89,7 @@ export default function App() {
     };
 
     try {
-      const stored = localStorage.getItem('obytkem_inquiries');
-      const list = stored ? JSON.parse(stored) : [];
-      const updated = [newInquiry, ...list];
-      localStorage.setItem('obytkem_inquiries', JSON.stringify(updated));
+      await dbService.saveInquiry(newInquiry);
       
       setInquirySuccess(true);
       // Reset form
