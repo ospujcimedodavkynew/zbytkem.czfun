@@ -4,9 +4,9 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", sans-serif;
   
-  --color-primary: #5A5A40; /* Olive green */
-  --color-accent: #FF6321; /* Warm orange */
-  --color-paper: #F5F5F0; /* Warm off-white */
+  --color-primary: #FF5A1F; /* Premium Obytkem Orange */
+  --color-accent: #FF5A1F; /* Primary Accent Orange */
+  --color-paper: #F4F4F6; /* Premium iPhone Light Titanium Silver background */
 }
 
 @layer base {

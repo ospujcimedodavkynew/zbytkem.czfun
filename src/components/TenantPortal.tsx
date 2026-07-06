@@ -18,6 +18,7 @@ import { ContractData, CampervanSettings } from '../types';
 import { calculateContractPrice, encodeContract, getStoredSettings } from '../utils/contractUtils';
 import SignaturePad from './SignaturePad';
 import ContractDocument from './ContractDocument';
+import Logo from './Logo';
 import { format } from 'date-fns';
 import { cs } from 'date-fns/locale';
 
@@ -181,10 +182,7 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       
       {/* Brand logo at top */}
       <div className="flex justify-between items-center mb-8 print:hidden">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">O</div>
-          <span className="text-2xl font-display font-bold tracking-tighter text-slate-900">obytkem.cz</span>
-        </div>
+        <Logo className="w-10 h-10" />
         {onBackToMain && (
           <button 
             onClick={onBackToMain}

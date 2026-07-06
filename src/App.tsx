@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import HostDashboard from './components/HostDashboard';
 import TenantPortal from './components/TenantPortal';
+import Logo from './components/Logo';
+import AvailabilityCalendar from './components/AvailabilityCalendar';
 import { decodeContract, getStoredSettings } from './utils/contractUtils';
 import { ContractData, ReservationInquiry } from './types';
 
@@ -135,10 +137,7 @@ export default function App() {
         {/* Simple Back Navigation Header */}
         <nav className="bg-white border-b border-slate-200 py-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">O</div>
-              <span className="font-display font-bold tracking-tighter text-slate-900">obytkem.cz</span>
-            </div>
+            <Logo className="w-8 h-8" />
             <div className="flex items-center gap-4">
               <a 
                 href="https://www.obytkem.cz"
@@ -164,17 +163,12 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F0]">
+    <div className="min-h-screen flex flex-col bg-paper">
       {/* Navigation Header */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl shadow-xs">O</div>
-              <div>
-                <span className="text-2xl font-display font-bold tracking-tighter text-slate-900 block">obytkem.cz</span>
-              </div>
-            </div>
+            <Logo className="w-10 h-10" />
             
             <div className="flex items-center gap-4">
               <a 
@@ -189,39 +183,52 @@ export default function App() {
       </nav>
 
       {/* Main Container - Balanced Negative Space */}
-      <main className="flex-grow py-12 sm:py-20 px-4">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-grow py-12 sm:py-16 px-4">
+        <div className="max-w-6xl mx-auto space-y-12">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Main Hero Header */}
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <span className="inline-block bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider border border-primary/20 animate-fade-in">
+              Nezávazný poptávkový formulář
+            </span>
+            <h1 className="text-3xl sm:text-5xl font-display font-bold text-slate-900 tracking-tight leading-tight">
+              Rezervujte si svůj termín pronájmu
+            </h1>
+            <p className="text-slate-600 leading-relaxed text-sm sm:text-base">
+              Zde si můžete jednoduše a nezávazně poptat volný termín pro náš luxusní rodinný obytný vůz <strong className="text-slate-800">{settings.brand} {settings.model}</strong>. Ostatní informace, parametry, kompletní specifikace a fotogalerie jsou dostupné na našem hlavním webu.
+            </p>
+          </div>
+
+          {/* Interactive Availability Calendar */}
+          <AvailabilityCalendar 
+            startDate={inquiryStartDate}
+            endDate={inquiryEndDate}
+            onSelectRange={(start, end) => {
+              setInquiryStartDate(start);
+              setInquiryEndDate(end);
+            }}
+            dailyPrice={settings.dailyPrice}
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start pt-4">
             
             {/* Left Column: Context details, trustworthy guidelines */}
             <div className="lg:col-span-6 space-y-8">
-              <div>
-                <span className="inline-block bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider mb-4 border border-primary/20">
-                  Nezávazný poptávkový formulář
-                </span>
-                <h1 className="text-3xl sm:text-5xl font-display font-bold text-slate-900 tracking-tight leading-tight">
-                  Rezervujte si svůj termín pronájmu
-                </h1>
-                <p className="text-slate-600 mt-4 leading-relaxed text-sm sm:text-base">
-                  Zde si můžete jednoduše a nezávazně poptat volný termín pro náš luxusní rodinný obytný vůz <strong className="text-slate-800">{settings.brand} {settings.model}</strong>. Ostatní informace, parametry, kompletní specifikace a fotogalerie jsou dostupné na našem hlavním webu.
-                </p>
-              </div>
 
               {/* Quick vehicle specs summary */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-xs flex items-center gap-3">
-                  <div className="bg-[#5A5A40]/10 text-primary p-2 rounded-xl">
+                  <div className="bg-primary/10 text-primary p-2 rounded-xl">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
                     <span className="text-xs text-slate-500 block">Kapacita vozu</span>
-                    <strong className="text-xs text-slate-900 block font-bold">Pro 6 osob</strong>
+                    <strong className="text-xs text-slate-900 block font-bold">Pro 5 osob</strong>
                   </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-xs flex items-center gap-3">
-                  <div className="bg-[#5A5A40]/10 text-primary p-2 rounded-xl">
+                  <div className="bg-primary/10 text-primary p-2 rounded-xl">
                     <Car className="w-5 h-5" />
                   </div>
                   <div>
@@ -426,7 +433,7 @@ export default function App() {
 
                     <button 
                       type="submit"
-                      className="w-full bg-[#5A5A40] hover:bg-[#5A5A40]/90 text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-[#5A5A40]/15 transition-all cursor-pointer mt-2"
+                      className="w-full bg-primary hover:bg-primary/95 text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-primary/15 transition-all cursor-pointer mt-2"
                     >
                       Odeslat nezávaznou poptávku
                     </button>
@@ -448,10 +455,7 @@ export default function App() {
       <footer className="bg-slate-900 text-white pt-12 pb-8 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#5A5A40] rounded-full flex items-center justify-center text-white font-bold text-base">O</div>
-              <span className="text-lg font-display font-bold tracking-tighter">obytkem.cz</span>
-            </div>
+            <Logo className="w-8 h-8" />
 
             <div className="flex flex-wrap justify-center gap-6 text-xs text-slate-400">
               <a href="https://www.obytkem.cz" className="hover:text-white transition-colors flex items-center gap-1.5 font-semibold text-primary">
