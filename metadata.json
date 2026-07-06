@@ -1,5 +1,6 @@
 {
   "name": "Obytkem.cz - Půjčovna obytných vozů",
   "description": "Moderní platforma pro pronájem obytných vozů a plánování cest za dobrodružstvím.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

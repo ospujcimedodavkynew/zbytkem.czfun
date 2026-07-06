@@ -3,8 +3,17 @@ import { CampervanSettings, ContractData, ReservationInquiry } from '../types';
 import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 
 // Read public environment variables from Vite
-const supabaseUrl = https://xttedvfikzondsnlufbf.supabase.co
-const supabaseAnonKey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0dGVkdmZpa3pvbmRzbmx1ZmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNzEzMTEsImV4cCI6MjA5ODk0NzMxMX0.ClAlzaZSglmJhcxcwLMcL6rIQHkmtM8uOGjkDkZNHOI
+const supabaseUrl = 
+  (import.meta as any).env?.VITE_SUPABASE_URL || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_URL) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_URL) || 
+  '';
+
+const supabaseAnonKey = 
+  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_ANON_KEY) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_ANON_KEY) || 
+  '';
 
 // Detect if Supabase is properly configured
 export const isSupabaseConfigured = 
