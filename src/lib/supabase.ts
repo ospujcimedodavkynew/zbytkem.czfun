@@ -3,10 +3,17 @@ import { CampervanSettings, ContractData, ReservationInquiry } from '../types';
 import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 
 // Read public environment variables from Vite
-const supabaseUrl = 'https://xttedvfikzondsnlufbf.supabase.co';
+const supabaseUrl = 
+  (import.meta as any).env?.VITE_SUPABASE_URL || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_URL) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_URL) || 
+  '';
 
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0dGVkdmZpa3pvbmRzbmx1ZmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNzEzMTEsImV4cCI6MjA5ODk0NzMxMX0.ClAlzaZSglmJhcxcwLMcL6rIQHkmtM8uOGjkDkZNHOI';
-  
+const supabaseAnonKey = 
+  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_ANON_KEY) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_ANON_KEY) || 
+  '';
 
 // Detect if Supabase is properly configured
 export const isSupabaseConfigured = 
@@ -25,6 +32,18 @@ if (isSupabaseConfigured) {
   console.log('🔌 Supabase client successfully configured for Obytkem.cz');
 } else {
   console.warn('⚠️ Supabase credentials missing. App running in Offline / LocalStorage mode.');
+}
+
+// Generate RFC4122 v4 compliant UUID
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // ====================================================================
@@ -72,8 +91,7 @@ function mapSettingsFromDb(db: any): CampervanSettings {
 }
 
 function mapInquiryToDb(inquiry: Partial<ReservationInquiry>) {
-  return {
-    id: inquiry.id,
+  const result: any = {
     name: inquiry.name,
     email: inquiry.email,
     phone: inquiry.phone,
@@ -82,6 +100,12 @@ function mapInquiryToDb(inquiry: Partial<ReservationInquiry>) {
     message: inquiry.message,
     status: inquiry.status
   };
+
+  // Only include ID if it is a valid UUID
+  if (inquiry.id && inquiry.id.includes('-')) {
+    result.id = inquiry.id;
+  }
+  return result;
 }
 
 function mapInquiryFromDb(db: any): ReservationInquiry {
@@ -268,8 +292,9 @@ export const dbService = {
   },
 
   async saveInquiry(inquiry: Partial<ReservationInquiry>): Promise<ReservationInquiry> {
+    const isNew = !inquiry.id || !inquiry.id.includes('-');
     const safeInquiry: ReservationInquiry = {
-      id: inquiry.id || 'inq_' + Math.random().toString(36).substring(2, 11),
+      id: inquiry.id && inquiry.id.includes('-') ? inquiry.id : generateUUID(),
       createdAt: inquiry.createdAt || new Date().toISOString(),
       name: inquiry.name || '',
       email: inquiry.email || '',
@@ -299,13 +324,34 @@ export const dbService = {
     if (isSupabaseConfigured && supabase) {
       try {
         const dbPayload = mapInquiryToDb(safeInquiry);
-        const { data, error } = await supabase
-          .from('reservation_inquiries')
-          .upsert(dbPayload)
-          .select()
-          .single();
-        if (error) throw error;
-        if (data) return mapInquiryFromDb(data);
+        
+        if (isNew) {
+          // New inquiry: Use INSERT (compatible with unauthenticated INSERT policy)
+          const { data, error } = await supabase
+            .from('reservation_inquiries')
+            .insert(dbPayload)
+            .select()
+            .single();
+          
+          if (error) {
+            console.warn('Supabase INSERT finished, check if select succeeded:', error.message);
+            // If the insert worked but select failed due to read-level RLS, we still have the record.
+            // Since we generated the UUID on the client, we can return the safeInquiry safely.
+          }
+          if (data) {
+            return mapInquiryFromDb(data);
+          }
+        } else {
+          // Existing inquiry (status update, etc.): Use UPSERT
+          const { data, error } = await supabase
+            .from('reservation_inquiries')
+            .upsert(dbPayload)
+            .select()
+            .single();
+          
+          if (error) throw error;
+          if (data) return mapInquiryFromDb(data);
+        }
       } catch (err) {
         console.error('Supabase write failed for inquiry, kept in local storage:', err);
       }
@@ -406,9 +452,9 @@ export const dbService = {
   },
 
   async saveContract(contract: Partial<ContractData>): Promise<ContractData> {
-    const isNew = !contract.id;
+    const isNew = !contract.id || !contract.id.includes('-');
     const safeContract: ContractData = {
-      id: contract.id || 'con_' + Math.random().toString(36).substring(2, 11),
+      id: contract.id && contract.id.includes('-') ? contract.id : generateUUID(),
       createdAt: contract.createdAt || new Date().toISOString(),
       tenantName: contract.tenantName || '',
       tenantBirthDate: contract.tenantBirthDate || '',
@@ -451,13 +497,25 @@ export const dbService = {
     if (isSupabaseConfigured && supabase) {
       try {
         const dbPayload = mapContractToDb(safeContract);
-        const { data, error } = await supabase
-          .from('contracts')
-          .upsert(dbPayload)
-          .select()
-          .single();
-        if (error) throw error;
-        if (data) return mapContractFromDb(data);
+        
+        if (isNew) {
+          const { data, error } = await supabase
+            .from('contracts')
+            .insert(dbPayload)
+            .select()
+            .single();
+          if (error) throw error;
+          if (data) return mapContractFromDb(data);
+        } else {
+          const { data, error } = await supabase
+            .from('contracts')
+            .update(dbPayload)
+            .eq('id', safeContract.id)
+            .select()
+            .single();
+          if (error) throw error;
+          if (data) return mapContractFromDb(data);
+        }
       } catch (err) {
         console.error('Supabase write failed for contract, kept in local storage:', err);
       }
