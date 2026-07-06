@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Search, 
@@ -16,51 +16,40 @@ import {
   Phone,
   Mail,
   ArrowRight,
-  FileText
+  FileText,
+  Car,
+  Check,
+  Compass,
+  Zap,
+  ShieldCheck,
+  CalendarDays,
+  ArrowLeft,
+  Globe
 } from 'lucide-react';
 import HostDashboard from './components/HostDashboard';
 import TenantPortal from './components/TenantPortal';
-import { decodeContract } from './utils/contractUtils';
-import { ContractData } from './types';
-
-// Mock data for campervans
-const CAMPERVANS = [
-  {
-    id: 1,
-    name: "VW California Ocean",
-    type: "Kompaktní",
-    price: "2 500 Kč",
-    rating: 4.9,
-    reviews: 124,
-    image: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800",
-    features: ["4 místa", "Kuchyňka", "Nezávislé topení"]
-  },
-  {
-    id: 2,
-    name: "Mercedes Marco Polo",
-    type: "Luxusní",
-    price: "3 200 Kč",
-    rating: 4.8,
-    reviews: 89,
-    image: "https://images.unsplash.com/photo-1513313778780-9ae4807465f0?auto=format&fit=crop&q=80&w=800",
-    features: ["4 místa", "Automat", "Solární panely"]
-  },
-  {
-    id: 3,
-    name: "Fiat Ducato Sunlight",
-    type: "Rodinný",
-    price: "2 800 Kč",
-    rating: 4.7,
-    reviews: 156,
-    image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&q=80&w=800",
-    features: ["6 míst", "Koupelna", "Velká garáž"]
-  }
-];
+import { decodeContract, getStoredSettings } from './utils/contractUtils';
+import { ContractData, ReservationInquiry } from './types';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'landing' | 'admin' | 'tenant'>('landing');
   const [tenantContract, setTenantContract] = useState<Partial<ContractData> | null>(null);
+  const [settings, setSettings] = useState(() => getStoredSettings());
+
+  // Reservation form state
+  const [inquiryName, setInquiryName] = useState('');
+  const [inquiryEmail, setInquiryEmail] = useState('');
+  const [inquiryPhone, setInquiryPhone] = useState('');
+  const [inquiryStartDate, setInquiryStartDate] = useState('');
+  const [inquiryEndDate, setInquiryEndDate] = useState('');
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const [inquirySuccess, setInquirySuccess] = useState(false);
+
+  // Sync settings when entering viewMode
+  useEffect(() => {
+    setSettings(getStoredSettings());
+  }, [viewMode]);
 
   // Check URL parameters on mount
   useEffect(() => {
@@ -79,6 +68,68 @@ export default function App() {
     setTenantContract(contract);
     setViewMode('tenant');
   };
+
+  const handleSendInquiry = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inquiryName || !inquiryEmail || !inquiryPhone || !inquiryStartDate || !inquiryEndDate) {
+      alert('Prosím vyplňte všechna povinná pole označená hvězdičkou.');
+      return;
+    }
+
+    const newInquiry: ReservationInquiry = {
+      id: 'inq_' + Math.random().toString(36).substring(2, 11),
+      createdAt: new Date().toISOString(),
+      name: inquiryName,
+      email: inquiryEmail,
+      phone: inquiryPhone,
+      startDate: inquiryStartDate,
+      endDate: inquiryEndDate,
+      message: inquiryMessage,
+      status: 'pending'
+    };
+
+    try {
+      const stored = localStorage.getItem('obytkem_inquiries');
+      const list = stored ? JSON.parse(stored) : [];
+      const updated = [newInquiry, ...list];
+      localStorage.setItem('obytkem_inquiries', JSON.stringify(updated));
+      
+      setInquirySuccess(true);
+      // Reset form
+      setInquiryName('');
+      setInquiryEmail('');
+      setInquiryPhone('');
+      setInquiryStartDate('');
+      setInquiryEndDate('');
+      setInquiryMessage('');
+    } catch (err) {
+      console.error('Error saving inquiry', err);
+      alert('Došlo k chybě při ukládání poptávky. Zkuste to prosím znovu.');
+    }
+  };
+
+  const scrollToInquiryForm = () => {
+    const el = document.getElementById('rezervace-formular');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Live calculation of estimated price
+  const calculateEstimate = () => {
+    if (!inquiryStartDate || !inquiryEndDate) return null;
+    const start = new Date(inquiryStartDate);
+    const end = new Date(inquiryEndDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return null;
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const days = diffDays === 0 ? 1 : diffDays;
+    const totalRental = days * settings.dailyPrice;
+    const grandTotal = totalRental + settings.cleaningFee;
+    return { days, totalRental, grandTotal };
+  };
+
+  const estimate = calculateEstimate();
 
   // If we are in the standalone Tenant Portal, render it directly without landing page wrappers
   if (viewMode === 'tenant' && tenantContract) {
@@ -108,12 +159,20 @@ export default function App() {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">O</div>
               <span className="font-display font-bold tracking-tighter text-slate-900">obytkem.cz</span>
             </div>
-            <button 
-              onClick={() => setViewMode('landing')}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition-all"
-            >
-              Zpět na web
-            </button>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://www.obytkem.cz"
+                className="text-xs font-semibold text-primary hover:text-primary/80 transition-all flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Vrátit se na hlavní web
+              </a>
+              <button 
+                onClick={() => setViewMode('landing')}
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition-all"
+              >
+                Zpět na web
+              </button>
+            </div>
           </div>
         </nav>
         
@@ -125,9 +184,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-paper/80 backdrop-blur-md border-b border-slate-200">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div className="flex items-center gap-2">
@@ -136,20 +195,29 @@ export default function App() {
             </div>
             
             <div className="hidden md:flex items-center gap-8">
-              <a href="#" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Naše vozy</a>
-              <a href="#" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Jak to funguje</a>
-              <a href="#" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">Inspirace</a>
+              <a 
+                href="https://www.obytkem.cz" 
+                className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" /> Vrátit se na hlavní web
+              </a>
+              <button onClick={scrollToInquiryForm} className="text-sm font-medium text-slate-600 hover:text-primary transition-colors cursor-pointer">
+                Náš vůz
+              </button>
+              <a href="#specifikace" className="text-sm font-medium text-slate-600 hover:text-primary transition-colors">
+                Výbava a parametry
+              </a>
               <button 
                 onClick={() => setViewMode('admin')}
-                className="flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                className="flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-primary transition-colors cursor-pointer"
               >
                 <FileText className="w-4 h-4" /> Správa smluv
               </button>
               <button 
-                onClick={() => setViewMode('admin')}
-                className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
+                onClick={scrollToInquiryForm}
+                className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
               >
-                Rezervovat nyní
+                Poptat rezervaci
               </button>
             </div>
 
@@ -170,28 +238,47 @@ export default function App() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="md:hidden bg-paper border-b border-slate-200 absolute top-20 w-full z-40 p-4 space-y-4 shadow-xl"
+            className="md:hidden bg-white border-b border-slate-200 absolute top-20 w-full z-40 p-4 space-y-4 shadow-xl text-left"
           >
-            <a href="#" className="block py-2 text-lg font-medium text-slate-900">Naše vozy</a>
-            <a href="#" className="block py-2 text-lg font-medium text-slate-900">Jak to funguje</a>
-            <a href="#" className="block py-2 text-lg font-medium text-slate-900">Inspirace</a>
+            <a 
+              href="https://www.obytkem.cz"
+              className="flex items-center gap-2 text-lg font-bold text-primary py-2 border-b border-slate-100"
+            >
+              <ArrowLeft className="w-5 h-5" /> Vrátit se na hlavní web
+            </a>
+            <button 
+              onClick={() => {
+                setIsMenuOpen(false);
+                scrollToInquiryForm();
+              }}
+              className="block w-full text-left py-2 text-lg font-medium text-slate-900"
+            >
+              Náš vůz & Rezervace
+            </button>
+            <a 
+              href="#specifikace"
+              onClick={() => setIsMenuOpen(false)}
+              className="block py-2 text-lg font-medium text-slate-900"
+            >
+              Výbava a parametry
+            </a>
             <button 
               onClick={() => {
                 setIsMenuOpen(false);
                 setViewMode('admin');
               }}
-              className="w-full flex justify-center items-center gap-2 text-lg font-semibold text-primary py-2"
+              className="w-full flex justify-start items-center gap-2 text-lg font-semibold text-slate-700 py-2"
             >
               <FileText className="w-5 h-5" /> Správa smluv
             </button>
             <button 
               onClick={() => {
                 setIsMenuOpen(false);
-                setViewMode('admin');
+                scrollToInquiryForm();
               }}
               className="w-full bg-primary text-white py-4 rounded-xl font-bold"
             >
-              Rezervovat nyní
+              Poptat rezervaci
             </button>
           </motion.div>
         )}
@@ -199,137 +286,355 @@ export default function App() {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
+        <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=2070" 
-              alt="Campervan in nature" 
-              className="w-full h-full object-cover brightness-75"
+              src="https://images.unsplash.com/photo-1513313778780-9ae4807465f0?auto=format&fit=crop&q=80&w=2000" 
+              alt="Ahorn Canada TU Plus" 
+              className="w-full h-full object-cover brightness-50"
               referrerPolicy="no-referrer"
             />
           </div>
           
           <div className="relative z-10 max-w-4xl mx-auto px-4 text-center text-white">
+            <span className="inline-block bg-accent/25 backdrop-blur-md border border-accent/40 text-accent font-bold px-4 py-1.5 rounded-full text-xs uppercase tracking-widest mb-6">
+              EXKLUZIVNÍ PRONÁJEM OBYTNÉHO VOZU
+            </span>
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-5xl md:text-7xl font-display font-bold mb-6 leading-tight"
+              className="text-4xl sm:text-6xl md:text-7xl font-display font-bold mb-6 leading-tight tracking-tight"
             >
-              Svoboda na čtyřech kolech
+              {settings.brand} {settings.model}
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-xl md:text-2xl mb-12 text-slate-100 font-light max-w-2xl mx-auto"
+              className="text-lg sm:text-xl md:text-2xl mb-10 text-slate-100 font-light max-w-2xl mx-auto leading-relaxed"
             >
-              Pronajměte si moderní obytný vůz a vydejte se na cestu, o které jste vždy snili.
+              Luxusní rodinný obytný vůz s nadstandardní výbavou a prostorem až pro 6 osob. Užijte si svobodu cestování v naprostém komfortu.
             </motion.p>
 
-            {/* Search Bar */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-white/10 backdrop-blur-xl p-2 rounded-2xl md:rounded-full border border-white/20 shadow-2xl max-w-3xl mx-auto"
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="flex flex-col sm:flex-row justify-center gap-4"
             >
-              <div className="flex flex-col md:flex-row items-center gap-2">
-                <div className="flex-1 w-full flex items-center gap-3 px-6 py-3 border-b md:border-b-0 md:border-r border-white/10">
-                  <MapPin className="text-accent w-5 h-5 flex-shrink-0" />
-                  <div className="text-left">
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-white/60">Místo vyzvednutí</p>
-                    <input type="text" placeholder="Kde začnete?" className="bg-transparent border-none p-0 focus:ring-0 text-white placeholder:text-white/40 w-full" />
-                  </div>
-                </div>
-                <div className="flex-1 w-full flex items-center gap-3 px-6 py-3 border-b md:border-b-0 md:border-r border-white/10">
-                  <CalendarIcon className="text-accent w-5 h-5 flex-shrink-0" />
-                  <div className="text-left">
-                    <p className="text-[10px] uppercase tracking-wider font-bold text-white/60">Termín</p>
-                    <input type="text" placeholder="Kdy vyrazíte?" className="bg-transparent border-none p-0 focus:ring-0 text-white placeholder:text-white/40 w-full" />
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setViewMode('admin')}
-                  className="w-full md:w-auto bg-accent text-white px-10 py-4 rounded-full font-bold hover:bg-accent/90 transition-all flex items-center justify-center gap-2"
-                >
-                  <Search className="w-5 h-5" />
-                  Hledat
-                </button>
-              </div>
+              <button 
+                onClick={scrollToInquiryForm}
+                className="bg-accent hover:bg-accent/95 text-white px-8 py-4 rounded-full font-bold text-base transition-all shadow-lg shadow-accent/20 cursor-pointer"
+              >
+                Poptat volný termín
+              </button>
+              <a 
+                href="#specifikace"
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-full font-bold text-base transition-all"
+              >
+                Více o vozidle
+              </a>
             </motion.div>
           </div>
         </section>
 
-        {/* Featured Fleet */}
-        <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-            <div>
-              <h2 className="text-4xl md:text-5xl mb-4">Naše flotila</h2>
-              <p className="text-slate-500 max-w-xl">Vyberte si z našich pečlivě udržovaných vozů, které jsou připraveny na vaše další dobrodružství.</p>
-            </div>
-            <button 
-              onClick={() => setViewMode('admin')}
-              className="group flex items-center gap-2 text-primary font-bold"
-            >
-              Zobrazit vše <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
+        {/* Real-time Availability & Detailed Inquiry Form Section */}
+        <section id="rezervace-formular" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            
+            {/* Left side: Premium Showcase */}
+            <div className="lg:col-span-7 space-y-8">
+              <div>
+                <h2 className="text-3xl sm:text-5xl font-display font-bold text-slate-900 tracking-tight">
+                  Prvotřídní komfort na cestách
+                </h2>
+                <p className="text-slate-500 mt-4 leading-relaxed text-base sm:text-lg">
+                  {settings.brand} {settings.model} je ztělesněním svobody bez kompromisů. Nabízí obrovské množství vnitřního prostoru, oddělené sprchové kouty a WC, nezávislé solární napájení a zadní sezení ve tvaru písmene U, které zaručuje jedinečnou útulnost.
+                </p>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {CAMPERVANS.map((van, idx) => (
-              <motion.div 
-                key={van.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-slate-100"
-              >
-                <div className="aspect-[4/3] overflow-hidden relative">
+              {/* Gallery Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-slate-100">
                   <img 
-                    src={van.image} 
-                    alt={van.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    src="https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=800" 
+                    alt="Campervan interior" 
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-primary uppercase tracking-wider">
-                    {van.type}
+                </div>
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+                  <img 
+                    src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800" 
+                    alt="Campervan kitchen" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+
+              {/* Badges / Highlights */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-start gap-3">
+                  <div className="bg-primary/10 text-primary p-2 rounded-xl flex-shrink-0">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">6 osob</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Jízda i spánek</p>
                   </div>
                 </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl mb-1">{van.name}</h3>
-                      <div className="flex items-center gap-1 text-sm text-slate-500">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="font-bold text-slate-900">{van.rating}</span>
-                        <span>({van.reviews} recenzí)</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-primary">{van.price}</p>
-                      <p className="text-xs text-slate-400">za den</p>
-                    </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-start gap-3">
+                  <div className="bg-primary/10 text-primary p-2 rounded-xl flex-shrink-0">
+                    <Car className="w-5 h-5" />
                   </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {van.features.map(feature => (
-                      <span key={feature} className="text-[10px] bg-slate-50 text-slate-600 px-2 py-1 rounded-md font-medium uppercase tracking-wide">
-                        {feature}
-                      </span>
-                    ))}
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Skupina B</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Stačí r.p. na auto</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-start gap-3 col-span-2 sm:col-span-1">
+                  <div className="bg-primary/10 text-primary p-2 rounded-xl flex-shrink-0">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Solár 140W</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Nezávislost na divoko</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key terms and price guarantee */}
+              <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 flex gap-4 items-start">
+                <ShieldCheck className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Vše v základní ceně a bez skrytých poplatků</h4>
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                    U nás neplatíte za zapůjčení kempingového nábytku, nádobí ani za druhou plynovou láhev. V ceně je také havarijní pojištění pro celou Evropu a dálniční známka pro ČR. Chceme, aby pro vás byl pronájem co nejjednodušší!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side: Interactive Non-binding Inquiry Card */}
+            <div className="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none"></div>
+              
+              <div>
+                <span className="text-xs font-bold text-accent uppercase tracking-wider block mb-1">Rezervační systém</span>
+                <h3 className="text-2xl font-bold text-slate-900">Nezávazná poptávka</h3>
+                <p className="text-xs text-slate-500 mt-1">Vyberte si termín, vyplňte údaje a my se vám obratem ozveme s potvrzením a návrhem smlouvy.</p>
+              </div>
+
+              {inquirySuccess ? (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-green-50/50 border border-green-200/80 rounded-2xl p-6 text-center space-y-4"
+                >
+                  <div className="w-12 h-12 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-green-900">Poptávka úspěšně odeslána!</h4>
+                    <p className="text-xs text-green-700 mt-1.5 leading-relaxed">
+                      Děkujeme za váš zájem o vůz {settings.brand} {settings.model}. Vaši poptávku jsme bezpečně zaznamenali a ihned se jí budeme věnovat. Brzy vás kontaktujeme s dalším postupem a odkazem na zjednodušený podpis smlouvy.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setInquirySuccess(false)}
+                    className="text-xs font-bold text-green-700 underline cursor-pointer"
+                  >
+                    Odeslat další poptávku
+                  </button>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleSendInquiry} className="space-y-4">
+                  {/* Step 1: Dates */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Od *</label>
+                      <input 
+                        type="date" 
+                        required
+                        value={inquiryStartDate}
+                        min={new Date().toISOString().split('T')[0]}
+                        onChange={e => setInquiryStartDate(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Do *</label>
+                      <input 
+                        type="date" 
+                        required
+                        value={inquiryEndDate}
+                        min={inquiryStartDate || new Date().toISOString().split('T')[0]}
+                        onChange={e => setInquiryEndDate(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                      />
+                    </div>
                   </div>
 
+                  {/* Step 2: Contact Information */}
+                  <div className="space-y-3 pt-2">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Jméno a příjmení *</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={inquiryName}
+                        onChange={e => setInquiryName(e.target.value)}
+                        placeholder="Jan Novák" 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Telefon *</label>
+                        <input 
+                          type="tel" 
+                          required
+                          value={inquiryPhone}
+                          onChange={e => setInquiryPhone(e.target.value)}
+                          placeholder="+420 777 123 456" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">E-mail *</label>
+                        <input 
+                          type="email" 
+                          required
+                          value={inquiryEmail}
+                          onChange={e => setInquiryEmail(e.target.value)}
+                          placeholder="jan.novak@seznam.cz" 
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Vaše zpráva / doplňující otázky</label>
+                      <textarea 
+                        rows={2}
+                        value={inquiryMessage}
+                        onChange={e => setInquiryMessage(e.target.value)}
+                        placeholder="Máte zájem o doplňkovou výbavu, nebo jedete se psem? Napište nám..." 
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:bg-white focus:border-primary outline-none transition-all resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Pricing Breakdown Live Indicator */}
+                  {estimate && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-4 space-y-2 text-xs"
+                    >
+                      <div className="flex justify-between text-slate-600 font-medium">
+                        <span>Počet dní pronájmu:</span>
+                        <span>{estimate.days}x</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600 font-medium">
+                        <span>Sazba za den ({settings.dailyPrice.toLocaleString('cs-CZ')} Kč):</span>
+                        <span>{estimate.totalRental.toLocaleString('cs-CZ')} Kč</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600 font-medium pb-2 border-b border-slate-200/60">
+                        <span>Servisní poplatek (úklid):</span>
+                        <span>{settings.cleaningFee.toLocaleString('cs-CZ')} Kč</span>
+                      </div>
+                      <div className="flex justify-between text-slate-900 font-bold text-sm pt-1">
+                        <span>Odhadovaná cena nájemného:</span>
+                        <span className="text-primary">{estimate.grandTotal.toLocaleString('cs-CZ')} Kč</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500 text-[10px] italic mt-1 pt-1 border-t border-dashed border-slate-200">
+                        <span>Vratná kauce (skládá se při převzetí):</span>
+                        <span>{settings.deposit.toLocaleString('cs-CZ')} Kč</span>
+                      </div>
+                    </motion.div>
+                  )}
+
                   <button 
-                    onClick={() => setViewMode('admin')}
-                    className="w-full py-3 border-2 border-slate-100 rounded-xl font-bold text-slate-900 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all"
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/95 text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-primary/10 transition-all cursor-pointer mt-2"
                   >
-                    Detail vozu
+                    Odeslat nezávaznou poptávku
                   </button>
-                </div>
-              </motion.div>
-            ))}
+                </form>
+              )}
+
+              <div className="text-[10px] text-slate-400 text-center leading-relaxed">
+                * Odesláním poptávky vyjadřujete souhlas se zpracováním osobních údajů pro účely vyřízení této rezervace. Poptávka je zcela nezávazná.
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Technical Specification Section */}
+        <section id="specifikace" className="py-24 bg-white border-y border-slate-200/80">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest block mb-2">VŠECHNY PARAMETRY A ROZMĚRY</span>
+              <h2 className="text-3xl sm:text-5xl font-display font-bold text-slate-900 tracking-tight">Technická specifikace vozidla</h2>
+              <p className="text-slate-500 mt-4 leading-relaxed text-base">
+                Připravili jsme pro vás kompletní soupis specifikací a vybavení, abyste přesně věděli, do jaké obytné limuzíny nasedáte.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {/* Box 1: Technické údaje */}
+              <div className="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200/60">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <Car className="text-primary w-5 h-5" /> Motor a podvozek
+                </h3>
+                <dl className="space-y-4 divide-y divide-slate-200/60 text-sm">
+                  {[
+                    { label: "Model vozu", value: `${settings.brand} ${settings.model} (Polointegrovaný / Alkovna)` },
+                    { label: "Základní podvozek", value: "Renault Master dCi 145" },
+                    { label: "Výkon motoru", value: "107 kW / 145 HP (Euro 6d)" },
+                    { label: "Převodovka", value: "Manuální, 6 rychlostí" },
+                    { label: "Hmotnostní limit", value: "Do 3500 kg (stačí řidičský průkaz sk. B)" },
+                    { label: "Celková délka / šířka / výška", value: "7.43 m / 2.34 m / 3.06 m" },
+                    { label: "Registrační značka (SPZ)", value: settings.plateNumber }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex justify-between py-3">
+                      <dt className="text-slate-500 font-medium">{item.label}</dt>
+                      <dd className="text-slate-900 font-semibold text-right">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              {/* Box 2: Komfortní vybavení */}
+              <div className="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200/60">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                  <Compass className="text-primary w-5 h-5" /> Vybavení nástavby a pohodlí
+                </h3>
+                <dl className="space-y-4 divide-y divide-slate-200/60 text-sm">
+                  {[
+                    { label: "Počet míst (jízda / spaní)", value: "6 míst / 6 míst" },
+                    { label: "Klimatizace", value: "Kabinová při jízdě" },
+                    { label: "Vytápění a ohřev vody", value: "Truma Combi 4 Gas s digitálním panelem" },
+                    { label: "Koupelna", value: "Oddělená sprcha a samostatné splachovací WC" },
+                    { label: "Kuchyňská výbava", value: "Plynový vařič s 3 hořáky, dřez, 141l chladnička s mrazákem" },
+                    { label: "Energetické napájení", value: "Nástavbová baterie + solární panel 140W" },
+                    { label: "Další výbava v ceně", value: "Markýza, parkovací kamera, nosič na 4 kola" }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex justify-between py-3">
+                      <dt className="text-slate-500 font-medium">{item.label}</dt>
+                      <dd className="text-slate-900 font-semibold text-right">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -344,13 +649,13 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div>
-                <h2 className="text-4xl md:text-6xl mb-8 leading-tight">Proč si vybrat právě nás?</h2>
+                <h2 className="text-4xl md:text-6xl mb-8 leading-tight">Proč vyrazit právě s námi?</h2>
                 <div className="space-y-6">
                   {[
-                    { title: "Nové a spolehlivé vozy", desc: "Naše flotila se skládá pouze z moderních vozů v perfektním technickém stavu." },
-                    { title: "Kompletní výbava v ceně", desc: "Nádobí, kempingový nábytek i lůžkoviny. Stačí si jen sbalit osobní věci." },
-                    { title: "Podpora 24/7 na cestách", desc: "Ať se stane cokoliv, jsme vám k dispozici na telefonu po celou dobu vaší cesty." },
-                    { title: "Pojištění bez starostí", desc: "Všechny naše vozy mají havarijní pojištění pro celou Evropu s nízkou spoluúčastí." }
+                    { title: "Perfektní technický stav", desc: "Náš vůz Ahorn Canada TU Plus prochází důkladným servisem a čištěním po každém pronájmu." },
+                    { title: "Kompletní výbava v ceně", desc: "Nádobí, kempingový nábytek i veškeré příslušenství jsou součástí ceny. Neplatíte nic navíc." },
+                    { title: "Zákaznická podpora 24/7", desc: "Ať se na cestě stane cokoliv, jsme vám k dispozici na telefonu. Poradíme i s obsluhou." },
+                    { title: "Kompletní pojištění bez starostí", desc: "Havarijní pojištění pro celou Evropu s nízkou spoluúčastí a asistenčními službami." }
                   ].map((item, idx) => (
                     <motion.div 
                       key={idx}
@@ -393,22 +698,22 @@ export default function App() {
         <section className="py-24 bg-paper">
           <div className="max-w-5xl mx-auto px-4 text-center">
             <div className="bg-white p-12 md:p-20 rounded-[40px] shadow-sm border border-slate-100">
-              <h2 className="text-4xl md:text-6xl mb-6">Připraveni vyrazit?</h2>
+              <h2 className="text-4xl md:text-6xl mb-6">Připraveni vyrazit za dobrodružstvím?</h2>
               <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto">
-                Rezervujte si svůj termín ještě dnes a začněte plánovat svou nezapomenutelnou cestu.
+                Rezervujte si svůj termín ve vozu {settings.brand} {settings.model} ještě dnes a začněte plánovat nezapomenutelnou cestu.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button 
-                  onClick={() => setViewMode('admin')}
-                  className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                  onClick={scrollToInquiryForm}
+                  className="w-full sm:w-auto bg-primary text-white px-10 py-5 rounded-full font-bold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 cursor-pointer"
                 >
-                  Rezervovat vůz
+                  Nezávazná poptávka termínu
                 </button>
                 <button 
                   onClick={() => setViewMode('admin')}
-                  className="w-full sm:w-auto bg-white border-2 border-slate-200 text-slate-900 px-10 py-5 rounded-full font-bold text-lg hover:border-primary transition-all"
+                  className="w-full sm:w-auto bg-white border-2 border-slate-200 text-slate-900 px-10 py-5 rounded-full font-bold text-lg hover:border-primary transition-all cursor-pointer"
                 >
-                  Kontaktujte nás
+                  Správa smluv
                 </button>
               </div>
             </div>
@@ -426,7 +731,7 @@ export default function App() {
                 <span className="text-xl font-display font-bold tracking-tighter">obytkem.cz</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Vaše brána do světa svobody a dobrodružství. Nabízíme prémiové obytné vozy pro nezapomenutelné zážitky.
+                Vaše brána do světa svobody a dobrodružství. Nabízíme prémiový obytný vůz {settings.brand} {settings.model} pro ty nejkrásnější cestovatelské zážitky.
               </p>
               <div className="flex gap-4">
                 <a href="#" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
@@ -444,10 +749,10 @@ export default function App() {
             <div>
               <h4 className="text-lg font-bold mb-6">Rychlé odkazy</h4>
               <ul className="space-y-4 text-slate-400">
-                <li><button onClick={() => setViewMode('admin')} className="hover:text-white transition-colors">Naše flotila</button></li>
-                <li><button onClick={() => setViewMode('admin')} className="hover:text-white transition-colors">Ceník pronájmu</button></li>
-                <li><button onClick={() => setViewMode('admin')} className="hover:text-white transition-colors">Obchodní podmínky</button></li>
-                <li><button onClick={() => setViewMode('admin')} className="hover:text-white transition-colors">Často kladené dotazy</button></li>
+                <li><a href="https://www.obytkem.cz" className="hover:text-white text-primary font-semibold transition-colors flex items-center gap-1.5"><ArrowLeft className="w-4 h-4" /> Vrátit se na hlavní web</a></li>
+                <li><button onClick={scrollToInquiryForm} className="hover:text-white transition-colors cursor-pointer">Poptávka rezervace</button></li>
+                <li><a href="#specifikace" className="hover:text-white transition-colors">Výbava a parametry</a></li>
+                <li><button onClick={() => setViewMode('admin')} className="hover:text-white transition-colors cursor-pointer">Administrace smluv</button></li>
               </ul>
             </div>
 
@@ -456,22 +761,22 @@ export default function App() {
               <ul className="space-y-4 text-slate-400">
                 <li className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-accent" />
-                  <span>+420 777 123 456</span>
+                  <span>{settings.ownerPhone || "+420 777 123 456"}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-accent" />
-                  <span>info@obytkem.cz</span>
+                  <span>{settings.ownerEmail || "info@obytkem.cz"}</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-accent" />
-                  <span>Pražská 123, 100 00 Praha</span>
+                  <span>{settings.ownerAddress || "Praha, Česká republika"}</span>
                 </li>
               </ul>
             </div>
 
             <div>
               <h4 className="text-lg font-bold mb-6">Newsletter</h4>
-              <p className="text-slate-400 mb-4">Odebírejte novinky a tipy na cesty.</p>
+              <p className="text-slate-400 mb-4">Odebírejte novinky a tipy na cesty obytňákem.</p>
               <div className="flex gap-2">
                 <input 
                   type="email" 

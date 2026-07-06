@@ -81,12 +81,12 @@ export function calculateContractPrice(
  * Default settings for the owner's single campervan
  */
 export const DEFAULT_SETTINGS: CampervanSettings = {
-  brand: "Volkswagen",
-  model: "California Ocean T6.1 2.0 TDI",
-  plateNumber: "8A2 4589",
-  year: 2022,
-  dailyPrice: 2500,
-  deposit: 20000,
+  brand: "Ahorn",
+  model: "Canada TU Plus",
+  plateNumber: "7AM 8243",
+  year: 2023,
+  dailyPrice: 3200,
+  deposit: 30000,
   cleaningFee: 1500,
   kmLimitPerDay: 300,
   kmOverLimitPrice: 6,

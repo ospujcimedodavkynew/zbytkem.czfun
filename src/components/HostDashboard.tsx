@@ -15,7 +15,7 @@ import {
   Info,
   Car
 } from 'lucide-react';
-import { ContractData, CampervanSettings } from '../types';
+import { ContractData, CampervanSettings, ReservationInquiry } from '../types';
 import { 
   getStoredSettings, 
   saveStoredSettings, 
@@ -30,9 +30,10 @@ interface HostDashboardProps {
 }
 
 export default function HostDashboard({ onViewContract }: HostDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'contracts' | 'new-contract' | 'settings'>('contracts');
+  const [activeTab, setActiveTab] = useState<'contracts' | 'new-contract' | 'settings' | 'inquiries'>('inquiries');
   const [settings, setSettings] = useState<CampervanSettings>(getStoredSettings());
   const [contracts, setContracts] = useState<ContractData[]>([]);
+  const [inquiries, setInquiries] = useState<ReservationInquiry[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Form states for a new contract
@@ -80,7 +81,21 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
         console.error('Error loading contracts', err);
       }
     };
+
+    // Load inquiries from localStorage
+    const loadInquiries = () => {
+      try {
+        const stored = localStorage.getItem('obytkem_inquiries');
+        if (stored) {
+          setInquiries(JSON.parse(stored));
+        }
+      } catch (err) {
+        console.error('Error loading inquiries', err);
+      }
+    };
+
     loadContracts();
+    loadInquiries();
   }, []);
 
   const handleSaveSettings = (e: React.FormEvent) => {
@@ -170,6 +185,47 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     }
   };
 
+  const handleConvertInquiry = (inquiry: ReservationInquiry) => {
+    // Pre-fill fields
+    setTenantName(inquiry.name);
+    setTenantPhone(inquiry.phone);
+    setTenantEmail(inquiry.email);
+    setStartDate(inquiry.startDate);
+    setEndDate(inquiry.endDate);
+    setAdditionalTerms(inquiry.message ? `Poznámka z poptávky: ${inquiry.message}` : '');
+    
+    // Reset custom overrides so default settings are used
+    setCustomDailyPrice('');
+    setCustomDeposit('');
+    setCustomCleaningFee('');
+
+    // Update status to converted
+    const updatedInquiries = inquiries.map(i => 
+      i.id === inquiry.id ? { ...i, status: 'converted' as const } : i
+    );
+    setInquiries(updatedInquiries);
+    localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+
+    // Switch to contract creation
+    setActiveTab('new-contract');
+  };
+
+  const handleCancelInquiry = (id: string) => {
+    const updatedInquiries = inquiries.map(i => 
+      i.id === id ? { ...i, status: 'cancelled' as const } : i
+    );
+    setInquiries(updatedInquiries);
+    localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+  };
+
+  const handleDeleteInquiry = (id: string) => {
+    if (confirm('Opravdu chcete tuto poptávku smazat?')) {
+      const updatedInquiries = inquiries.filter(i => i.id !== id);
+      setInquiries(updatedInquiries);
+      localStorage.setItem('obytkem_inquiries', JSON.stringify(updatedInquiries));
+    }
+  };
+
   const getContractLink = (contract: ContractData) => {
     const baseUrl = window.location.origin + window.location.pathname;
     const encoded = encodeContract(contract);
@@ -207,7 +263,18 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
           <p className="text-slate-500 mt-1">Jednoduchá správa pronájmu vašeho obytného vozu {settings.brand} {settings.model}.</p>
         </div>
         
-        <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+        <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 p-1 flex-wrap gap-1">
+          <button 
+            onClick={() => setActiveTab('inquiries')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all relative ${activeTab === 'inquiries' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+          >
+            <Calendar className="w-4 h-4" /> Poptávky
+            {inquiries.filter(i => i.status === 'pending').length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-accent text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                {inquiries.filter(i => i.status === 'pending').length}
+              </span>
+            )}
+          </button>
           <button 
             onClick={() => setActiveTab('contracts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === 'contracts' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
@@ -337,6 +404,109 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                               onClick={() => handleDeleteContract(contract.id)}
                               className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
                               title="Smazat"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'inquiries' && (
+        <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+          {inquiries.length === 0 ? (
+            <div className="p-16 text-center text-slate-400">
+              <Calendar className="w-12 h-12 mx-auto opacity-30 mb-4" />
+              <p className="font-semibold text-slate-600 text-base">Žádné poptávky k dispozici</p>
+              <p className="text-sm mt-1 max-w-sm mx-auto">Všechny poptávky, které zákazníci vyplní na úvodní stránce webu, se zobrazí zde.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider font-semibold text-slate-500">
+                    <th className="py-4 px-6">Zájemce</th>
+                    <th className="py-4 px-6">Požadovaný termín</th>
+                    <th className="py-4 px-6">Poznámka</th>
+                    <th className="py-4 px-6">Stav</th>
+                    <th className="py-4 px-6 text-right">Akce</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-sm">
+                  {inquiries.map(inquiry => {
+                    const price = calculateContractPrice(inquiry.startDate, inquiry.endDate, settings.dailyPrice, settings.cleaningFee);
+                    
+                    return (
+                      <tr key={inquiry.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-900">{inquiry.name}</div>
+                          <div className="text-xs text-slate-600">{inquiry.phone}</div>
+                          <div className="text-xs text-slate-400">{inquiry.email}</div>
+                          <div className="text-[10px] text-slate-400 mt-1 font-mono">Přijato: {formatDateText(inquiry.createdAt)}</div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                            <Calendar className="w-4 h-4 text-slate-400" />
+                            <span>{formatDateText(inquiry.startDate)} - {formatDateText(inquiry.endDate)}</span>
+                          </div>
+                          <div className="text-xs text-slate-500 mt-1">{price.days} dní</div>
+                          <div className="text-xs font-semibold text-primary mt-0.5">Orientační cena: {price.grandTotal.toLocaleString('cs-CZ')} Kč</div>
+                        </td>
+                        <td className="py-4 px-6 max-w-xs">
+                          {inquiry.message ? (
+                            <p className="text-xs text-slate-600 line-clamp-2 italic">"{inquiry.message}"</p>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic">Bez poznámky</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6">
+                          {inquiry.status === 'pending' && (
+                            <span className="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold border border-yellow-200">
+                              Nová poptávka
+                            </span>
+                          )}
+                          {inquiry.status === 'converted' && (
+                            <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold border border-green-200">
+                              Smlouva vytvořena
+                            </span>
+                          )}
+                          {inquiry.status === 'cancelled' && (
+                            <span className="inline-flex items-center gap-1 bg-slate-50 text-slate-500 px-2.5 py-1 rounded-full text-xs font-bold border border-slate-200 line-through">
+                              Stornováno
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <div className="flex justify-end gap-2">
+                            {inquiry.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => handleConvertInquiry(inquiry)}
+                                  className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1 shadow-sm"
+                                  title="Převést na smlouvu"
+                                >
+                                  Schválit & smlouva
+                                </button>
+                                <button
+                                  onClick={() => handleCancelInquiry(inquiry.id)}
+                                  className="px-2.5 py-1.5 bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 text-xs font-semibold rounded-lg transition-all"
+                                  title="Stornovat poptávku"
+                                >
+                                  Storno
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={() => handleDeleteInquiry(inquiry.id)}
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              title="Smazat poptávku navždy"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

@@ -50,3 +50,15 @@ export interface ContractData {
   signedIp?: string;
   isSigned: boolean;
 }
+
+export interface ReservationInquiry {
+  id: string;
+  createdAt: string;
+  name: string;
+  email: string;
+  phone: string;
+  startDate: string;
+  endDate: string;
+  message?: string;
+  status: 'pending' | 'converted' | 'cancelled';
+}
