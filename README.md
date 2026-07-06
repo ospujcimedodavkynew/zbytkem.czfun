@@ -1,31 +1,20 @@
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-# obytkem.cz - Rezervační systém pro Ahorn TU Plus 2021
+# Run and deploy your AI Studio app
 
-Tento systém je moderní webová aplikace pro správu pronájmu obytných vozů. Je postavena na technologiích React, Tailwind CSS a využívá Google Gemini API pro inteligentní funkce.
+This contains everything you need to run your app locally.
 
-## 🚀 Funkce systému
-- **Online rezervace**: Zákaznický portál s výpočtem ceny.
-- **Admin Panel**: Přehled rezervací, zákazníků a statistik.
-- **AI Contract Creator**: Automatické generování právně podložených smluv.
-- **AI Business Advisor**: Analýza vytíženosti a doporučení cenotvorby.
-- **Responzivní design**: Plně funkční na mobilech, tabletech i PC.
+View your app in AI Studio: https://ai.studio/apps/591cde5b-d556-4107-a69e-5ea045446a71
 
-## 🛠 Instalace a spuštění
-1. Systém běží jako statická webová aplikace (SPA).
-2. Pro správnou funkci generování smluv a analýz je vyžadován `process.env.GEMINI_API_KEY` (Gemini API).
-3. **Přístup do administrace**:
-   - Tlačítko: "Vstup pro majitele" v navigaci.
-   - Heslo: `admin`
+## Run Locally
 
-## 📄 Struktura dat
-- `types.ts`: Definice datových modelů (Vozidla, Rezervace, Zákazníci).
-- `mockData.ts`: Ukázková data pro sezónu 2026.
-- `services/geminiService.ts`: Logika pro AI funkce.
+**Prerequisites:**  Node.js
 
-## 📍 Předání vozu
-- **Místo**: Obytkem.cz parkoviště Teslova Brno, po pravé straně od vjezdu.
-- **Google Maps**: https://share.google/6M5XW9rgNIyoFMlfq
-- **Vozidlo**: Ahorn TU Plus, model 2021.
 
-## 📧 Automatizace
-Systém simuluje odesílání emailů (potvrzení rezervace, zaslání smlouvy) do konzole prohlížeče. Pro produkční nasazení lze napojit na služby jako SendGrid nebo Mailgun.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

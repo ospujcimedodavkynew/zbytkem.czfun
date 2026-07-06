@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  
+  --color-primary: #5A5A40; /* Olive green */
+  --color-accent: #FF6321; /* Warm orange */
+  --color-paper: #F5F5F0; /* Warm off-white */
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-slate-900 font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+  }
+}
