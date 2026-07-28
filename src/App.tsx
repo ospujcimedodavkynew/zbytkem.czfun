@@ -119,21 +119,29 @@ export default function App() {
     const contractParam = params.get('contract');
     const idParam = params.get('id') || params.get('contractId');
 
-    if (contractParam) {
+    if (idParam) {
+      dbService.getContract(idParam).then(contract => {
+        if (contract) {
+          setTenantContract(contract);
+          setViewMode('tenant');
+        } else if (contractParam) {
+          const decoded = decodeContract(contractParam);
+          if (decoded) {
+            setTenantContract(decoded);
+            setViewMode('tenant');
+          } else {
+            alert('Smlouva s tímto ID nebyla v databázi nalezena.');
+          }
+        } else {
+          alert('Smlouva s tímto ID nebyla v databázi nalezena.');
+        }
+      });
+    } else if (contractParam) {
       const decoded = decodeContract(contractParam);
       if (decoded) {
         setTenantContract(decoded);
         setViewMode('tenant');
       }
-    } else if (idParam) {
-      dbService.getContract(idParam).then(contract => {
-        if (contract) {
-          setTenantContract(contract);
-          setViewMode('tenant');
-        } else {
-          alert('Smlouva s tímto ID nebyla v databázi nalezena.');
-        }
-      });
     }
   }, []);
 

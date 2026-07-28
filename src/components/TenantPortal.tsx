@@ -138,12 +138,12 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       const saved = await dbService.saveContract(finalContract);
       setContract(saved);
 
-      // Generate signed URL link (shorter link with ID if it's a Supabase UUID)
+      // Generate signed URL link (with fallback payload)
       const baseUrl = window.location.origin + window.location.pathname;
+      const encoded = encodeContract(saved);
       if (saved.id && saved.id.includes('-')) {
-        setSignedLink(`${baseUrl}?id=${saved.id}`);
+        setSignedLink(`${baseUrl}?id=${saved.id}&contract=${encoded}`);
       } else {
-        const encoded = encodeContract(saved);
         setSignedLink(`${baseUrl}?contract=${encoded}`);
       }
 

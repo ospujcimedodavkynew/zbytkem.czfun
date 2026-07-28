@@ -342,11 +342,10 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
 
   const getContractLink = (contract: ContractData) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    // If it's a real Supabase UUID, use the shorter ID url
-    if (contract.id && contract.id.includes('-')) {
-      return `${baseUrl}?id=${contract.id}`;
-    }
     const encoded = encodeContract(contract);
+    if (contract.id && contract.id.includes('-')) {
+      return `${baseUrl}?id=${contract.id}&contract=${encoded}`;
+    }
     return `${baseUrl}?contract=${encoded}`;
   };
 
