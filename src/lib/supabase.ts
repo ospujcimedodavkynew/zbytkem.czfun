@@ -7,10 +7,10 @@ import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 // ====================================================================
 
 // 1. Sem vložte URL adresu Vašeho Supabase projektu:
-const SUPABASE_URL = 'https://xttedvfikzondsnlufbf.supabase.co'; 
+const SUPABASE_URL = 'VLOZTE_SEM_VAS_SUPABASE_URL'; 
 
 // 2. Sem vložte Váš Supabase anon/public API klíč:
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0dGVkdmZpa3pvbmRzbmx1ZmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNzEzMTEsImV4cCI6MjA5ODk0NzMxMX0.ClAlzaZSglmJhcxcwLMcL6rIQHkmtM8uOGjkDkZNHOI';
+const SUPABASE_ANON_KEY = 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY';
 
 // ====================================================================
 
@@ -287,6 +287,8 @@ export const dbService = {
 
   // 2. RESERVATION INQUIRIES
   async getInquiries(): Promise<ReservationInquiry[]> {
+    let supabaseData: ReservationInquiry[] | null = null;
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
@@ -294,29 +296,43 @@ export const dbService = {
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (data) {
-          return data.map(mapInquiryFromDb);
+        if (error) {
+          console.error('Error fetching inquiries from Supabase:', error.message);
+        } else if (data) {
+          supabaseData = data.map(mapInquiryFromDb);
         }
-        if (error) throw error;
       } catch (err) {
         console.error('Error fetching inquiries from Supabase:', err);
       }
     }
 
-    // LocalStorage fallback
+    // LocalStorage fallback and sync merge
+    let localData: ReservationInquiry[] = [];
     try {
       const stored = localStorage.getItem('obytkem_inquiries');
       if (stored) {
-        return JSON.parse(stored);
+        localData = JSON.parse(stored);
       }
     } catch (err) {
       console.error('Error loading inquiries from localStorage', err);
     }
-    return [];
+
+    if (supabaseData) {
+      // Merge: Keep all Supabase items + any local items not yet in Supabase
+      const combinedMap = new Map<string, ReservationInquiry>();
+      supabaseData.forEach(item => combinedMap.set(item.id, item));
+      localData.forEach(item => {
+        if (!combinedMap.has(item.id)) {
+          combinedMap.set(item.id, item);
+        }
+      });
+      return Array.from(combinedMap.values());
+    }
+
+    return localData;
   },
 
   async saveInquiry(inquiry: Partial<ReservationInquiry>): Promise<ReservationInquiry> {
-    const isNew = !inquiry.id || !inquiry.id.includes('-');
     const safeInquiry: ReservationInquiry = {
       id: inquiry.id && inquiry.id.includes('-') ? inquiry.id : generateUUID(),
       createdAt: inquiry.createdAt || new Date().toISOString(),
@@ -324,12 +340,14 @@ export const dbService = {
       email: inquiry.email || '',
       phone: inquiry.phone || '',
       startDate: inquiry.startDate || '',
+      startTime: inquiry.startTime || '10:00',
       endDate: inquiry.endDate || '',
+      endTime: inquiry.endTime || '10:00',
       message: inquiry.message || '',
       status: inquiry.status || 'pending'
     };
 
-    // Save to localStorage
+    // Save to localStorage immediately
     try {
       const stored = localStorage.getItem('obytkem_inquiries');
       const list: ReservationInquiry[] = stored ? JSON.parse(stored) : [];
@@ -349,32 +367,15 @@ export const dbService = {
       try {
         const dbPayload = mapInquiryToDb(safeInquiry);
         
-        if (isNew) {
-          // New inquiry: Use INSERT (compatible with unauthenticated INSERT policy)
-          const { data, error } = await supabase
-            .from('reservation_inquiries')
-            .insert(dbPayload)
-            .select()
-            .single();
-          
-          if (error) {
-            console.warn('Supabase INSERT finished, check if select succeeded:', error.message);
-            // If the insert worked but select failed due to read-level RLS, we still have the record.
-            // Since we generated the UUID on the client, we can return the safeInquiry safely.
-          }
-          if (data) {
-            return mapInquiryFromDb(data);
-          }
-        } else {
-          // Existing inquiry (status update, etc.): Use UPSERT
-          const { data, error } = await supabase
-            .from('reservation_inquiries')
-            .upsert(dbPayload)
-            .select()
-            .single();
-          
-          if (error) throw error;
-          if (data) return mapInquiryFromDb(data);
+        const { data, error } = await supabase
+          .from('reservation_inquiries')
+          .upsert(dbPayload)
+          .select();
+        
+        if (error) {
+          console.error('Supabase save inquiry error:', error.message);
+        } else if (data && data.length > 0) {
+          return mapInquiryFromDb(data[0]);
         }
       } catch (err) {
         console.error('Supabase write failed for inquiry, kept in local storage:', err);
@@ -415,6 +416,8 @@ export const dbService = {
 
   // 3. CONTRACTS
   async getContracts(): Promise<ContractData[]> {
+    let supabaseData: ContractData[] | null = null;
+
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
@@ -422,25 +425,39 @@ export const dbService = {
           .select('*')
           .order('created_at', { ascending: false });
         
-        if (data) {
-          return data.map(mapContractFromDb);
+        if (error) {
+          console.error('Error loading contracts from Supabase:', error.message);
+        } else if (data) {
+          supabaseData = data.map(mapContractFromDb);
         }
-        if (error) throw error;
       } catch (err) {
         console.error('Error loading contracts from Supabase:', err);
       }
     }
 
-    // Local fallback
+    // Local fallback and merge
+    let localData: ContractData[] = [];
     try {
       const stored = localStorage.getItem('obytkem_contracts');
       if (stored) {
-        return JSON.parse(stored);
+        localData = JSON.parse(stored);
       }
     } catch (err) {
       console.error('Error loading contracts from localStorage', err);
     }
-    return [];
+
+    if (supabaseData) {
+      const combinedMap = new Map<string, ContractData>();
+      supabaseData.forEach(item => combinedMap.set(item.id, item));
+      localData.forEach(item => {
+        if (!combinedMap.has(item.id)) {
+          combinedMap.set(item.id, item);
+        }
+      });
+      return Array.from(combinedMap.values());
+    }
+
+    return localData;
   },
 
   async getContract(id: string): Promise<ContractData | null> {
@@ -522,23 +539,15 @@ export const dbService = {
       try {
         const dbPayload = mapContractToDb(safeContract);
         
-        if (isNew) {
-          const { data, error } = await supabase
-            .from('contracts')
-            .insert(dbPayload)
-            .select()
-            .single();
-          if (error) throw error;
-          if (data) return mapContractFromDb(data);
-        } else {
-          const { data, error } = await supabase
-            .from('contracts')
-            .update(dbPayload)
-            .eq('id', safeContract.id)
-            .select()
-            .single();
-          if (error) throw error;
-          if (data) return mapContractFromDb(data);
+        const { data, error } = await supabase
+          .from('contracts')
+          .upsert(dbPayload)
+          .select();
+        
+        if (error) {
+          console.error('Supabase save contract error:', error.message);
+        } else if (data && data.length > 0) {
+          return mapContractFromDb(data[0]);
         }
       } catch (err) {
         console.error('Supabase write failed for contract, kept in local storage:', err);

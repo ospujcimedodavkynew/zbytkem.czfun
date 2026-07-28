@@ -90,6 +90,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [emailModalContract, setEmailModalContract] = useState<ContractData | null>(null);
   const [copiedEmailText, setCopiedEmailText] = useState(false);
 
+  // Load data on mount and whenever activeTab changes
   useEffect(() => {
     // Load settings from database
     dbService.getSettings().then(res => {
@@ -121,7 +122,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     dbService.getInquiries().then(res => {
       setInquiries(res);
     });
-  }, []);
+  }, [activeTab]);
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
