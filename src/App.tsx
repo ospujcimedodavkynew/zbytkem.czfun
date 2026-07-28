@@ -13,34 +13,105 @@ import {
   Mail,
   Phone,
   ArrowRight,
-  Info
+  Info,
+  LogOut,
+  Lock,
+  AlertCircle
 } from 'lucide-react';
 import HostDashboard from './components/HostDashboard';
 import TenantPortal from './components/TenantPortal';
 import Logo from './components/Logo';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
-import { decodeContract, getStoredSettings } from './utils/contractUtils';
+import AdminLoginModal from './components/AdminLoginModal';
+import { decodeContract, getStoredSettings, checkRentalCollision } from './utils/contractUtils';
 import { dbService, isSupabaseConfigured } from './lib/supabase';
+import { isAdminAuthenticated, logoutAdmin } from './utils/authUtils';
 import { ContractData, ReservationInquiry } from './types';
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'landing' | 'admin' | 'tenant'>('landing');
   const [tenantContract, setTenantContract] = useState<Partial<ContractData> | null>(null);
   const [settings, setSettings] = useState(() => getStoredSettings());
+  const [showAdminLoginModal, setShowAdminLoginModal] = useState(false);
+  const [authenticatedAdmin, setAuthenticatedAdmin] = useState(() => isAdminAuthenticated());
+
+  // Handle opening admin portal securely
+  const handleOpenAdmin = () => {
+    if (isAdminAuthenticated()) {
+      setAuthenticatedAdmin(true);
+      setViewMode('admin');
+    } else {
+      setShowAdminLoginModal(true);
+    }
+  };
+
+  const handleAdminLoginSuccess = () => {
+    setAuthenticatedAdmin(true);
+    setShowAdminLoginModal(false);
+    setViewMode('admin');
+  };
+
+  const handleAdminLogout = () => {
+    logoutAdmin();
+    setAuthenticatedAdmin(false);
+    setViewMode('landing');
+  };
 
   // Reservation form state
   const [inquiryName, setInquiryName] = useState('');
   const [inquiryEmail, setInquiryEmail] = useState('');
   const [inquiryPhone, setInquiryPhone] = useState('');
   const [inquiryStartDate, setInquiryStartDate] = useState('');
+  const [inquiryStartTime, setInquiryStartTime] = useState('10:00');
   const [inquiryEndDate, setInquiryEndDate] = useState('');
+  const [inquiryEndTime, setInquiryEndTime] = useState('10:00');
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [inquirySuccess, setInquirySuccess] = useState(false);
 
-  // Sync settings when entering viewMode
+  // Existing DB data for collision checks
+  const [existingContracts, setExistingContracts] = useState<ContractData[]>([]);
+  const [existingInquiries, setExistingInquiries] = useState<ReservationInquiry[]>([]);
+
+  // Load contracts and inquiries for availability check
+  const loadCalendarData = () => {
+    dbService.getContracts().then(res => setExistingContracts(res));
+    dbService.getInquiries().then(res => setExistingInquiries(res));
+  };
+
+  // Sync settings and calendar data when entering viewMode
   useEffect(() => {
     dbService.getSettings().then(res => setSettings(res));
+    loadCalendarData();
   }, [viewMode]);
+
+  // Real-time rental collision check with service buffer
+  const collisionResult = checkRentalCollision(
+    {
+      startDate: inquiryStartDate,
+      startTime: inquiryStartTime,
+      endDate: inquiryEndDate,
+      endTime: inquiryEndTime
+    },
+    [
+      ...existingContracts.map(c => ({
+        id: c.id,
+        startDate: c.startDate,
+        startTime: c.startTime || '10:00',
+        endDate: c.endDate,
+        endTime: c.endTime || '10:00'
+      })),
+      ...existingInquiries
+        .filter(i => i.status !== 'cancelled')
+        .map(i => ({
+          id: i.id,
+          startDate: i.startDate,
+          startTime: i.startTime || '10:00',
+          endDate: i.endDate,
+          endTime: i.endTime || '10:00'
+        }))
+    ],
+    settings.bufferHours ?? 1.5
+  );
 
   // Check URL parameters on mount to support contract signatures directly via links
   useEffect(() => {
@@ -78,12 +149,19 @@ export default function App() {
       return;
     }
 
+    if (collisionResult.hasCollision) {
+      alert(collisionResult.message || 'Vybraný termín koliduje s jinou rezervací.');
+      return;
+    }
+
     const newInquiry: Partial<ReservationInquiry> = {
       name: inquiryName,
       email: inquiryEmail,
       phone: inquiryPhone,
       startDate: inquiryStartDate,
+      startTime: inquiryStartTime || '10:00',
       endDate: inquiryEndDate,
+      endTime: inquiryEndTime || '10:00',
       message: inquiryMessage,
       status: 'pending'
     };
@@ -92,12 +170,17 @@ export default function App() {
       await dbService.saveInquiry(newInquiry);
       
       setInquirySuccess(true);
+      // Refresh DB data
+      loadCalendarData();
+
       // Reset form
       setInquiryName('');
       setInquiryEmail('');
       setInquiryPhone('');
       setInquiryStartDate('');
+      setInquiryStartTime('10:00');
       setInquiryEndDate('');
+      setInquiryEndTime('10:00');
       setInquiryMessage('');
     } catch (err) {
       console.error('Error saving inquiry', err);
@@ -139,24 +222,64 @@ export default function App() {
 
   // If we are in the Host Administration, render the dashboard
   if (viewMode === 'admin') {
+    if (!isAdminAuthenticated()) {
+      return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-4">
+            <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center mx-auto">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Přístup odmítnut</h2>
+            <p className="text-xs text-slate-600">Pro přístup do administrace je vyžadováno přihlášení.</p>
+            <button 
+              onClick={handleOpenAdmin}
+              className="w-full bg-primary text-white py-3 rounded-xl text-xs font-bold"
+            >
+              Přihlásit se do administrace
+            </button>
+          </div>
+          <AdminLoginModal 
+            isOpen={showAdminLoginModal} 
+            onClose={() => {
+              setShowAdminLoginModal(false);
+              setViewMode('landing');
+            }} 
+            onSuccess={handleAdminLoginSuccess} 
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="bg-paper min-h-screen flex flex-col">
         {/* Simple Back Navigation Header */}
-        <nav className="bg-white border-b border-slate-200 py-4">
+        <nav className="bg-white border-b border-slate-200 py-4 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <Logo className="w-8 h-8" />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Logo className="w-8 h-8" />
+              <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 flex items-center gap-1">
+                <Lock className="w-3 h-3 text-emerald-600" /> Administrace
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
               <a 
                 href="https://www.obytkem.cz"
-                className="text-xs font-semibold text-primary hover:text-primary/80 transition-all flex items-center gap-1.5"
+                className="hidden sm:flex text-xs font-semibold text-primary hover:text-primary/80 transition-all items-center gap-1.5"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Vrátit se na hlavní web obytkem.cz
+                <ArrowLeft className="w-3.5 h-3.5" /> Hlavní web obytkem.cz
               </a>
               <button 
                 onClick={() => setViewMode('landing')}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-xl transition-all"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl transition-all"
               >
                 Zpět k poptávce
+              </button>
+              <button 
+                onClick={handleAdminLogout}
+                className="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5"
+                title="Odhlásit se z administrace"
+              >
+                <LogOut className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Odhlásit se</span>
               </button>
             </div>
           </div>
@@ -322,35 +445,69 @@ export default function App() {
                 ) : (
                   <form onSubmit={handleSendInquiry} className="space-y-5">
                     
-                    {/* Date picker fields with responsive grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* Date and Time picker fields with responsive grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Začátek pronájmu (Od) *</label>
-                        <div className="relative">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Začátek pronájmu (Datum a Čas převzetí) *</label>
+                        <div className="grid grid-cols-3 gap-1.5">
                           <input 
                             type="date" 
                             required
                             value={inquiryStartDate}
                             min={new Date().toISOString().split('T')[0]}
                             onChange={e => setInquiryStartDate(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+                            className="col-span-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-xs font-semibold text-slate-700 focus:bg-white focus:border-primary outline-none transition-all cursor-pointer"
                           />
+                          <select
+                            value={inquiryStartTime}
+                            onChange={e => setInquiryStartTime(e.target.value)}
+                            className="col-span-1 bg-slate-50 border border-slate-200 rounded-xl px-1.5 py-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                          >
+                            {['07:00', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '20:00'].map(t => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
+
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Konec pronájmu (Do) *</label>
-                        <div className="relative">
+                        <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">Konec pronájmu (Datum a Čas vrácení) *</label>
+                        <div className="grid grid-cols-3 gap-1.5">
                           <input 
                             type="date" 
                             required
                             value={inquiryEndDate}
                             min={inquiryStartDate || new Date().toISOString().split('T')[0]}
                             onChange={e => setInquiryEndDate(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer"
+                            className="col-span-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 text-xs font-semibold text-slate-700 focus:bg-white focus:border-primary outline-none transition-all cursor-pointer"
                           />
+                          <select
+                            value={inquiryEndTime}
+                            onChange={e => setInquiryEndTime(e.target.value)}
+                            className="col-span-1 bg-slate-50 border border-slate-200 rounded-xl px-1.5 py-2.5 text-xs font-bold text-slate-700 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                          >
+                            {['07:00', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '20:00'].map(t => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </div>
+
+                    {/* Collision warning callout if selected dates & times overlap */}
+                    {collisionResult.hasCollision && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-rose-800"
+                      >
+                        <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="block text-rose-900 font-bold mb-0.5">TER MÍN NELZE REZERVOVAT (KOLIZE):</strong>
+                          <span>{collisionResult.message}</span>
+                        </div>
+                      </motion.div>
+                    )}
 
                     {/* Pricing calculation feedback in real-time */}
                     {estimate ? (
@@ -440,9 +597,14 @@ export default function App() {
 
                     <button 
                       type="submit"
-                      className="w-full bg-primary hover:bg-primary/95 text-white py-4 rounded-xl font-bold text-sm shadow-md shadow-primary/15 transition-all cursor-pointer mt-2"
+                      disabled={collisionResult.hasCollision}
+                      className={`w-full py-4 rounded-xl font-bold text-sm shadow-md transition-all mt-2 ${
+                        collisionResult.hasCollision 
+                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                          : 'bg-primary hover:bg-primary/95 text-white shadow-primary/15 cursor-pointer'
+                      }`}
                     >
-                      Odeslat nezávaznou poptávku
+                      {collisionResult.hasCollision ? 'Vybraný termín koliduje (nedostupné)' : 'Odeslat nezávaznou poptávku'}
                     </button>
                   </form>
                 )}
@@ -469,10 +631,10 @@ export default function App() {
                 <ArrowLeft className="w-3.5 h-3.5" /> Přejít na hlavní web obytkem.cz
               </a>
               <button 
-                onClick={() => setViewMode('admin')}
-                className="hover:text-white transition-colors flex items-center gap-1"
+                onClick={handleOpenAdmin}
+                className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer font-semibold"
               >
-                <Settings className="w-3.5 h-3.5" /> Administrace (pro majitele)
+                <Settings className="w-3.5 h-3.5 text-primary" /> Administrace (pro majitele)
               </button>
             </div>
           </div>
@@ -483,6 +645,13 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Admin Login Modal */}
+      <AdminLoginModal 
+        isOpen={showAdminLoginModal} 
+        onClose={() => setShowAdminLoginModal(false)} 
+        onSuccess={handleAdminLoginSuccess} 
+      />
     </div>
   );
 }

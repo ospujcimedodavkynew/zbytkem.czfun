@@ -90,6 +90,7 @@ export const DEFAULT_SETTINGS: CampervanSettings = {
   cleaningFee: 1500,
   kmLimitPerDay: 300,
   kmOverLimitPrice: 6,
+  bufferHours: 1.5,
   ownerName: "Petr Svoboda",
   ownerId: "12345678",
   ownerAddress: "Slunečná 45, 100 00 Praha 10",
@@ -97,6 +98,71 @@ export const DEFAULT_SETTINGS: CampervanSettings = {
   ownerEmail: "info@obytkem.cz",
   ownerBank: "123456789/0100 (Komerční banka)"
 };
+
+/**
+ * Converts date string "YYYY-MM-DD" and time string "HH:MM" into a Date timestamp (ms)
+ */
+export function parseDateTime(dateStr: string, timeStr?: string): number {
+  if (!dateStr) return 0;
+  const time = timeStr && timeStr.trim() !== '' ? timeStr.trim() : '10:00';
+  const isoStr = `${dateStr}T${time.length === 5 ? time : '10:00'}:00`;
+  const parsed = new Date(isoStr);
+  return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
+export interface RentalPeriod {
+  id?: string;
+  startDate: string;
+  startTime?: string;
+  endDate: string;
+  endTime?: string;
+}
+
+/**
+ * Checks if a proposed rental period collides with existing rental periods,
+ * taking into account a service buffer gap (in hours) for cleaning and preparation.
+ */
+export function checkRentalCollision(
+  proposed: RentalPeriod,
+  existingList: RentalPeriod[],
+  bufferHours: number = 1.5,
+  excludeId?: string
+): { hasCollision: boolean; conflictingRental?: RentalPeriod; message?: string } {
+  if (!proposed.startDate || !proposed.endDate) {
+    return { hasCollision: false };
+  }
+
+  const propStart = parseDateTime(proposed.startDate, proposed.startTime || '10:00');
+  const propEnd = parseDateTime(proposed.endDate, proposed.endTime || '10:00');
+
+  if (propStart <= 0 || propEnd <= 0 || propEnd <= propStart) {
+    return { hasCollision: false };
+  }
+
+  const bufferMs = (bufferHours || 0) * 3600 * 1000;
+
+  for (const existing of existingList) {
+    if (excludeId && existing.id === excludeId) continue;
+    if (!existing.startDate || !existing.endDate) continue;
+
+    const existStart = parseDateTime(existing.startDate, existing.startTime || '10:00');
+    const existEnd = parseDateTime(existing.endDate, existing.endTime || '10:00');
+
+    if (existStart <= 0 || existEnd <= 0) continue;
+
+    // Overlap condition considering buffer pause
+    if (propStart < (existEnd + bufferMs) && (propEnd + bufferMs) > existStart) {
+      const bufferText = bufferHours > 0 ? ` (včetně servisní pauzy ${bufferHours} h pro úklid a přípravu)` : '';
+      return {
+        hasCollision: true,
+        conflictingRental: existing,
+        message: `Vybraný termín koliduje s jinou rezervací od ${existing.startDate} (${existing.startTime || '10:00'}) do ${existing.endDate} (${existing.endTime || '10:00'})${bufferText}.`
+      };
+    }
+  }
+
+  return { hasCollision: false };
+}
 
 /**
  * Helper to get settings from localStorage

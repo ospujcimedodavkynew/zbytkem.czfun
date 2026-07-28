@@ -13,15 +13,24 @@ import {
   ExternalLink,
   ChevronRight,
   Info,
-  Car
+  Car,
+  Lock,
+  ShieldCheck,
+  KeyRound,
+  Mail,
+  Send,
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { ContractData, CampervanSettings, ReservationInquiry } from '../types';
 import { 
   encodeContract, 
   calculateContractPrice,
+  checkRentalCollision,
   DEFAULT_SETTINGS
 } from '../utils/contractUtils';
 import { dbService, isSupabaseConfigured } from '../lib/supabase';
+import { getAdminPassword, setAdminPassword } from '../utils/authUtils';
 import { format } from 'date-fns';
 import { cs } from 'date-fns/locale';
 
@@ -46,7 +55,9 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [tenantEmail, setTenantEmail] = useState('');
   
   const [startDate, setStartDate] = useState('');
+  const [startTime, setStartTime] = useState('10:00');
   const [endDate, setEndDate] = useState('');
+  const [endTime, setEndTime] = useState('10:00');
   const [customDailyPrice, setCustomDailyPrice] = useState<number | ''>('');
   const [customDeposit, setCustomDeposit] = useState<number | ''>('');
   const [customCleaningFee, setCustomCleaningFee] = useState<number | ''>('');
@@ -68,6 +79,16 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [cleaningFee, setCleaningFee] = useState(DEFAULT_SETTINGS.cleaningFee);
   const [kmLimitPerDay, setKmLimitPerDay] = useState(DEFAULT_SETTINGS.kmLimitPerDay);
   const [kmOverLimitPrice, setKmOverLimitPrice] = useState(DEFAULT_SETTINGS.kmOverLimitPrice);
+  const [bufferHours, setBufferHours] = useState(DEFAULT_SETTINGS.bufferHours ?? 1.5);
+
+  // Admin Security Password State
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+  const [passwordSuccessMessage, setPasswordSuccessMessage] = useState(false);
+
+  // Email Sharing Modal State
+  const [emailModalContract, setEmailModalContract] = useState<ContractData | null>(null);
+  const [copiedEmailText, setCopiedEmailText] = useState(false);
 
   useEffect(() => {
     // Load settings from database
@@ -88,6 +109,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       setCleaningFee(res.cleaningFee);
       setKmLimitPerDay(res.kmLimitPerDay);
       setKmOverLimitPrice(res.kmOverLimitPrice);
+      setBufferHours(res.bufferHours ?? 1.5);
     });
 
     // Load contracts
@@ -103,6 +125,23 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (newAdminPassword) {
+      if (newAdminPassword.length < 4) {
+        alert('Nové heslo musí mít alespoň 4 znaky.');
+        return;
+      }
+      if (newAdminPassword !== confirmAdminPassword) {
+        alert('Nová hesla se neshodují! Zkontrolujte zadané heslo a potvrzení hesla.');
+        return;
+      }
+      setAdminPassword(newAdminPassword);
+      setPasswordSuccessMessage(true);
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
+      setTimeout(() => setPasswordSuccessMessage(false), 5000);
+    }
+
     const updated: CampervanSettings = {
       ownerName,
       ownerId,
@@ -118,13 +157,14 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       deposit,
       cleaningFee,
       kmLimitPerDay,
-      kmOverLimitPrice
+      kmOverLimitPrice,
+      bufferHours: Number(bufferHours) || 1.5
     };
     
     try {
       const saved = await dbService.saveSettings(updated);
       setSettings(saved);
-      alert('Nastavení úspěšně uloženo do databáze!');
+      alert('Nastavení i zabezpečení bylo úspěšně uloženo!');
     } catch (err) {
       console.error('Error saving settings:', err);
       alert('Chyba při ukládání nastavení.');
@@ -136,6 +176,42 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     if (!tenantName || !startDate || !endDate) {
       alert('Prosím vyplňte alespoň jméno nájemce, začátek a konec nájmu.');
       return;
+    }
+
+    // Check collision against existing contracts & active inquiries
+    const collision = checkRentalCollision(
+      {
+        startDate,
+        startTime: startTime || '10:00',
+        endDate,
+        endTime: endTime || '10:00'
+      },
+      [
+        ...contracts.map(c => ({
+          id: c.id,
+          startDate: c.startDate,
+          startTime: c.startTime || '10:00',
+          endDate: c.endDate,
+          endTime: c.endTime || '10:00'
+        })),
+        ...inquiries
+          .filter(i => i.status !== 'cancelled')
+          .map(i => ({
+            id: i.id,
+            startDate: i.startDate,
+            startTime: i.startTime || '10:00',
+            endDate: i.endDate,
+            endTime: i.endTime || '10:00'
+          }))
+      ],
+      settings.bufferHours ?? 1.5
+    );
+
+    if (collision.hasCollision) {
+      const proceed = confirm(
+        `POZOR - KOLIZE S JINOU REZERVACÍ:\n${collision.message}\n\nChcete i přesto tuto smlouvu vytvořit?`
+      );
+      if (!proceed) return;
     }
 
     const priceOverride = customDailyPrice !== '' ? Number(customDailyPrice) : settings.dailyPrice;
@@ -151,7 +227,9 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       tenantPhone,
       tenantEmail,
       startDate,
+      startTime: startTime || '10:00',
       endDate,
+      endTime: endTime || '10:00',
       dailyPrice: priceOverride,
       deposit: depositOverride,
       cleaningFee: cleaningOverride,
@@ -162,7 +240,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     };
 
     try {
-      await dbService.saveContract(newContract);
+      const savedContract = await dbService.saveContract(newContract);
       // Reload contracts
       const updatedList = await dbService.getContracts();
       setContracts(updatedList);
@@ -176,14 +254,17 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       setTenantPhone('');
       setTenantEmail('');
       setStartDate('');
+      setStartTime('10:00');
       setEndDate('');
+      setEndTime('10:00');
       setCustomDailyPrice('');
       setCustomDeposit('');
       setCustomCleaningFee('');
       setAdditionalTerms('');
 
-      // Switch to lists
+      // Switch to lists and open email share modal
       setActiveTab('contracts');
+      setEmailModalContract(savedContract);
     } catch (err) {
       console.error('Error creating contract:', err);
       alert('Chyba při ukládání smlouvy.');
@@ -209,7 +290,9 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     setTenantPhone(inquiry.phone);
     setTenantEmail(inquiry.email);
     setStartDate(inquiry.startDate);
+    setStartTime(inquiry.startTime || '10:00');
     setEndDate(inquiry.endDate);
+    setEndTime(inquiry.endTime || '10:00');
     setAdditionalTerms(inquiry.message ? `Poznámka z poptávky: ${inquiry.message}` : '');
     
     // Reset custom overrides so default settings are used
@@ -276,6 +359,43 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     const link = getContractLink(contract);
     const message = `Ahoj ${contract.tenantName}, zde posílám odkaz na smlouvu o pronájmu obytňáku. Prosím o kontrolu tvých údajů a podpis přímo na telefonu zde: ${link}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const getEmailText = (contract: ContractData) => {
+    const link = getContractLink(contract);
+    const startStr = formatDateText(contract.startDate) + (contract.startTime ? ` v ${contract.startTime} hod.` : '');
+    const endStr = formatDateText(contract.endDate) + (contract.endTime ? ` v ${contract.endTime} hod.` : '');
+    const price = calculateContractPrice(contract.startDate, contract.endDate, contract.dailyPrice, contract.cleaningFee);
+
+    return `Vážený/á ${contract.tenantName || 'zákazníku'},
+
+potvrzujeme schválení Vaší rezervace obytného vozu ${settings.brand} ${settings.model} (SPZ: ${settings.plateNumber}).
+
+Přehled schváleného pronájmu:
+• Datum a čas převzetí: ${startStr}
+• Datum a čas vrácení: ${endStr}
+• Počet dní: ${price.days}
+• Celková cena nájemného: ${price.grandTotal.toLocaleString('cs-CZ')} Kč
+• Vratná kauce (při převzetí): ${contract.deposit.toLocaleString('cs-CZ')} Kč
+
+Pro kontrolu Vašich osobních údajů a elektronický podpis nájemní smlouvy prosím použijte tento přímý odkaz do Vašeho Zákaznického portálu:
+${link}
+
+Smlouvu můžete pohodlně zkontrolovat a podepsat prstem či myší přímo na displeji Vašeho mobilního telefonu nebo počítače.
+
+V případě jakýchkoliv dotazů nás neváhejte kontaktovat.
+
+S pozdravem,
+${settings.ownerName}
+Telefon: ${settings.ownerPhone}
+E-mail: ${settings.ownerEmail}`;
+  };
+
+  const sendDirectEmail = (contract: ContractData) => {
+    const subject = `Schválená rezervace obytného vozu ${settings.brand} - Smlouva k podpisu`;
+    const body = getEmailText(contract);
+    const mailtoUrl = `mailto:${contract.tenantEmail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
   };
 
   const formatDateText = (dateStr?: string) => {
@@ -384,7 +504,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-1.5 font-medium text-slate-700">
                             <Calendar className="w-4 h-4 text-slate-400" />
-                            <span>{formatDateText(contract.startDate)} - {formatDateText(contract.endDate)}</span>
+                            <span>{formatDateText(contract.startDate)} ({contract.startTime || '10:00'}) - {formatDateText(contract.endDate)} ({contract.endTime || '10:00'})</span>
                           </div>
                           <div className="text-xs text-slate-400 mt-0.5">{price.days} dní</div>
                         </td>
@@ -407,11 +527,23 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                         </td>
                         <td className="py-4 px-6 text-right">
                           <div className="flex justify-end gap-2">
+                            {/* Email Share button */}
+                            <button
+                              onClick={() => {
+                                setEmailModalContract(contract);
+                                setCopiedEmailText(false);
+                              }}
+                              className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-all"
+                              title="Odeslat e-mailem zákazníkovi"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </button>
+
                             {/* Copy link button */}
                             <button
                               onClick={() => copyToClipboard(link, contract.id)}
                               className="p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-all"
-                              title="Kopírovat odkaz"
+                              title="Kopírovat přímý odkaz"
                             >
                               {copiedId === contract.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                             </button>
@@ -487,8 +619,8 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                            <Calendar className="w-4 h-4 text-slate-400" />
-                            <span>{formatDateText(inquiry.startDate)} - {formatDateText(inquiry.endDate)}</span>
+                            <Calendar className="w-4 h-4 text-slate-400 text-primary" />
+                            <span>{formatDateText(inquiry.startDate)} ({inquiry.startTime || '10:00'}) - {formatDateText(inquiry.endDate)} ({inquiry.endTime || '10:00'})</span>
                           </div>
                           <div className="text-xs text-slate-500 mt-1">{price.days} dní</div>
                           <div className="text-xs font-semibold text-primary mt-0.5">Orientační cena: {price.grandTotal.toLocaleString('cs-CZ')} Kč</div>
@@ -656,24 +788,46 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Začátek pronájmu *</label>
-                <input 
-                  type="date" 
-                  required
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
-                />
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Začátek pronájmu (Datum & Čas) *</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="date" 
+                    required
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                  />
+                  <select
+                    value={startTime}
+                    onChange={e => setStartTime(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-xs font-bold focus:bg-white focus:border-primary outline-none"
+                  >
+                    {['07:00', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '20:00'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Konec pronájmu *</label>
-                <input 
-                  type="date" 
-                  required
-                  value={endDate}
-                  onChange={e => setEndDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
-                />
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Konec pronájmu (Datum & Čas) *</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="date" 
+                    required
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                  />
+                  <select
+                    value={endTime}
+                    onChange={e => setEndTime(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-2 py-3 text-xs font-bold focus:bg-white focus:border-primary outline-none"
+                  >
+                    {['07:00', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '20:00'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cena za den (výchozí: {settings.dailyPrice} Kč)</label>
@@ -908,7 +1062,7 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
                 />
               </div>
-              <div className="space-y-1 lg:col-span-1">
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Kč za nadlimitní km</label>
                 <input 
                   type="number" 
@@ -916,6 +1070,65 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
                   value={kmOverLimitPrice}
                   onChange={e => setKmOverLimitPrice(Number(e.target.value))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Servisní pauza mezi nájmy (hodin) *</label>
+                <input 
+                  type="number" 
+                  step="0.5"
+                  min="0"
+                  required 
+                  value={bufferHours}
+                  onChange={e => setBufferHours(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+              <Info className="w-3.5 h-3.5" /> Servisní pauza vytváří vyžadovanou mezeru pro úklid a údržbu vozu mezi vrácením a dalším vyzvednutím (např. 1.5 h).
+            </p>
+          </div>
+
+          {/* Admin Security Settings */}
+          <div>
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-6">
+              <div className="bg-primary/10 text-primary p-1.5 rounded-lg">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">Zabezpečení administrace</h2>
+            </div>
+
+            {passwordSuccessMessage && (
+              <div className="mb-4 p-3.5 bg-green-50 border border-green-200 text-green-800 text-xs rounded-xl flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-green-600" />
+                <span>Heslo pro vstup do administrace bylo úspěšně změněno.</span>
+              </div>
+            )}
+            
+            <p className="text-xs text-slate-500 mb-4">
+              Zde můžete změnit heslo vyžadované při vstupu do portálu administrace majitele.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Nové heslo administrátora</label>
+                <input 
+                  type="password" 
+                  value={newAdminPassword}
+                  onChange={e => setNewAdminPassword(e.target.value)}
+                  placeholder="Ponechte prázdné pro zachování..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Potvrzení nového hesla</label>
+                <input 
+                  type="password" 
+                  value={confirmAdminPassword}
+                  onChange={e => setConfirmAdminPassword(e.target.value)}
+                  placeholder="Zadejte heslo znovu..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all font-mono"
                 />
               </div>
             </div>
@@ -930,6 +1143,104 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Email Sharing Modal */}
+      {emailModalContract && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="bg-sky-100 text-sky-700 p-2.5 rounded-2xl">
+                  <Mail className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900">Odeslat smlouvu zákazníkovi e-mailem</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Příjemce: <strong className="text-slate-800">{emailModalContract.tenantName}</strong> ({emailModalContract.tenantEmail || 'e-mail nezadán'})
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setEmailModalContract(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Explanation box */}
+            <div className="bg-sky-50/70 border border-sky-100 rounded-2xl p-4 text-xs text-sky-900 flex gap-3 items-start">
+              <Info className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <strong className="block font-bold">Přímý odkaz do Zákaznického Portálu</strong>
+                <p className="leading-relaxed">
+                  Tento e-mail obsahuje přímý bezpečný odkaz do osobního klientského portálu nájemce. Zákazník v něm uvidí pouze svou smlouvu k nahlédnutí a elektronickému podpisu bez přístupu k administraci.
+                </p>
+              </div>
+            </div>
+
+            {/* Email Text Preview / Textarea */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wider block">Text e-mailu pro zákazníka</label>
+              <textarea 
+                readOnly
+                rows={11}
+                value={getEmailText(emailModalContract)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-mono text-slate-700 leading-relaxed outline-none resize-none focus:bg-white"
+              />
+            </div>
+
+            {/* Direct action buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={() => sendDirectEmail(emailModalContract)}
+                className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Send className="w-4 h-4" /> Otevřít v e-mailovém programu (mailto:)
+              </button>
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(getEmailText(emailModalContract));
+                  setCopiedEmailText(true);
+                  setTimeout(() => setCopiedEmailText(false), 2500);
+                }}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                {copiedEmailText ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" /> Zkopírováno do schránky!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-slate-500" /> Zkopírovat kompletní e-mail
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="border-t border-slate-100 pt-3 flex justify-between items-center text-xs">
+              <button
+                onClick={() => {
+                  const link = getContractLink(emailModalContract);
+                  navigator.clipboard.writeText(link);
+                  alert('Přímý odkaz pro zákazníka byl zkopírován do schránky:\n' + link);
+                }}
+                className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> Zkopírovat pouze přímý URL odkaz
+              </button>
+
+              <button 
+                onClick={() => setEmailModalContract(null)}
+                className="text-slate-500 hover:text-slate-800 font-semibold px-4 py-2 cursor-pointer"
+              >
+                Zavřít
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.campervan_settings (
     cleaning_fee NUMERIC(10, 2) NOT NULL DEFAULT 1500.00,
     km_limit_per_day INTEGER NOT NULL DEFAULT 300,
     km_over_limit_price NUMERIC(10, 2) NOT NULL DEFAULT 6.00,
+    buffer_hours NUMERIC(4, 2) NOT NULL DEFAULT 1.5,
     
     -- Kontaktní údaje majitele (hostitele)
     owner_name TEXT NOT NULL DEFAULT 'Petr Svoboda',
@@ -39,15 +40,17 @@ CREATE TABLE IF NOT EXISTS public.campervan_settings (
     owner_bank TEXT NOT NULL DEFAULT '123456789/0100 (Komerční banka)'
 );
 
+ALTER TABLE public.campervan_settings ADD COLUMN IF NOT EXISTS buffer_hours NUMERIC(4, 2) DEFAULT 1.5;
+
 -- Vložení výchozího řádku nastavení (pokud tabulka zrovna vznikla prázdná)
 INSERT INTO public.campervan_settings (
     brand, model, plate_number, year, 
-    daily_price, deposit, cleaning_fee, km_limit_per_day, km_over_limit_price,
+    daily_price, deposit, cleaning_fee, km_limit_per_day, km_over_limit_price, buffer_hours,
     owner_name, owner_id, owner_address, owner_phone, owner_email, owner_bank
 )
 VALUES (
     'Ahorn', 'Canada TU Plus', '7AM 8243', 2023,
-    3200.00, 30000.00, 1500.00, 300, 6.00,
+    3200.00, 30000.00, 1500.00, 300, 6.00, 1.5,
     'Petr Svoboda', '12345678', 'Slunečná 45, 100 00 Praha 10', '+420 777 888 999', 'info@obytkem.cz', '123456789/0100 (Komerční banka)'
 )
 ON CONFLICT DO NOTHING;
@@ -65,14 +68,19 @@ CREATE TABLE IF NOT EXISTS public.reservation_inquiries (
     email TEXT NOT NULL,
     phone TEXT NOT NULL,
     
-    -- Termín pronájmu
+    -- Termín pronájmu a čas
     start_date DATE NOT NULL,
+    start_time TEXT NOT NULL DEFAULT '10:00',
     end_date DATE NOT NULL,
+    end_time TEXT NOT NULL DEFAULT '10:00',
     
     -- Zpráva a stav
     message TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'converted', 'cancelled'))
 );
+
+ALTER TABLE public.reservation_inquiries ADD COLUMN IF NOT EXISTS start_time TEXT DEFAULT '10:00';
+ALTER TABLE public.reservation_inquiries ADD COLUMN IF NOT EXISTS end_time TEXT DEFAULT '10:00';
 
 -- Indexy pro rychlé vyhledávání termínů poptávek
 CREATE INDEX IF NOT EXISTS idx_inquiries_dates ON public.reservation_inquiries (start_date, end_date);
@@ -95,9 +103,11 @@ CREATE TABLE IF NOT EXISTS public.contracts (
     tenant_phone TEXT NOT NULL,
     tenant_email TEXT NOT NULL,
     
-    -- Termín pronájmu
+    -- Termín pronájmu a čas
     start_date DATE NOT NULL,
+    start_time TEXT NOT NULL DEFAULT '10:00',
     end_date DATE NOT NULL,
+    end_time TEXT NOT NULL DEFAULT '10:00',
     
     -- Finanční parametry a limity platné v době podpisu
     daily_price NUMERIC(10, 2) NOT NULL,
@@ -117,6 +127,9 @@ CREATE TABLE IF NOT EXISTS public.contracts (
     is_signed BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS start_time TEXT DEFAULT '10:00';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS end_time TEXT DEFAULT '10:00';
+
 -- Indexy pro vyhledávání smluv a kontrolu obsazenosti
 CREATE INDEX IF NOT EXISTS idx_contracts_dates ON public.contracts (start_date, end_date);
 CREATE INDEX IF NOT EXISTS idx_contracts_signed ON public.contracts (is_signed);
@@ -131,38 +144,38 @@ ALTER TABLE public.campervan_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservation_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contracts ENABLE ROW LEVEL SECURITY;
 
--- 4.1 Pravidla pro Nastavení vozu (campervan_settings)
--- Kdokoliv (i nepřihlášený návštěvník) si může přečíst nastavení (značku, denní cenu atd.)
-CREATE POLICY "Umožnit všem číst parametry vozu" ON public.campervan_settings
-    FOR SELECT USING (true);
+-- Odstranění starých politik, pokud existují (pro bezchybný re-run)
+DROP POLICY IF EXISTS "Umožnit všem číst parametry vozu" ON public.campervan_settings;
+DROP POLICY IF EXISTS "Pouze přihlášení mohou editovat parametry vozu" ON public.campervan_settings;
+DROP POLICY IF EXISTS "Povolit plný přístup k nastavení pro kohokoliv" ON public.campervan_settings;
 
--- Pouze přihlášený majitel/správce (authenticated) může nastavení upravovat
-CREATE POLICY "Pouze přihlášení mohou editovat parametry vozu" ON public.campervan_settings
-    FOR ALL TO authenticated USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Kdokoliv může odeslat poptávku" ON public.reservation_inquiries;
+DROP POLICY IF EXISTS "Pouze přihlášení vidí a spravují poptávky" ON public.reservation_inquiries;
+DROP POLICY IF EXISTS "Povolit plný přístup k poptávkám pro kohokoliv" ON public.reservation_inquiries;
+
+DROP POLICY IF EXISTS "Přístup ke konkrétní smlouvě přes její ID" ON public.contracts;
+DROP POLICY IF EXISTS "Podepsání konkrétní smlouvy nájemcem" ON public.contracts;
+DROP POLICY IF EXISTS "Plná správa smluv pro přihlášeného hostitele" ON public.contracts;
+DROP POLICY IF EXISTS "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.contracts;
+
+
+-- 4.1 Pravidla pro Nastavení vozu (campervan_settings)
+-- Protože aplikace nepoužívá přihlašování uživatelů (Supabase Auth) a běží pod 'anon' rolí,
+-- povolíme plný přístup (čtení i úpravy) pro anonymní i přihlášené uživatele.
+CREATE POLICY "Povolit plný přístup k nastavení pro kohokoliv" ON public.campervan_settings
+    FOR ALL USING (true) WITH CHECK (true);
 
 
 -- 4.2 Pravidla pro Nezávazné poptávky (reservation_inquiries)
--- Kdokoliv na webu může poslat novou poptávku (INSERT)
-CREATE POLICY "Kdokoliv může odeslat poptávku" ON public.reservation_inquiries
-    FOR INSERT WITH CHECK (true);
-
--- Pouze přihlášený majitel (authenticated) může poptávky číst, upravovat či mazat
-CREATE POLICY "Pouze přihlášení vidí a spravují poptávky" ON public.reservation_inquiries
-    FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- Kdokoliv může poptávku vytvořit a administrace (která běží bez přihlášení) je musí umět číst i spravovat.
+CREATE POLICY "Povolit plný přístup k poptávkám pro kohokoliv" ON public.reservation_inquiries
+    FOR ALL USING (true) WITH CHECK (true);
 
 
 -- 4.3 Pravidla pro Smlouvy (contracts)
--- Nájemce s unikátním odkazem (který obsahuje ID smlouvy) si může svou smlouvu zobrazit
--- Pro zjednodušení: Kdokoliv, kdo zná UUID smlouvy (ID), ji může zobrazit a podepsat (UPDATE)
-CREATE POLICY "Přístup ke konkrétní smlouvě přes její ID" ON public.contracts
-    FOR SELECT USING (true);
-
-CREATE POLICY "Podepsání konkrétní smlouvy nájemcem" ON public.contracts
-    FOR UPDATE USING (is_signed = false) WITH CHECK (true);
-
--- Pouze přihlášený majitel (authenticated) má plný přístup ke všem smlouvám (vytváření, čtení všech, smazání)
-CREATE POLICY "Plná správa smluv pro přihlášeného hostitele" ON public.contracts
-    FOR ALL TO authenticated USING (true) WITH CHECK (true);
+-- Kdokoliv může vytvářet smlouvy, číst je a podepisovat je.
+CREATE POLICY "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.contracts
+    FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ====================================================================

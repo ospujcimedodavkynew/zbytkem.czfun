@@ -3,11 +3,17 @@ import { CampervanSettings, ContractData, ReservationInquiry } from '../types';
 import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 
 // Read public environment variables from Vite
-const supabaseUrl = 'https://xttedvfikzondsnlufbf.supabase.co';
-  
+const supabaseUrl = 
+  (import.meta as any).env?.VITE_SUPABASE_URL || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_URL) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_URL) || 
+  '';
 
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0dGVkdmZpa3pvbmRzbmx1ZmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNzEzMTEsImV4cCI6MjA5ODk0NzMxMX0.ClAlzaZSglmJhcxcwLMcL6rIQHkmtM8uOGjkDkZNHOI';
-  
+const supabaseAnonKey = 
+  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
+  (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_ANON_KEY) || 
+  (typeof process !== 'undefined' && (process as any).env?.SUPABASE_ANON_KEY) || 
+  '';
 
 // Detect if Supabase is properly configured
 export const isSupabaseConfigured = 
@@ -55,6 +61,7 @@ function mapSettingsToDb(settings: CampervanSettings) {
     cleaning_fee: settings.cleaningFee,
     km_limit_per_day: settings.kmLimitPerDay,
     km_over_limit_price: settings.kmOverLimitPrice,
+    buffer_hours: settings.bufferHours ?? 1.5,
     owner_name: settings.ownerName,
     owner_id: settings.ownerId,
     owner_address: settings.ownerAddress,
@@ -75,6 +82,7 @@ function mapSettingsFromDb(db: any): CampervanSettings {
     cleaningFee: Number(db.cleaning_fee) || DEFAULT_SETTINGS.cleaningFee,
     kmLimitPerDay: Number(db.km_limit_per_day) ?? DEFAULT_SETTINGS.kmLimitPerDay,
     kmOverLimitPrice: Number(db.km_over_limit_price) || DEFAULT_SETTINGS.kmOverLimitPrice,
+    bufferHours: db.buffer_hours !== undefined && db.buffer_hours !== null ? Number(db.buffer_hours) : (DEFAULT_SETTINGS.bufferHours || 1.5),
     ownerName: db.owner_name || DEFAULT_SETTINGS.ownerName,
     ownerId: db.owner_id || DEFAULT_SETTINGS.ownerId,
     ownerAddress: db.owner_address || DEFAULT_SETTINGS.ownerAddress,
@@ -90,7 +98,9 @@ function mapInquiryToDb(inquiry: Partial<ReservationInquiry>) {
     email: inquiry.email,
     phone: inquiry.phone,
     start_date: inquiry.startDate,
+    start_time: inquiry.startTime || '10:00',
     end_date: inquiry.endDate,
+    end_time: inquiry.endTime || '10:00',
     message: inquiry.message,
     status: inquiry.status
   };
@@ -110,7 +120,9 @@ function mapInquiryFromDb(db: any): ReservationInquiry {
     email: db.email,
     phone: db.phone,
     startDate: db.start_date,
+    startTime: db.start_time || '10:00',
     endDate: db.end_date,
+    endTime: db.end_time || '10:00',
     message: db.message || '',
     status: (db.status as 'pending' | 'converted' | 'cancelled') || 'pending'
   };
@@ -126,7 +138,9 @@ function mapContractToDb(contract: Partial<ContractData>) {
     tenant_phone: contract.tenantPhone || '',
     tenant_email: contract.tenantEmail || '',
     start_date: contract.startDate,
+    start_time: contract.startTime || '10:00',
     end_date: contract.endDate,
+    end_time: contract.endTime || '10:00',
     daily_price: contract.dailyPrice,
     deposit: contract.deposit,
     cleaning_fee: contract.cleaningFee,
@@ -159,7 +173,9 @@ function mapContractFromDb(db: any): ContractData {
     tenantPhone: db.tenant_phone || '',
     tenantEmail: db.tenant_email || '',
     startDate: db.start_date,
+    startTime: db.start_time || '10:00',
     endDate: db.end_date,
+    endTime: db.end_time || '10:00',
     dailyPrice: Number(db.daily_price),
     deposit: Number(db.deposit),
     cleaningFee: Number(db.cleaning_fee),

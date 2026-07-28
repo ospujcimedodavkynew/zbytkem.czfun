@@ -8,6 +8,7 @@ export interface CampervanSettings {
   cleaningFee: number;
   kmLimitPerDay: number; // 0 for unlimited
   kmOverLimitPrice: number;
+  bufferHours?: number; // Service gap between rentals in hours (e.g. 1.5)
   ownerName: string;
   ownerId: string; // IČO
   ownerAddress: string;
@@ -29,9 +30,11 @@ export interface ContractData {
   tenantPhone: string;
   tenantEmail: string;
   
-  // Rental dates
+  // Rental dates & times
   startDate: string;
+  startTime?: string; // HH:MM, e.g. "10:00"
   endDate: string;
+  endTime?: string; // HH:MM, e.g. "10:00"
   
   // Pricing override or snapshots
   dailyPrice: number;
@@ -58,7 +61,9 @@ export interface ReservationInquiry {
   email: string;
   phone: string;
   startDate: string;
+  startTime?: string; // HH:MM, e.g. "10:00"
   endDate: string;
+  endTime?: string; // HH:MM, e.g. "10:00"
   message?: string;
   status: 'pending' | 'converted' | 'cancelled';
 }

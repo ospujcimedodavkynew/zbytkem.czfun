@@ -108,12 +108,12 @@ export default function ContractDocument({ contract, settings }: ContractDocumen
           <h3 className="font-bold text-slate-900 mb-1">Čl. II - Doba nájmu a předání vozidla</h3>
           <p>
             1. Nájemní poměr se uzavírá na dobu určitou od{' '}
-            <strong className="text-slate-900">{formatDate(contract.startDate)}</strong> do{' '}
-            <strong className="text-slate-900">{formatDate(contract.endDate)}</strong> (celkem{' '}
+            <strong className="text-slate-900">{formatDate(contract.startDate)} v {contract.startTime || '10:00'} hod.</strong> do{' '}
+            <strong className="text-slate-900">{formatDate(contract.endDate)} v {contract.endTime || '10:00'} hod.</strong> (celkem{' '}
             <strong className="text-slate-900">{daysCount}</strong> {daysCount === 1 ? 'den' : (daysCount >= 2 && daysCount <= 4 ? 'dny' : 'dní')}).
           </p>
           <p className="mt-1">
-            2. Místem předání a vrácení vozidla je sídlo pronajímatele, nebude-li písemně dohodnuto jinak. Vozidlo bude předáno s plnou nádrží paliva a ve stejném stavu musí být také vráceno.
+            2. Místem předání a vrácení vozidla je sídlo pronajímatele, nebude-li písemně dohodnuto jinak. Vozidlo bude předáno s plnou nádrží paliva a ve stejném stavu musí být také vráceno. Pro přípravu a sanitaci vozu po vrácení je vyžadována servisní pauza.
           </p>
         </div>
 
