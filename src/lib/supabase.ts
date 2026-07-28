@@ -2,14 +2,28 @@ import { createClient } from '@supabase/supabase-js';
 import { CampervanSettings, ContractData, ReservationInquiry } from '../types';
 import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 
-// Read public environment variables from Vite
+// ====================================================================
+// 🔑 VLOŽTE VAŠE SUPABASE API ÚDAJE SEM (NA ŘÁDKY 10 A 13):
+// ====================================================================
+
+// 1. Sem vložte URL adresu Vašeho Supabase projektu:
+const SUPABASE_URL = 'VLOZTE_SEM_VAS_SUPABASE_URL'; 
+
+// 2. Sem vložte Váš Supabase anon/public API klíč:
+const SUPABASE_ANON_KEY = 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY';
+
+// ====================================================================
+
+// Auto-detekce klíčů z kódu nebo z environmentálních proměnných
 const supabaseUrl = 
+  (SUPABASE_URL && SUPABASE_URL !== 'VLOZTE_SEM_VAS_SUPABASE_URL' ? SUPABASE_URL : '') ||
   (import.meta as any).env?.VITE_SUPABASE_URL || 
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_URL) || 
   (typeof process !== 'undefined' && (process as any).env?.SUPABASE_URL) || 
   '';
 
 const supabaseAnonKey = 
+  (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY' ? SUPABASE_ANON_KEY : '') ||
   (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_ANON_KEY) || 
   (typeof process !== 'undefined' && (process as any).env?.SUPABASE_ANON_KEY) || 
