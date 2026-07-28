@@ -7,10 +7,10 @@ import { DEFAULT_SETTINGS } from '../utils/contractUtils';
 // ====================================================================
 
 // 1. Sem vložte URL adresu Vašeho Supabase projektu:
-const SUPABASE_URL = 'VLOZTE_SEM_VAS_SUPABASE_URL'; 
+const SUPABASE_URL = 'https://xttedvfikzondsnlufbf.supabase.co'; 
 
 // 2. Sem vložte Váš Supabase anon/public API klíč:
-const SUPABASE_ANON_KEY = 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0dGVkdmZpa3pvbmRzbmx1ZmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNzEzMTEsImV4cCI6MjA5ODk0NzMxMX0.ClAlzaZSglmJhcxcwLMcL6rIQHkmtM8uOGjkDkZNHOI';
 
 // ====================================================================
 
