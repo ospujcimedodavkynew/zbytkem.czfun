@@ -342,10 +342,10 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
 
   const getContractLink = (contract: ContractData) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    const encoded = encodeContract(contract);
     if (contract.id && contract.id.includes('-')) {
-      return `${baseUrl}?id=${contract.id}&contract=${encoded}`;
+      return `${baseUrl}?id=${contract.id}`;
     }
+    const encoded = encodeContract(contract);
     return `${baseUrl}?contract=${encoded}`;
   };
 

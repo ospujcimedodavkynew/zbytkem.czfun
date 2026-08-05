@@ -138,12 +138,12 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       const saved = await dbService.saveContract(finalContract);
       setContract(saved);
 
-      // Generate signed URL link (with fallback payload)
+      // Generate signed URL link
       const baseUrl = window.location.origin + window.location.pathname;
-      const encoded = encodeContract(saved);
       if (saved.id && saved.id.includes('-')) {
-        setSignedLink(`${baseUrl}?id=${saved.id}&contract=${encoded}`);
+        setSignedLink(`${baseUrl}?id=${saved.id}`);
       } else {
+        const encoded = encodeContract(saved);
         setSignedLink(`${baseUrl}?contract=${encoded}`);
       }
 
