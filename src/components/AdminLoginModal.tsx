@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Lock, Eye, EyeOff, ShieldCheck, X, KeyRound, AlertCircle, Loader2 } from 'lucide-react';
-import { loginAdminAsync, DEFAULT_ADMIN_PASSWORD } from '../utils/authUtils';
+import { Lock, Eye, EyeOff, ShieldCheck, X, KeyRound, AlertCircle, Loader2, RotateCcw } from 'lucide-react';
+import { loginAdminAsync, DEFAULT_ADMIN_PASSWORD, resetAdminPasswordToDefault } from '../utils/authUtils';
 import { dbService } from '../lib/supabase';
 
 interface AdminLoginModalProps {
@@ -82,10 +82,25 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="bg-red-50 border border-red-200 text-red-800 text-xs p-3.5 rounded-2xl flex items-center gap-2.5"
+              className="bg-red-50 border border-red-200 text-red-800 text-xs p-3.5 rounded-2xl space-y-2"
             >
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-              <span><strong>Zadané heslo je nesprávné.</strong> Zkontrolujte velká a malá písmena.</span>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span><strong>Zadané heslo je nesprávné.</strong></span>
+              </div>
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetAdminPasswordToDefault();
+                    setPassword(DEFAULT_ADMIN_PASSWORD);
+                    setError(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-red-700 underline hover:text-red-900 transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" /> Obnovit heslo na výchozí ({DEFAULT_ADMIN_PASSWORD})
+                </button>
+              </div>
             </motion.div>
           )}
 

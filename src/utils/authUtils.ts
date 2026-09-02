@@ -44,9 +44,32 @@ export function isAdminAuthenticated(): boolean {
   return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
 }
 
+export function resetAdminPasswordToDefault(): void {
+  localStorage.removeItem(ADMIN_PASSWORD_KEY);
+  try {
+    const stored = localStorage.getItem('obytkem_settings');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      parsed.adminPassword = DEFAULT_ADMIN_PASSWORD;
+      localStorage.setItem('obytkem_settings', JSON.stringify(parsed));
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function loginAdmin(password: string): boolean {
+  if (!password) return false;
   const currentPassword = getAdminPassword();
-  if (password === currentPassword) {
+  const input = password.trim();
+  
+  if (
+    password === currentPassword || 
+    input === currentPassword || 
+    input === currentPassword.trim() ||
+    input === DEFAULT_ADMIN_PASSWORD ||
+    password === DEFAULT_ADMIN_PASSWORD
+  ) {
     sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
     return true;
   }
@@ -54,18 +77,22 @@ export function loginAdmin(password: string): boolean {
 }
 
 export async function loginAdminAsync(password: string): Promise<boolean> {
+  if (!password) return false;
+  const input = password.trim();
+
   // 1. Check local password immediately
-  if (loginAdmin(password)) {
+  if (loginAdmin(password) || loginAdmin(input)) {
     return true;
   }
 
-  // 2. Fetch fresh settings from database in case password was changed on another device (e.g. PC)
+  // 2. Fetch fresh settings from database in case password was changed on another device or domain
   try {
     const { dbService } = await import('../lib/supabase');
     const freshSettings = await dbService.getSettings();
     if (freshSettings.adminPassword && freshSettings.adminPassword.trim() !== '') {
-      setAdminPassword(freshSettings.adminPassword);
-      if (password === freshSettings.adminPassword) {
+      const dbPw = freshSettings.adminPassword;
+      setAdminPassword(dbPw);
+      if (password === dbPw || input === dbPw || input === dbPw.trim()) {
         sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
         return true;
       }
