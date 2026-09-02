@@ -96,7 +96,8 @@ export const DEFAULT_SETTINGS: CampervanSettings = {
   ownerAddress: "Slunečná 45, 100 00 Praha 10",
   ownerPhone: "+420 777 888 999",
   ownerEmail: "info@obytkem.cz",
-  ownerBank: "123456789/0100 (Komerční banka)"
+  ownerBank: "123456789/0100 (Komerční banka)",
+  adminPassword: "obytkem2026"
 };
 
 /**

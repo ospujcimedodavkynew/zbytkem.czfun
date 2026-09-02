@@ -159,7 +159,8 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       cleaningFee,
       kmLimitPerDay,
       kmOverLimitPrice,
-      bufferHours: Number(bufferHours) || 1.5
+      bufferHours: Number(bufferHours) || 1.5,
+      adminPassword: newAdminPassword ? newAdminPassword : (settings.adminPassword || getAdminPassword())
     };
     
     try {

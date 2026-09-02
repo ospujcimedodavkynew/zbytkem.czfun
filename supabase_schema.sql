@@ -37,21 +37,23 @@ CREATE TABLE IF NOT EXISTS public.campervan_settings (
     owner_address TEXT NOT NULL DEFAULT 'Slunečná 45, 100 00 Praha 10',
     owner_phone TEXT NOT NULL DEFAULT '+420 777 888 999',
     owner_email TEXT NOT NULL DEFAULT 'info@obytkem.cz',
-    owner_bank TEXT NOT NULL DEFAULT '123456789/0100 (Komerční banka)'
+    owner_bank TEXT NOT NULL DEFAULT '123456789/0100 (Komerční banka)',
+    admin_password TEXT DEFAULT 'obytkem2026'
 );
 
 ALTER TABLE public.campervan_settings ADD COLUMN IF NOT EXISTS buffer_hours NUMERIC(4, 2) DEFAULT 1.5;
+ALTER TABLE public.campervan_settings ADD COLUMN IF NOT EXISTS admin_password TEXT DEFAULT 'obytkem2026';
 
 -- Vložení výchozího řádku nastavení (pokud tabulka zrovna vznikla prázdná)
 INSERT INTO public.campervan_settings (
     brand, model, plate_number, year, 
     daily_price, deposit, cleaning_fee, km_limit_per_day, km_over_limit_price, buffer_hours,
-    owner_name, owner_id, owner_address, owner_phone, owner_email, owner_bank
+    owner_name, owner_id, owner_address, owner_phone, owner_email, owner_bank, admin_password
 )
 VALUES (
     'Ahorn', 'Canada TU Plus', '7AM 8243', 2023,
     3200.00, 30000.00, 1500.00, 300, 6.00, 1.5,
-    'Petr Svoboda', '12345678', 'Slunečná 45, 100 00 Praha 10', '+420 777 888 999', 'info@obytkem.cz', '123456789/0100 (Komerční banka)'
+    'Petr Svoboda', '12345678', 'Slunečná 45, 100 00 Praha 10', '+420 777 888 999', 'info@obytkem.cz', '123456789/0100 (Komerční banka)', 'obytkem2026'
 )
 ON CONFLICT DO NOTHING;
 

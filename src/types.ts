@@ -15,6 +15,7 @@ export interface CampervanSettings {
   ownerPhone: string;
   ownerEmail: string;
   ownerBank: string;
+  adminPassword?: string;
 }
 
 export interface ContractData {

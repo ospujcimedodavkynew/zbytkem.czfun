@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Lock, Eye, EyeOff, ShieldCheck, X, KeyRound, AlertCircle } from 'lucide-react';
-import { loginAdmin, DEFAULT_ADMIN_PASSWORD } from '../utils/authUtils';
+import { Lock, Eye, EyeOff, ShieldCheck, X, KeyRound, AlertCircle, Loader2 } from 'lucide-react';
+import { loginAdminAsync, DEFAULT_ADMIN_PASSWORD } from '../utils/authUtils';
+import { dbService } from '../lib/supabase';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -13,17 +14,35 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Pre-fetch latest settings and password from database when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      dbService.getSettings().catch(() => {});
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginAdmin(password)) {
-      setError(false);
-      setPassword('');
-      onSuccess();
-    } else {
+    setLoading(true);
+    setError(false);
+
+    try {
+      const isValid = await loginAdminAsync(password);
+      if (isValid) {
+        setError(false);
+        setPassword('');
+        onSuccess();
+      } else {
+        setError(true);
+      }
+    } catch {
       setError(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,15 +130,25 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             <button 
               type="button"
               onClick={onClose}
-              className="w-full sm:w-1/2 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors"
+              disabled={loading}
+              className="w-full sm:w-1/2 py-3 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
               Zrušit
             </button>
             <button 
               type="submit"
-              className="w-full sm:w-1/2 bg-primary hover:bg-primary/95 text-white py-3 rounded-xl font-bold text-xs shadow-md shadow-primary/15 transition-all flex items-center justify-center gap-2"
+              disabled={loading}
+              className="w-full sm:w-1/2 bg-primary hover:bg-primary/95 text-white py-3 rounded-xl font-bold text-xs shadow-md shadow-primary/15 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
             >
-              <ShieldCheck className="w-4 h-4" /> Vstoupit
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Ověřuji...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" /> Vstoupit
+                </>
+              )}
             </button>
           </div>
         </form>
