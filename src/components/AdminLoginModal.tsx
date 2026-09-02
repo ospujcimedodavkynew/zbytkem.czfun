@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Lock, Eye, EyeOff, ShieldCheck, X, KeyRound, AlertCircle, Loader2, RotateCcw } from 'lucide-react';
-import { loginAdminAsync, DEFAULT_ADMIN_PASSWORD, resetAdminPasswordToDefault } from '../utils/authUtils';
+import { Lock, Eye, EyeOff, ShieldCheck, X, AlertCircle, Loader2 } from 'lucide-react';
+import { loginAdminAsync } from '../utils/authUtils';
 import { dbService } from '../lib/supabase';
 
 interface AdminLoginModalProps {
@@ -19,6 +19,9 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
   // Pre-fetch latest settings and password from database when modal opens
   useEffect(() => {
     if (isOpen) {
+      setPassword('');
+      setError(false);
+      setLoading(false);
       dbService.getSettings().catch(() => {});
     }
   }, [isOpen]);
@@ -27,6 +30,8 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!password.trim()) return;
+
     setLoading(true);
     setError(false);
 
@@ -72,7 +77,7 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             Vstup do administrace
           </h2>
           <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-            Tato sekce obsahuje osobní údaje zákazníků a nastavení pronájmu. Pro přístup zadejte heslo majitele.
+            Tato sekce obsahuje správu rezervací, smluv a nastavení. Pro přístup zadejte heslo administrátora.
           </p>
         </div>
 
@@ -82,25 +87,10 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             <motion.div 
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="bg-red-50 border border-red-200 text-red-800 text-xs p-3.5 rounded-2xl space-y-2"
+              className="bg-red-50 border border-red-200 text-red-800 text-xs p-3.5 rounded-2xl flex items-center gap-2.5"
             >
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span><strong>Zadané heslo je nesprávné.</strong></span>
-              </div>
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetAdminPasswordToDefault();
-                    setPassword(DEFAULT_ADMIN_PASSWORD);
-                    setError(false);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-red-700 underline hover:text-red-900 transition-colors"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Obnovit heslo na výchozí ({DEFAULT_ADMIN_PASSWORD})
-                </button>
-              </div>
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <span><strong>Zadané heslo je nesprávné.</strong> Zkontrolujte velká a malá písmena.</span>
             </motion.div>
           )}
 
@@ -132,15 +122,6 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             </div>
           </div>
 
-          <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 text-[11px] text-amber-800 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-amber-900">
-              <KeyRound className="w-3.5 h-3.5 text-amber-700" /> Nápověda k přihlášení:
-            </div>
-            <p className="leading-relaxed">
-              Výchozí heslo při prvním spuštění je <strong className="font-mono bg-amber-100 px-1 py-0.5 rounded text-amber-950">{DEFAULT_ADMIN_PASSWORD}</strong>. Heslo si můžete kdykoliv změnit v nastavení po přihlášení.
-            </p>
-          </div>
-
           <div className="pt-2 flex flex-col sm:flex-row gap-3">
             <button 
               type="button"
@@ -152,7 +133,7 @@ export default function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLog
             </button>
             <button 
               type="submit"
-              disabled={loading}
+              disabled={loading || !password.trim()}
               className="w-full sm:w-1/2 bg-primary hover:bg-primary/95 text-white py-3 rounded-xl font-bold text-xs shadow-md shadow-primary/15 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
             >
               {loading ? (

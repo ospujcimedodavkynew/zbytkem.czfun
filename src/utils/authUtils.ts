@@ -66,9 +66,7 @@ export function loginAdmin(password: string): boolean {
   if (
     password === currentPassword || 
     input === currentPassword || 
-    input === currentPassword.trim() ||
-    input === DEFAULT_ADMIN_PASSWORD ||
-    password === DEFAULT_ADMIN_PASSWORD
+    input === currentPassword.trim()
   ) {
     sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
     return true;
@@ -80,28 +78,25 @@ export async function loginAdminAsync(password: string): Promise<boolean> {
   if (!password) return false;
   const input = password.trim();
 
-  // 1. Check local password immediately
-  if (loginAdmin(password) || loginAdmin(input)) {
-    return true;
-  }
-
-  // 2. Fetch fresh settings from database in case password was changed on another device or domain
+  // 1. Fetch fresh settings directly from database first (source of truth)
   try {
     const { dbService } = await import('../lib/supabase');
     const freshSettings = await dbService.getSettings();
     if (freshSettings.adminPassword && freshSettings.adminPassword.trim() !== '') {
-      const dbPw = freshSettings.adminPassword;
+      const dbPw = freshSettings.adminPassword.trim();
       setAdminPassword(dbPw);
-      if (password === dbPw || input === dbPw || input === dbPw.trim()) {
+      if (password === dbPw || input === dbPw) {
         sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
         return true;
       }
+      return false;
     }
   } catch (err) {
     console.error('Error verifying admin password against database:', err);
   }
 
-  return false;
+  // 2. Fallback to local storage password only if database unreachable
+  return loginAdmin(password) || loginAdmin(input);
 }
 
 export function logoutAdmin(): void {
