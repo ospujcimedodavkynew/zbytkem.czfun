@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { ContractData, CampervanSettings } from '../types';
 import { calculateContractPrice, encodeContract, DEFAULT_SETTINGS } from '../utils/contractUtils';
-import { dbService, isSupabaseConfigured } from '../lib/supabase';
+import { dbService, isSupabaseConfigured, generateUUID } from '../lib/supabase';
 import SignaturePad from './SignaturePad';
 import ContractDocument from './ContractDocument';
 import Logo from './Logo';
@@ -111,7 +111,7 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
 
     // Capture signature, timestamp and mock IP details
     const finalContract: ContractData = {
-      id: contract.id || 'c_' + Math.random().toString(36).substring(2, 11),
+      id: contract.id && contract.id.includes('-') ? contract.id : generateUUID(),
       createdAt: contract.createdAt || new Date().toISOString(),
       tenantName,
       tenantBirthDate,
@@ -121,13 +121,16 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       tenantPhone,
       tenantEmail,
       startDate: contract.startDate || '',
+      startTime: contract.startTime || '10:00',
       endDate: contract.endDate || '',
+      endTime: contract.endTime || '10:00',
       dailyPrice: contract.dailyPrice || settings.dailyPrice,
       deposit: contract.deposit || settings.deposit,
       cleaningFee: contract.cleaningFee || settings.cleaningFee,
       kmLimitPerDay: contract.kmLimitPerDay || settings.kmLimitPerDay,
       kmOverLimitPrice: contract.kmOverLimitPrice || settings.kmOverLimitPrice,
       additionalTerms: contract.additionalTerms || '',
+      ownerSignature: contract.ownerSignature || '',
       tenantSignature: signatureImage,
       isSigned: true,
       signedAt: new Date().toISOString(),

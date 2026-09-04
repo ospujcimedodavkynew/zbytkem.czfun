@@ -67,6 +67,7 @@ export default function App() {
   const [inquiryEndTime, setInquiryEndTime] = useState('10:00');
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [inquirySuccess, setInquirySuccess] = useState(false);
+  const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
 
   // Existing DB data for collision checks
   const [existingContracts, setExistingContracts] = useState<ContractData[]>([]);
@@ -162,6 +163,8 @@ export default function App() {
       return;
     }
 
+    setIsSubmittingInquiry(true);
+
     const newInquiry: Partial<ReservationInquiry> = {
       name: inquiryName,
       email: inquiryEmail,
@@ -190,9 +193,11 @@ export default function App() {
       setInquiryEndDate('');
       setInquiryEndTime('10:00');
       setInquiryMessage('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving inquiry', err);
-      alert('Došlo k chybě při ukládání poptávky. Zkuste to prosím znovu.');
+      alert('Došlo k chybě při ukládání poptávky: ' + (err?.message || 'Zkuste to prosím znovu.'));
+    } finally {
+      setIsSubmittingInquiry(false);
     }
   };
 
@@ -424,29 +429,42 @@ export default function App() {
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-green-50/50 border border-green-200/80 rounded-2xl p-6 text-center space-y-4 py-8"
+                    className="bg-green-50/70 border border-green-200 rounded-2xl p-6 text-center space-y-4 py-8"
                   >
-                    <div className="w-12 h-12 bg-green-100 text-green-700 rounded-full flex items-center justify-center mx-auto shadow-xs">
-                      <Check className="w-6 h-6" />
+                    <div className="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-xs">
+                      <Check className="w-7 h-7" />
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-green-900 text-lg">Poptávka byla úspěšně odeslána!</h4>
-                      <p className="text-xs text-green-700 mt-2 leading-relaxed max-w-sm mx-auto">
-                        Děkujeme za váš zájem o pronájem vozu {settings.brand} {settings.model}. Vaši poptávku jsme v pořádku přijali a ihned se jí budeme věnovat. Brzy se vám ozveme zpět na zadaný telefon nebo e-mail.
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-slate-900 text-lg sm:text-xl">Poptávka byla úspěšně odeslána!</h4>
+                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+                        Děkujeme za váš zájem o pronájem vozu <strong>{settings.brand} {settings.model}</strong>. Vaše poptávka byla uložena a majitel vozu byl informován.
                       </p>
                     </div>
-                    <div className="pt-4 flex flex-col gap-3">
+
+                    <div className="bg-white/80 border border-green-100 rounded-xl p-3.5 text-xs text-slate-600 space-y-1 text-left max-w-sm mx-auto">
+                      <div className="font-semibold text-slate-800 text-center mb-2">Potřebujete rychlou odpověď?</div>
+                      <div className="flex items-center justify-center gap-3">
+                        <a 
+                          href={`tel:${settings.ownerPhone?.replace(/\s+/g, '')}`}
+                          className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition-all inline-flex items-center gap-1.5"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-primary" /> {settings.ownerPhone}
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                       <button 
                         onClick={() => setInquirySuccess(false)}
-                        className="text-xs font-bold text-green-800 underline hover:text-green-900 transition-colors cursor-pointer"
+                        className="text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer underline"
                       >
                         Odeslat novou poptávku
                       </button>
                       <a 
                         href="https://www.obytkem.cz"
-                        className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary hover:bg-primary/95 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Zpět na hlavní web obytkem.cz
+                        <ArrowLeft className="w-3.5 h-3.5" /> Zpět na obytkem.cz
                       </a>
                     </div>
                   </motion.div>
@@ -605,14 +623,25 @@ export default function App() {
 
                     <button 
                       type="submit"
-                      disabled={collisionResult.hasCollision}
-                      className={`w-full py-4 rounded-xl font-bold text-sm shadow-md transition-all mt-2 ${
+                      disabled={collisionResult.hasCollision || isSubmittingInquiry}
+                      className={`w-full py-4 rounded-xl font-bold text-sm shadow-md transition-all mt-2 flex items-center justify-center gap-2 ${
                         collisionResult.hasCollision 
                           ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
+                          : isSubmittingInquiry
+                          ? 'bg-primary/80 text-white cursor-wait'
                           : 'bg-primary hover:bg-primary/95 text-white shadow-primary/15 cursor-pointer'
                       }`}
                     >
-                      {collisionResult.hasCollision ? 'Vybraný termín koliduje (nedostupné)' : 'Odeslat nezávaznou poptávku'}
+                      {isSubmittingInquiry ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span>Odesílám a ukládám poptávku...</span>
+                        </>
+                      ) : collisionResult.hasCollision ? (
+                        'Vybraný termín koliduje (nedostupné)'
+                      ) : (
+                        'Odeslat nezávaznou poptávku'
+                      )}
                     </button>
                   </form>
                 )}

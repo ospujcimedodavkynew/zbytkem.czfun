@@ -20,7 +20,12 @@ import {
   Mail,
   Send,
   X,
-  MessageSquare
+  MessageSquare,
+  Database,
+  Activity,
+  AlertTriangle,
+  RefreshCw,
+  BellRing
 } from 'lucide-react';
 import { ContractData, CampervanSettings, ReservationInquiry } from '../types';
 import { 
@@ -29,7 +34,7 @@ import {
   checkRentalCollision,
   DEFAULT_SETTINGS
 } from '../utils/contractUtils';
-import { dbService, isSupabaseConfigured } from '../lib/supabase';
+import { dbService, isSupabaseConfigured, DatabaseHealthReport } from '../lib/supabase';
 import { getAdminPassword, setAdminPassword } from '../utils/authUtils';
 import { format } from 'date-fns';
 import { cs } from 'date-fns/locale';
@@ -44,6 +49,14 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [contracts, setContracts] = useState<ContractData[]>([]);
   const [inquiries, setInquiries] = useState<ReservationInquiry[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Database Diagnostics State
+  const [healthReport, setHealthReport] = useState<DatabaseHealthReport | null>(null);
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [newInquiryToast, setNewInquiryToast] = useState<string | null>(null);
+  const [copiedSql, setCopiedSql] = useState(false);
+  const [isCreatingTestInquiry, setIsCreatingTestInquiry] = useState(false);
 
   // Form states for a new contract
   const [tenantName, setTenantName] = useState('');
@@ -122,7 +135,167 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
     dbService.getInquiries().then(res => {
       setInquiries(res);
     });
+
+    // Initial DB Health Check
+    dbService.checkDatabaseHealth().then(res => {
+      setHealthReport(res);
+    });
+
+    // Subscribe to Realtime Inquiries
+    const unsubscribe = dbService.subscribeToInquiries((newInquiry) => {
+      setInquiries(prev => {
+        if (prev.some(i => i.id === newInquiry.id)) return prev;
+        return [newInquiry, ...prev];
+      });
+      setNewInquiryToast(`Nová poptávka od: ${newInquiry.name} (${newInquiry.phone || newInquiry.email})`);
+      setTimeout(() => setNewInquiryToast(null), 8000);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [activeTab]);
+
+  const handleRunHealthCheck = async () => {
+    setIsCheckingHealth(true);
+    try {
+      const report = await dbService.checkDatabaseHealth();
+      setHealthReport(report);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsCheckingHealth(false);
+    }
+  };
+
+  const handleSendTestInquiry = async () => {
+    setIsCreatingTestInquiry(true);
+    try {
+      const today = new Date();
+      const testStart = new Date(today);
+      testStart.setDate(today.getDate() + 14);
+      const testEnd = new Date(today);
+      testEnd.setDate(today.getDate() + 18);
+
+      const startStr = testStart.toISOString().split('T')[0];
+      const endStr = testEnd.toISOString().split('T')[0];
+
+      const testInquiry: Partial<ReservationInquiry> = {
+        name: 'Zkušební Poptávka (Test Systému)',
+        email: settings.ownerEmail || 'test@obytkem.cz',
+        phone: '+420 777 000 111',
+        startDate: startStr,
+        startTime: '10:00',
+        endDate: endStr,
+        endTime: '10:00',
+        message: 'Toto je testovací poptávka pro ověření funkčnosti databáze a příjmu rezervací.',
+        status: 'pending'
+      };
+
+      const saved = await dbService.saveInquiry(testInquiry);
+      const updatedList = await dbService.getInquiries();
+      setInquiries(updatedList);
+      setActiveTab('inquiries');
+      alert(`✅ Testovací poptávka byla úspěšně vytvořena a uložena!\n\nNyní ji vidíte v seznamu poptávek.`);
+      handleRunHealthCheck();
+    } catch (err: any) {
+      alert(`❌ Chyba při vytváření testovací poptávky: ${err?.message || err}`);
+    } finally {
+      setIsCreatingTestInquiry(false);
+    }
+  };
+
+  const handleCopySqlSchema = () => {
+    const sql = `-- ====================================================================
+-- SUPABASE / POSTGRESQL DATABASE SCHEMA FOR OBYTKEM.CZ
+-- ====================================================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. campervan_settings
+CREATE TABLE IF NOT EXISTS public.campervan_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    brand TEXT NOT NULL DEFAULT 'Ahorn',
+    model TEXT NOT NULL DEFAULT 'Canada TU Plus',
+    plate_number TEXT NOT NULL DEFAULT '7AM 8243',
+    year INTEGER NOT NULL DEFAULT 2023,
+    daily_price NUMERIC(10, 2) NOT NULL DEFAULT 3200.00,
+    deposit NUMERIC(10, 2) NOT NULL DEFAULT 30000.00,
+    cleaning_fee NUMERIC(10, 2) NOT NULL DEFAULT 1500.00,
+    km_limit_per_day INTEGER NOT NULL DEFAULT 300,
+    km_over_limit_price NUMERIC(10, 2) NOT NULL DEFAULT 6.00,
+    buffer_hours NUMERIC(4, 2) NOT NULL DEFAULT 1.5,
+    owner_name TEXT NOT NULL DEFAULT 'Petr Svoboda',
+    owner_id TEXT NOT NULL DEFAULT '12345678',
+    owner_address TEXT NOT NULL DEFAULT 'Slunečná 45, 100 00 Praha 10',
+    owner_phone TEXT NOT NULL DEFAULT '+420 777 888 999',
+    owner_email TEXT NOT NULL DEFAULT 'info@obytkem.cz',
+    owner_bank TEXT NOT NULL DEFAULT '123456789/0100 (Komerční banka)',
+    admin_password TEXT DEFAULT 'obytkem2026'
+);
+
+-- 2. reservation_inquiries
+CREATE TABLE IF NOT EXISTS public.reservation_inquiries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    start_date DATE NOT NULL,
+    start_time TEXT NOT NULL DEFAULT '10:00',
+    end_date DATE NOT NULL,
+    end_time TEXT NOT NULL DEFAULT '10:00',
+    message TEXT,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'converted', 'cancelled'))
+);
+
+-- 3. contracts
+CREATE TABLE IF NOT EXISTS public.contracts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    tenant_name TEXT NOT NULL,
+    tenant_birth_date DATE NOT NULL,
+    tenant_id_number TEXT NOT NULL,
+    tenant_dl_number TEXT NOT NULL,
+    tenant_address TEXT NOT NULL,
+    tenant_phone TEXT NOT NULL,
+    tenant_email TEXT NOT NULL,
+    start_date DATE NOT NULL,
+    start_time TEXT NOT NULL DEFAULT '10:00',
+    end_date DATE NOT NULL,
+    end_time TEXT NOT NULL DEFAULT '10:00',
+    daily_price NUMERIC(10, 2) NOT NULL,
+    deposit NUMERIC(10, 2) NOT NULL,
+    cleaning_fee NUMERIC(10, 2) NOT NULL,
+    km_limit_per_day INTEGER NOT NULL,
+    km_over_limit_price NUMERIC(10, 2) NOT NULL,
+    additional_terms TEXT,
+    owner_signature TEXT,
+    tenant_signature TEXT,
+    signed_at TIMESTAMP WITH TIME ZONE,
+    signed_ip TEXT,
+    is_signed BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- 4. RLS POLICIES
+ALTER TABLE public.campervan_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reservation_inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contracts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Povolit plný přístup k nastavení pro kohokoliv" ON public.campervan_settings;
+CREATE POLICY "Povolit plný přístup k nastavení pro kohokoliv" ON public.campervan_settings FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Povolit plný přístup k poptávkám pro kohokoliv" ON public.reservation_inquiries;
+CREATE POLICY "Povolit plný přístup k poptávkám pro kohokoliv" ON public.reservation_inquiries FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.contracts;
+CREATE POLICY "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.contracts FOR ALL USING (true) WITH CHECK (true);`;
+
+    navigator.clipboard.writeText(sql);
+    setCopiedSql(true);
+    setTimeout(() => setCopiedSql(false), 4000);
+  };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -449,6 +622,151 @@ E-mail: ${settings.ownerEmail}`;
             <Settings className="w-4 h-4" /> Nastavení
           </button>
         </div>
+      </div>
+
+      {/* Realtime New Inquiry Toast */}
+      {newInquiryToast && (
+        <div className="bg-emerald-600 text-white px-5 py-3.5 rounded-2xl mb-6 flex items-center justify-between shadow-lg shadow-emerald-600/20 animate-bounce">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-2 rounded-xl">
+              <BellRing className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm">Právě dorazila nová poptávka!</h4>
+              <p className="text-xs text-emerald-100">{newInquiryToast}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setNewInquiryToast(null)}
+            className="text-white/80 hover:text-white p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Database Status & Health Bar */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 mb-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-xl flex-shrink-0 ${
+              healthReport?.status === 'connected' 
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
+                : healthReport?.status === 'error'
+                ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                : 'bg-amber-50 text-amber-600 border border-amber-200'
+            }`}>
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-slate-900 text-sm">Stav databáze a příjmu rezervací:</span>
+                {healthReport?.status === 'connected' && (
+                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Supabase Cloud Aktivní
+                  </span>
+                )}
+                {healthReport?.status === 'error' && (
+                  <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                    <AlertTriangle className="w-3 h-3 text-rose-600" /> Chyba synchronizace tabulek
+                  </span>
+                )}
+                {healthReport?.status === 'unconfigured' && (
+                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                    Offline režim (Prohlížeč)
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {healthReport?.status === 'connected' 
+                  ? `Všechny poptávky z webu se okamžitě ukládají do centrální Supabase databáze (${healthReport.inquiriesCount} poptávek celkem).`
+                  : healthReport?.errorDetails || 'Data se ukládají lokálně v tomto prohlížeči. Pro sdílení mezi zařízeními propojte Supabase.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+            <button
+              onClick={handleSendTestInquiry}
+              disabled={isCreatingTestInquiry}
+              className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs font-bold rounded-xl border border-sky-200 transition-all flex items-center gap-1.5"
+              title="Vytvořit testovací poptávku a ověřit, že dorazí"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {isCreatingTestInquiry ? 'Odesílám test...' : 'Otestovat příjem poptávky'}
+            </button>
+            <button
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+            >
+              <Activity className="w-3.5 h-3.5 text-slate-500" />
+              {showDiagnostics ? 'Skrýt detail' : 'Detail připojení'}
+            </button>
+          </div>
+        </div>
+
+        {/* Detailed Diagnostic Panel */}
+        {showDiagnostics && (
+          <div className="mt-4 pt-4 border-t border-slate-100 space-y-4 text-xs animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="font-semibold text-slate-700">1. Nastavení vozu</div>
+                <div className="mt-1 flex items-center gap-1">
+                  {healthReport?.settingsOk ? (
+                    <span className="text-emerald-600 font-bold flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Tabulka dostupná</span>
+                  ) : (
+                    <span className="text-rose-600 font-bold flex items-center gap-1"><X className="w-3.5 h-3.5" /> Nedostupná</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="font-semibold text-slate-700">2. Poptávky (Inquiries)</div>
+                <div className="mt-1 flex items-center gap-1">
+                  {healthReport?.inquiriesOk ? (
+                    <span className="text-emerald-600 font-bold flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {healthReport.inquiriesCount} záznamů</span>
+                  ) : (
+                    <span className="text-rose-600 font-bold flex items-center gap-1"><X className="w-3.5 h-3.5" /> Nedostupná</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="font-semibold text-slate-700">3. Smlouvy (Contracts)</div>
+                <div className="mt-1 flex items-center gap-1">
+                  {healthReport?.contractsOk ? (
+                    <span className="text-emerald-600 font-bold flex items-center gap-1"><Check className="w-3.5 h-3.5" /> {healthReport.contractsCount} záznamů</span>
+                  ) : (
+                    <span className="text-rose-600 font-bold flex items-center gap-1"><X className="w-3.5 h-3.5" /> Nedostupná</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl">
+              <div className="text-slate-600">
+                Supabase URL: <span className="font-mono font-semibold text-slate-800">{healthReport?.supabaseUrl}</span>
+                {healthReport?.lastChecked && <span className="text-slate-400 ml-2"> (Ověřeno v {healthReport.lastChecked})</span>}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRunHealthCheck}
+                  disabled={isCheckingHealth}
+                  className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isCheckingHealth ? 'animate-spin' : ''}`} /> Zkontrolovat znovu
+                </button>
+                <button
+                  onClick={handleCopySqlSchema}
+                  className="px-3 py-1 bg-primary text-white rounded-lg font-semibold flex items-center gap-1 cursor-pointer hover:bg-primary/90"
+                >
+                  {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedSql ? 'Zkopírováno!' : 'Kopírovat opravný SQL skript'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Info Warning banner about Single campervan */}
