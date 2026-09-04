@@ -106,53 +106,85 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   // Load data on mount and whenever activeTab changes
   useEffect(() => {
     // Load settings from database
-    dbService.getSettings().then(res => {
-      setSettings(res);
-      setOwnerName(res.ownerName);
-      setOwnerId(res.ownerId);
-      setOwnerAddress(res.ownerAddress);
-      setOwnerPhone(res.ownerPhone);
-      setOwnerEmail(res.ownerEmail);
-      setOwnerBank(res.ownerBank);
-      setBrand(res.brand);
-      setModel(res.model);
-      setPlateNumber(res.plateNumber);
-      setYear(res.year);
-      setDailyPrice(res.dailyPrice);
-      setDeposit(res.deposit);
-      setCleaningFee(res.cleaningFee);
-      setKmLimitPerDay(res.kmLimitPerDay);
-      setKmOverLimitPrice(res.kmOverLimitPrice);
-      setBufferHours(res.bufferHours ?? 1.5);
-    });
+    dbService.getSettings()
+      .then(res => {
+        if (!res) return;
+        setSettings(res);
+        setOwnerName(res.ownerName || DEFAULT_SETTINGS.ownerName);
+        setOwnerId(res.ownerId || DEFAULT_SETTINGS.ownerId);
+        setOwnerAddress(res.ownerAddress || DEFAULT_SETTINGS.ownerAddress);
+        setOwnerPhone(res.ownerPhone || DEFAULT_SETTINGS.ownerPhone);
+        setOwnerEmail(res.ownerEmail || DEFAULT_SETTINGS.ownerEmail);
+        setOwnerBank(res.ownerBank || DEFAULT_SETTINGS.ownerBank);
+        setBrand(res.brand || DEFAULT_SETTINGS.brand);
+        setModel(res.model || DEFAULT_SETTINGS.model);
+        setPlateNumber(res.plateNumber || DEFAULT_SETTINGS.plateNumber);
+        setYear(res.year || DEFAULT_SETTINGS.year);
+        setDailyPrice(res.dailyPrice ?? DEFAULT_SETTINGS.dailyPrice);
+        setDeposit(res.deposit ?? DEFAULT_SETTINGS.deposit);
+        setCleaningFee(res.cleaningFee ?? DEFAULT_SETTINGS.cleaningFee);
+        setKmLimitPerDay(res.kmLimitPerDay ?? DEFAULT_SETTINGS.kmLimitPerDay);
+        setKmOverLimitPrice(res.kmOverLimitPrice ?? DEFAULT_SETTINGS.kmOverLimitPrice);
+        setBufferHours(res.bufferHours ?? DEFAULT_SETTINGS.bufferHours ?? 1.5);
+      })
+      .catch(err => {
+        console.error('Error fetching settings in dashboard:', err);
+      });
 
     // Load contracts
-    dbService.getContracts().then(res => {
-      setContracts(res);
-    });
+    dbService.getContracts()
+      .then(res => {
+        setContracts(Array.isArray(res) ? res : []);
+      })
+      .catch(err => {
+        console.error('Error loading contracts in dashboard:', err);
+        setContracts([]);
+      });
 
     // Load inquiries
-    dbService.getInquiries().then(res => {
-      setInquiries(res);
-    });
+    dbService.getInquiries()
+      .then(res => {
+        setInquiries(Array.isArray(res) ? res : []);
+      })
+      .catch(err => {
+        console.error('Error loading inquiries in dashboard:', err);
+        setInquiries([]);
+      });
 
     // Initial DB Health Check
-    dbService.checkDatabaseHealth().then(res => {
-      setHealthReport(res);
-    });
+    dbService.checkDatabaseHealth()
+      .then(res => {
+        if (res) setHealthReport(res);
+      })
+      .catch(err => {
+        console.error('Health check failed:', err);
+      });
 
     // Subscribe to Realtime Inquiries
-    const unsubscribe = dbService.subscribeToInquiries((newInquiry) => {
-      setInquiries(prev => {
-        if (prev.some(i => i.id === newInquiry.id)) return prev;
-        return [newInquiry, ...prev];
+    let unsubscribe: () => void = () => {};
+    try {
+      unsubscribe = dbService.subscribeToInquiries((newInquiry) => {
+        if (!newInquiry || !newInquiry.id) return;
+        setInquiries(prev => {
+          const list = Array.isArray(prev) ? prev : [];
+          if (list.some(i => i.id === newInquiry.id)) return list;
+          return [newInquiry, ...list];
+        });
+        setNewInquiryToast(`Nová poptávka od: ${newInquiry.name || 'Zákazník'} (${newInquiry.phone || newInquiry.email || 'Bez kontaktu'})`);
+        setTimeout(() => setNewInquiryToast(null), 8000);
       });
-      setNewInquiryToast(`Nová poptávka od: ${newInquiry.name} (${newInquiry.phone || newInquiry.email})`);
-      setTimeout(() => setNewInquiryToast(null), 8000);
-    });
+    } catch (e) {
+      console.warn('Realtime subscription error:', e);
+    }
 
     return () => {
-      unsubscribe();
+      try {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      } catch (e) {
+        console.warn('Unsubscribe cleanup error:', e);
+      }
     };
   }, [activeTab]);
 
@@ -597,9 +629,9 @@ E-mail: ${settings.ownerEmail}`;
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all relative ${activeTab === 'inquiries' ? 'bg-primary text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
           >
             <Calendar className="w-4 h-4" /> Poptávky
-            {inquiries.filter(i => i.status === 'pending').length > 0 && (
+            {(Array.isArray(inquiries) ? inquiries : []).filter(i => i && i.status === 'pending').length > 0 && (
               <span className="absolute -top-1 -right-1 bg-accent text-white font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
-                {inquiries.filter(i => i.status === 'pending').length}
+                {(Array.isArray(inquiries) ? inquiries : []).filter(i => i && i.status === 'pending').length}
               </span>
             )}
           </button>
@@ -785,7 +817,7 @@ E-mail: ${settings.ownerEmail}`;
       {/* Tab Contents */}
       {activeTab === 'contracts' && (
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-          {contracts.length === 0 ? (
+          {(!Array.isArray(contracts) || contracts.length === 0) ? (
             <div className="p-16 text-center text-slate-400">
               <FileText className="w-12 h-12 mx-auto opacity-30 mb-4" />
               <p className="font-semibold text-slate-600 text-base">Zatím jste nevytvořili žádnou smlouvu</p>
@@ -810,7 +842,7 @@ E-mail: ${settings.ownerEmail}`;
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {contracts.map(contract => {
+                  {contracts.filter(Boolean).map(contract => {
                     const price = calculateContractPrice(contract.startDate, contract.endDate, contract.dailyPrice, contract.cleaningFee);
                     const link = getContractLink(contract);
                     
@@ -906,7 +938,7 @@ E-mail: ${settings.ownerEmail}`;
 
       {activeTab === 'inquiries' && (
         <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-          {inquiries.length === 0 ? (
+          {(!Array.isArray(inquiries) || inquiries.length === 0) ? (
             <div className="p-16 text-center text-slate-400">
               <Calendar className="w-12 h-12 mx-auto opacity-30 mb-4" />
               <p className="font-semibold text-slate-600 text-base">Žádné poptávky k dispozici</p>
@@ -925,7 +957,7 @@ E-mail: ${settings.ownerEmail}`;
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {inquiries.map(inquiry => {
+                  {inquiries.filter(Boolean).map(inquiry => {
                     const price = calculateContractPrice(inquiry.startDate, inquiry.endDate, settings.dailyPrice, settings.cleaningFee);
                     
                     return (
