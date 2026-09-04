@@ -605,11 +605,13 @@ E-mail: ${settings.ownerEmail}`;
   };
 
   const formatDateText = (dateStr?: string) => {
-    if (!dateStr) return '';
+    if (!dateStr || typeof dateStr !== 'string') return '';
     try {
-      return format(new Date(dateStr), 'd. M. yyyy', { locale: cs });
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return format(d, 'd. M. yyyy', { locale: cs });
     } catch {
-      return dateStr;
+      return dateStr || '';
     }
   };
 

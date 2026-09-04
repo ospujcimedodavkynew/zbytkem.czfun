@@ -214,7 +214,17 @@ export default function ContractDocument({ contract, settings }: ContractDocumen
             <div className="mt-2 text-xs font-mono text-slate-500">
               {contract.tenantName || '_______________'}<br />
               {contract.signedAt ? (
-                <span>Podepsáno {formatDate(contract.signedAt)} v {format(new Date(contract.signedAt), 'HH:mm')}</span>
+                <span>
+                  Podepsáno {formatDate(contract.signedAt)}
+                  {(() => {
+                    try {
+                      const d = new Date(contract.signedAt);
+                      return !isNaN(d.getTime()) ? ` v ${format(d, 'HH:mm')}` : '';
+                    } catch {
+                      return '';
+                    }
+                  })()}
+                </span>
               ) : (
                 <span>Datum podpisu: _______________</span>
               )}

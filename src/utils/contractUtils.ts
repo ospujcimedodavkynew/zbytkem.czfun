@@ -53,28 +53,39 @@ export function decodeContract(encoded: string): Partial<ContractData> | null {
 export function calculateContractPrice(
   startDateStr: string,
   endDateStr: string,
-  dailyPrice: number,
-  cleaningFee: number
+  dailyPrice: number = 3200,
+  cleaningFee: number = 1500
 ): { days: number; rentalTotal: number; grandTotal: number } {
+  const safeDailyPrice = typeof dailyPrice === 'number' && !isNaN(dailyPrice) ? dailyPrice : (DEFAULT_SETTINGS?.dailyPrice || 3200);
+  const safeCleaningFee = typeof cleaningFee === 'number' && !isNaN(cleaningFee) ? cleaningFee : (DEFAULT_SETTINGS?.cleaningFee || 1500);
+
   if (!startDateStr || !endDateStr) {
     return { days: 0, rentalTotal: 0, grandTotal: 0 };
   }
   
-  const start = new Date(startDateStr);
-  const end = new Date(endDateStr);
-  
-  // Calculate difference in days (inclusive, i.e., at least 1 day)
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-  
-  const rentalTotal = diffDays * dailyPrice;
-  const grandTotal = rentalTotal + cleaningFee;
-  
-  return {
-    days: diffDays,
-    rentalTotal,
-    grandTotal
-  };
+  try {
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { days: 0, rentalTotal: 0, grandTotal: 0 };
+    }
+
+    // Calculate difference in days (inclusive, i.e., at least 1 day)
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+    
+    const rentalTotal = diffDays * safeDailyPrice;
+    const grandTotal = rentalTotal + safeCleaningFee;
+    
+    return {
+      days: diffDays,
+      rentalTotal,
+      grandTotal
+    };
+  } catch {
+    return { days: 0, rentalTotal: 0, grandTotal: 0 };
+  }
 }
 
 /**

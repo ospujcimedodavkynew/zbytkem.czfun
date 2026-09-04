@@ -23,6 +23,7 @@ import TenantPortal from './components/TenantPortal';
 import Logo from './components/Logo';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
 import AdminLoginModal from './components/AdminLoginModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { decodeContract, getStoredSettings, checkRentalCollision } from './utils/contractUtils';
 import { dbService, isSupabaseConfigured } from './lib/supabase';
 import { isAdminAuthenticated, logoutAdmin } from './utils/authUtils';
@@ -299,7 +300,9 @@ export default function App() {
         </nav>
         
         <main className="flex-grow">
-          <HostDashboard onViewContract={handleViewContractInAdmin} />
+          <ErrorBoundary fallbackTitle="Chyba při načítání administrace majitele">
+            <HostDashboard onViewContract={handleViewContractInAdmin} />
+          </ErrorBoundary>
         </main>
       </div>
     );
