@@ -152,13 +152,15 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
       });
 
     // Initial DB Health Check
-    dbService.checkDatabaseHealth()
-      .then(res => {
-        if (res) setHealthReport(res);
-      })
-      .catch(err => {
-        console.error('Health check failed:', err);
-      });
+    if (dbService && typeof dbService.checkDatabaseHealth === 'function') {
+      dbService.checkDatabaseHealth()
+        .then(res => {
+          if (res) setHealthReport(res);
+        })
+        .catch(err => {
+          console.error('Health check failed:', err);
+        });
+    }
 
     // Subscribe to Realtime Inquiries
     let unsubscribe: () => void = () => {};
@@ -191,8 +193,10 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const handleRunHealthCheck = async () => {
     setIsCheckingHealth(true);
     try {
-      const report = await dbService.checkDatabaseHealth();
-      setHealthReport(report);
+      if (dbService && typeof dbService.checkDatabaseHealth === 'function') {
+        const report = await dbService.checkDatabaseHealth();
+        setHealthReport(report);
+      }
     } catch (e) {
       console.error(e);
     } finally {
