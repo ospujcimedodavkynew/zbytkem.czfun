@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { CampervanSettings, ContractData, ReservationInquiry } from '../types';
 import { DEFAULT_SETTINGS } from '../utils/contractUtils';
+import { getAdminPassword, setAdminPassword, DEFAULT_ADMIN_PASSWORD } from '../utils/authUtils';
 
 // ====================================================================
 // 🔑 VLOŽTE VAŠE SUPABASE API ÚDAJE SEM (NA ŘÁDKY 10 A 13):
@@ -15,15 +16,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // ====================================================================
 
 // Auto-detekce klíčů z kódu nebo z environmentálních proměnných
-const supabaseUrl = 
-  (SUPABASE_URL && SUPABASE_URL !== 'VLOZTE_SEM_VAS_SUPABASE_URL' ? SUPABASE_URL : '') ||
+const supabaseUrl: string = 
+  (SUPABASE_URL && (SUPABASE_URL as string) !== 'VLOZTE_SEM_VAS_SUPABASE_URL' ? SUPABASE_URL : '') ||
   (import.meta as any).env?.VITE_SUPABASE_URL || 
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_URL) || 
   (typeof process !== 'undefined' && (process as any).env?.SUPABASE_URL) || 
   '';
 
-const supabaseAnonKey = 
-  (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY' ? SUPABASE_ANON_KEY : '') ||
+const supabaseAnonKey: string = 
+  (SUPABASE_ANON_KEY && (SUPABASE_ANON_KEY as string) !== 'VLOZTE_SEM_VAS_SUPABASE_ANON_KEY' ? SUPABASE_ANON_KEY : '') ||
   (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || 
   (typeof process !== 'undefined' && (process as any).env?.VITE_SUPABASE_ANON_KEY) || 
   (typeof process !== 'undefined' && (process as any).env?.SUPABASE_ANON_KEY) || 
@@ -81,11 +82,16 @@ function mapSettingsToDb(settings: CampervanSettings) {
     owner_address: settings.ownerAddress,
     owner_phone: settings.ownerPhone,
     owner_email: settings.ownerEmail,
-    owner_bank: settings.ownerBank
+    owner_bank: settings.ownerBank,
+    admin_password: settings.adminPassword || getAdminPassword() || DEFAULT_ADMIN_PASSWORD
   };
 }
 
 function mapSettingsFromDb(db: any): CampervanSettings {
+  const adminPassword = db.admin_password || getAdminPassword() || DEFAULT_ADMIN_PASSWORD;
+  if (db.admin_password && typeof db.admin_password === 'string') {
+    setAdminPassword(db.admin_password);
+  }
   return {
     brand: db.brand || DEFAULT_SETTINGS.brand,
     model: db.model || DEFAULT_SETTINGS.model,
@@ -102,7 +108,8 @@ function mapSettingsFromDb(db: any): CampervanSettings {
     ownerAddress: db.owner_address || DEFAULT_SETTINGS.ownerAddress,
     ownerPhone: db.owner_phone || DEFAULT_SETTINGS.ownerPhone,
     ownerEmail: db.owner_email || DEFAULT_SETTINGS.ownerEmail,
-    ownerBank: db.owner_bank || DEFAULT_SETTINGS.ownerBank
+    ownerBank: db.owner_bank || DEFAULT_SETTINGS.ownerBank,
+    adminPassword: adminPassword
   };
 }
 
@@ -144,26 +151,28 @@ function mapInquiryFromDb(db: any): ReservationInquiry {
 
 function mapContractToDb(contract: Partial<ContractData>) {
   const result: any = {
-    tenant_name: contract.tenantName,
-    tenant_birth_date: contract.tenantBirthDate || null,
+    tenant_name: contract.tenantName || 'Zájemce',
+    tenant_birth_date: (contract.tenantBirthDate && /^\d{4}-\d{2}-\d{2}$/.test(contract.tenantBirthDate)) 
+      ? contract.tenantBirthDate 
+      : '2000-01-01',
     tenant_id_number: contract.tenantIdNumber || '',
     tenant_dl_number: contract.tenantDlNumber || '',
     tenant_address: contract.tenantAddress || '',
     tenant_phone: contract.tenantPhone || '',
     tenant_email: contract.tenantEmail || '',
-    start_date: contract.startDate,
+    start_date: contract.startDate || '2026-01-01',
     start_time: contract.startTime || '10:00',
-    end_date: contract.endDate,
+    end_date: contract.endDate || '2026-01-02',
     end_time: contract.endTime || '10:00',
-    daily_price: contract.dailyPrice,
-    deposit: contract.deposit,
-    cleaning_fee: contract.cleaningFee,
-    km_limit_per_day: contract.kmLimitPerDay,
-    km_over_limit_price: contract.kmOverLimitPrice,
+    daily_price: Number(contract.dailyPrice) || 3200,
+    deposit: Number(contract.deposit) || 30000,
+    cleaning_fee: Number(contract.cleaningFee) || 1500,
+    km_limit_per_day: Number(contract.kmLimitPerDay) || 300,
+    km_over_limit_price: Number(contract.kmOverLimitPrice) || 6,
     additional_terms: contract.additionalTerms || '',
     owner_signature: contract.ownerSignature || null,
     tenant_signature: contract.tenantSignature || null,
-    signed_at: contract.signedAt || null,
+    signed_at: contract.signedAt && contract.signedAt !== '' ? contract.signedAt : null,
     signed_ip: contract.signedIp || null,
     is_signed: !!contract.isSigned
   };
@@ -179,22 +188,22 @@ function mapContractFromDb(db: any): ContractData {
   return {
     id: db.id,
     createdAt: db.created_at || new Date().toISOString(),
-    tenantName: db.tenant_name,
-    tenantBirthDate: db.tenant_birth_date || '',
+    tenantName: db.tenant_name || '',
+    tenantBirthDate: db.tenant_birth_date === '2000-01-01' ? '' : (db.tenant_birth_date || ''),
     tenantIdNumber: db.tenant_id_number || '',
     tenantDlNumber: db.tenant_dl_number || '',
     tenantAddress: db.tenant_address || '',
     tenantPhone: db.tenant_phone || '',
     tenantEmail: db.tenant_email || '',
-    startDate: db.start_date,
+    startDate: db.start_date || '',
     startTime: db.start_time || '10:00',
-    endDate: db.end_date,
+    endDate: db.end_date || '',
     endTime: db.end_time || '10:00',
-    dailyPrice: Number(db.daily_price),
-    deposit: Number(db.deposit),
-    cleaningFee: Number(db.cleaning_fee),
-    kmLimitPerDay: Number(db.km_limit_per_day),
-    kmOverLimitPrice: Number(db.km_over_limit_price),
+    dailyPrice: Number(db.daily_price) || 3200,
+    deposit: Number(db.deposit) || 30000,
+    cleaningFee: Number(db.cleaning_fee) || 1500,
+    kmLimitPerDay: Number(db.km_limit_per_day) || 300,
+    kmOverLimitPrice: Number(db.km_over_limit_price) || 6,
     additionalTerms: db.additional_terms || '',
     ownerSignature: db.owner_signature || '',
     tenantSignature: db.tenant_signature || '',
@@ -208,7 +217,121 @@ function mapContractFromDb(db: any): ContractData {
 // CORE DATABASE API SERVICE (Transparently handles Supabase or LocalStorage)
 // ====================================================================
 
+export interface DatabaseHealthReport {
+  configured: boolean;
+  supabaseUrl: string;
+  status: 'connected' | 'error' | 'unconfigured';
+  settingsOk: boolean;
+  inquiriesOk: boolean;
+  contractsOk: boolean;
+  inquiriesCount: number;
+  contractsCount: number;
+  errorDetails?: string;
+  lastChecked: string;
+}
+
 export const dbService = {
+  // Realtime subscription helper
+  subscribeToInquiries(callback: (inquiry: ReservationInquiry) => void): () => void {
+    if (!isSupabaseConfigured || !supabase) {
+      return () => {};
+    }
+    try {
+      const channel = supabase
+        .channel('realtime-inquiries-channel')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'reservation_inquiries' },
+          (payload) => {
+            if (payload.new) {
+              callback(mapInquiryFromDb(payload.new));
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        try {
+          supabase.removeChannel(channel);
+        } catch (e) {
+          console.warn('Error removing realtime channel:', e);
+        }
+      };
+    } catch (err) {
+      console.error('Failed to subscribe to realtime inquiries:', err);
+      return () => {};
+    }
+  },
+
+  // Database Diagnostic & Health Check
+  async checkDatabaseHealth(): Promise<DatabaseHealthReport> {
+    const report: DatabaseHealthReport = {
+      configured: isSupabaseConfigured,
+      supabaseUrl: supabaseUrl ? supabaseUrl.replace(/^(https?:\/\/[^/]+).*/, '$1') : 'Nenastaveno',
+      status: isSupabaseConfigured ? 'connected' : 'unconfigured',
+      settingsOk: false,
+      inquiriesOk: false,
+      contractsOk: false,
+      inquiriesCount: 0,
+      contractsCount: 0,
+      lastChecked: new Date().toLocaleTimeString('cs-CZ')
+    };
+
+    if (!isSupabaseConfigured || !supabase) {
+      report.status = 'unconfigured';
+      report.errorDetails = 'Chybí Supabase URL nebo ANON API klíč. Aplikace ukládá data do mezipaměti prohlížeče (LocalStorage).';
+      return report;
+    }
+
+    const errors: string[] = [];
+
+    // 1. Check campervan_settings
+    try {
+      const { data, error } = await supabase.from('campervan_settings').select('id, brand').limit(1);
+      if (error) {
+        errors.push(`Tabulka 'campervan_settings': ${error.message} (kód: ${error.code})`);
+      } else {
+        report.settingsOk = true;
+      }
+    } catch (e: any) {
+      errors.push(`Tabulka 'campervan_settings': ${e.message || e}`);
+    }
+
+    // 2. Check reservation_inquiries
+    try {
+      const { data, count, error } = await supabase.from('reservation_inquiries').select('id', { count: 'exact' });
+      if (error) {
+        errors.push(`Tabulka 'reservation_inquiries': ${error.message} (kód: ${error.code})`);
+      } else {
+        report.inquiriesOk = true;
+        report.inquiriesCount = count || (data ? data.length : 0);
+      }
+    } catch (e: any) {
+      errors.push(`Tabulka 'reservation_inquiries': ${e.message || e}`);
+    }
+
+    // 3. Check contracts
+    try {
+      const { data, count, error } = await supabase.from('contracts').select('id', { count: 'exact' });
+      if (error) {
+        errors.push(`Tabulka 'contracts': ${error.message} (kód: ${error.code})`);
+      } else {
+        report.contractsOk = true;
+        report.contractsCount = count || (data ? data.length : 0);
+      }
+    } catch (e: any) {
+      errors.push(`Tabulka 'contracts': ${e.message || e}`);
+    }
+
+    if (errors.length > 0) {
+      report.status = 'error';
+      report.errorDetails = errors.join(' | ');
+    } else {
+      report.status = 'connected';
+    }
+
+    return report;
+  },
   // 1. CAMPERVAN SETTINGS
   async getSettings(): Promise<CampervanSettings> {
     if (isSupabaseConfigured && supabase) {
@@ -244,6 +367,10 @@ export const dbService = {
   },
 
   async saveSettings(settings: CampervanSettings): Promise<CampervanSettings> {
+    if (settings.adminPassword) {
+      setAdminPassword(settings.adminPassword);
+    }
+
     // Local storage save first
     try {
       localStorage.setItem('obytkem_settings', JSON.stringify(settings));
@@ -253,31 +380,41 @@ export const dbService = {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const dbPayload = mapSettingsToDb(settings);
+        const dbPayload: any = mapSettingsToDb(settings);
         // Find if there is an existing settings row to update, or insert new
         const { data: existing } = await supabase
           .from('campervan_settings')
           .select('id')
           .limit(1);
 
-        if (existing && existing.length > 0) {
-          const { data, error } = await supabase
-            .from('campervan_settings')
-            .update(dbPayload)
-            .eq('id', existing[0].id)
-            .select()
-            .single();
-          if (error) throw error;
-          if (data) return mapSettingsFromDb(data);
-        } else {
-          const { data, error } = await supabase
-            .from('campervan_settings')
-            .insert(dbPayload)
-            .select()
-            .single();
-          if (error) throw error;
-          if (data) return mapSettingsFromDb(data);
+        const tryExecute = async (payload: any) => {
+          if (existing && existing.length > 0) {
+            return await supabase
+              .from('campervan_settings')
+              .update(payload)
+              .eq('id', existing[0].id)
+              .select()
+              .single();
+          } else {
+            return await supabase
+              .from('campervan_settings')
+              .insert(payload)
+              .select()
+              .single();
+          }
+        };
+
+        let res = await tryExecute(dbPayload);
+
+        // Graceful retry without admin_password column if DB schema is older
+        if (res.error && res.error.message && res.error.message.includes('admin_password')) {
+          console.warn('admin_password column missing in database table, saving remaining settings...');
+          const { admin_password, ...payloadWithoutPw } = dbPayload;
+          res = await tryExecute(payloadWithoutPw);
         }
+
+        if (res.error) throw res.error;
+        if (res.data) return mapSettingsFromDb(res.data);
       } catch (err) {
         console.error('Failed to save settings to Supabase, fell back to local storage', err);
       }
