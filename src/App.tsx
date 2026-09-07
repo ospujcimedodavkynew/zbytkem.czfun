@@ -24,7 +24,7 @@ import Logo from './components/Logo';
 import AvailabilityCalendar from './components/AvailabilityCalendar';
 import AdminLoginModal from './components/AdminLoginModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { decodeContract, getStoredSettings, checkRentalCollision } from './utils/contractUtils';
+import { decodeContract, getStoredSettings, checkRentalCollision, calculateContractPrice } from './utils/contractUtils';
 import { dbService, isSupabaseConfigured } from './lib/supabase';
 import { isAdminAuthenticated, logoutAdmin } from './utils/authUtils';
 import { ContractData, ReservationInquiry } from './types';
@@ -205,15 +205,22 @@ export default function App() {
   // Live calculation of estimated price
   const calculateEstimate = () => {
     if (!inquiryStartDate || !inquiryEndDate) return null;
-    const start = new Date(inquiryStartDate);
-    const end = new Date(inquiryEndDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) return null;
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const days = diffDays === 0 ? 1 : diffDays;
-    const totalRental = days * settings.dailyPrice;
-    const grandTotal = totalRental + settings.cleaningFee;
-    return { days, totalRental, grandTotal };
+    const res = calculateContractPrice(
+      inquiryStartDate,
+      inquiryEndDate,
+      settings.dailyPrice,
+      settings.cleaningFee,
+      inquiryStartTime || '10:00',
+      inquiryEndTime || '10:00'
+    );
+    if (res.days <= 0) return null;
+    return {
+      days: res.days,
+      baseDays: res.baseDays,
+      hasExtraDay: res.hasExtraDay,
+      totalRental: res.rentalTotal,
+      grandTotal: res.grandTotal
+    };
   };
 
   const estimate = calculateEstimate();
@@ -547,7 +554,14 @@ export default function App() {
                       >
                         <div className="flex justify-between text-slate-600 font-medium">
                           <span>Počet dní pronájmu:</span>
-                          <span className="font-bold text-slate-800">{estimate.days} dní</span>
+                          <div className="text-right">
+                            <span className="font-bold text-slate-800">{estimate.days} {estimate.days === 1 ? 'den' : (estimate.days >= 2 && estimate.days <= 4 ? 'dny' : 'dní')}</span>
+                            {estimate.hasExtraDay && (
+                              <span className="block text-[10px] text-amber-600 font-semibold mt-0.5">
+                                ({estimate.baseDays} dny + 1 den za odpolední/večerní vrácení)
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex justify-between text-slate-600 font-medium">
                           <span>Denní sazba:</span>

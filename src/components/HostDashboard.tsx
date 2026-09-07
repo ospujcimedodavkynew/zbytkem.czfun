@@ -25,15 +25,21 @@ import {
   Activity,
   AlertTriangle,
   RefreshCw,
-  BellRing
+  BellRing,
+  ClipboardCheck,
+  Download,
+  CalendarDays
 } from 'lucide-react';
-import { ContractData, CampervanSettings, ReservationInquiry } from '../types';
+import { ContractData, CampervanSettings, ReservationInquiry, HandoverProtocol } from '../types';
 import { 
   encodeContract, 
   calculateContractPrice,
   checkRentalCollision,
   DEFAULT_SETTINGS
 } from '../utils/contractUtils';
+import { generateICalFeed, downloadFile } from '../utils/featureHelpers';
+import CommunicationModal from './CommunicationModal';
+import HandoverProtocolModal from './HandoverProtocolModal';
 import { dbService, isSupabaseConfigured, DatabaseHealthReport } from '../lib/supabase';
 import { getAdminPassword, setAdminPassword } from '../utils/authUtils';
 import { format } from 'date-fns';
@@ -57,6 +63,13 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [newInquiryToast, setNewInquiryToast] = useState<string | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
   const [isCreatingTestInquiry, setIsCreatingTestInquiry] = useState(false);
+
+  // Modals state for Communication & Handover Protocols
+  const [commModalContract, setCommModalContract] = useState<ContractData | null>(null);
+  const [protocolModalData, setProtocolModalData] = useState<{
+    contract: ContractData;
+    type: 'check_in' | 'check_out';
+  } | null>(null);
 
   // Form states for a new contract
   const [tenantName, setTenantName] = useState('');
@@ -88,6 +101,8 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
   const [plateNumber, setPlateNumber] = useState(DEFAULT_SETTINGS.plateNumber);
   const [year, setYear] = useState(DEFAULT_SETTINGS.year);
   const [dailyPrice, setDailyPrice] = useState(DEFAULT_SETTINGS.dailyPrice);
+  const [offSeasonPrice, setOffSeasonPrice] = useState<number | ''>(DEFAULT_SETTINGS.offSeasonPrice || '');
+  const [peakSeasonPrice, setPeakSeasonPrice] = useState<number | ''>(DEFAULT_SETTINGS.peakSeasonPrice || '');
   const [deposit, setDeposit] = useState(DEFAULT_SETTINGS.deposit);
   const [cleaningFee, setCleaningFee] = useState(DEFAULT_SETTINGS.cleaningFee);
   const [kmLimitPerDay, setKmLimitPerDay] = useState(DEFAULT_SETTINGS.kmLimitPerDay);
@@ -243,7 +258,8 @@ export default function HostDashboard({ onViewContract }: HostDashboardProps) {
 
   const handleCopySqlSchema = () => {
     const sql = `-- ====================================================================
--- SUPABASE / POSTGRESQL DATABASE SCHEMA FOR OBYTKEM.CZ
+-- SUPABASE / POSTGRESQL DATABASE SCHEMA PRO OBYTKEM.CZ
+-- (Lze bezpečně spustit jak na nové, tak i na existující databázi)
 -- ====================================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -271,6 +287,10 @@ CREATE TABLE IF NOT EXISTS public.campervan_settings (
     admin_password TEXT DEFAULT 'obytkem2026'
 );
 
+-- Aktualizace existující tabulky campervan_settings o případné chybějící sloupce
+ALTER TABLE public.campervan_settings ADD COLUMN IF NOT EXISTS buffer_hours NUMERIC(4, 2) NOT NULL DEFAULT 1.5;
+ALTER TABLE public.campervan_settings ADD COLUMN IF NOT EXISTS admin_password TEXT DEFAULT 'obytkem2026';
+
 -- 2. reservation_inquiries
 CREATE TABLE IF NOT EXISTS public.reservation_inquiries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -285,6 +305,10 @@ CREATE TABLE IF NOT EXISTS public.reservation_inquiries (
     message TEXT,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'converted', 'cancelled'))
 );
+
+-- Aktualizace existující tabulky reservation_inquiries o časové sloupce
+ALTER TABLE public.reservation_inquiries ADD COLUMN IF NOT EXISTS start_time TEXT NOT NULL DEFAULT '10:00';
+ALTER TABLE public.reservation_inquiries ADD COLUMN IF NOT EXISTS end_time TEXT NOT NULL DEFAULT '10:00';
 
 -- 3. contracts
 CREATE TABLE IF NOT EXISTS public.contracts (
@@ -313,6 +337,10 @@ CREATE TABLE IF NOT EXISTS public.contracts (
     signed_ip TEXT,
     is_signed BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- Aktualizace existující tabulky contracts o časové sloupce
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS start_time TEXT NOT NULL DEFAULT '10:00';
+ALTER TABLE public.contracts ADD COLUMN IF NOT EXISTS end_time TEXT NOT NULL DEFAULT '10:00';
 
 -- 4. RLS POLICIES
 ALTER TABLE public.campervan_settings ENABLE ROW LEVEL SECURITY;
@@ -364,6 +392,8 @@ CREATE POLICY "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.con
       plateNumber,
       year,
       dailyPrice,
+      offSeasonPrice: offSeasonPrice === '' ? undefined : Number(offSeasonPrice),
+      peakSeasonPrice: peakSeasonPrice === '' ? undefined : Number(peakSeasonPrice),
       deposit,
       cleaningFee,
       kmLimitPerDay,
@@ -837,107 +867,161 @@ E-mail: ${settings.ownerEmail}`;
               </button>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider font-semibold text-slate-500">
-                    <th className="py-4 px-6">Nájemce</th>
-                    <th className="py-4 px-6">Termín</th>
-                    <th className="py-4 px-6">Celkem (Kauce)</th>
-                    <th className="py-4 px-6">Stav</th>
-                    <th className="py-4 px-6 text-right">Akce</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {contracts.filter(Boolean).map(contract => {
-                    const price = calculateContractPrice(contract.startDate, contract.endDate, contract.dailyPrice, contract.cleaningFee);
-                    const link = getContractLink(contract);
-                    
-                    return (
-                      <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="py-4 px-6">
-                          <div className="font-semibold text-slate-900">{contract.tenantName}</div>
-                          <div className="text-xs text-slate-400">{contract.tenantEmail || 'Bez e-mailu'}</div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                            <Calendar className="w-4 h-4 text-slate-400" />
-                            <span>{formatDateText(contract.startDate)} ({contract.startTime || '10:00'}) - {formatDateText(contract.endDate)} ({contract.endTime || '10:00'})</span>
-                          </div>
-                          <div className="text-xs text-slate-400 mt-0.5">{price.days} dní</div>
-                        </td>
-                        <td className="py-4 px-6">
-                          <div className="font-bold text-slate-900">{price.grandTotal.toLocaleString('cs-CZ')} Kč</div>
-                          <div className="text-xs text-slate-400">Kauce: {contract.deposit.toLocaleString('cs-CZ')} Kč</div>
-                        </td>
-                        <td className="py-4 px-6">
-                          {contract.isSigned ? (
-                            <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold border border-green-200">
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                              Podepsáno
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold border border-yellow-200">
-                              <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
-                              Čeká na podpis
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex justify-end gap-2">
-                            {/* Email Share button */}
-                            <button
-                              onClick={() => {
-                                setEmailModalContract(contract);
-                                setCopiedEmailText(false);
-                              }}
-                              className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-all"
-                              title="Odeslat e-mailem zákazníkovi"
-                            >
-                              <Mail className="w-4 h-4" />
-                            </button>
+            <div>
+              {/* Table Top Toolbar */}
+              <div className="p-4 bg-slate-50/70 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <span className="text-xs font-bold text-slate-600">
+                  Celkem smluv: <span className="text-slate-900">{contracts.length}</span>
+                </span>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    const ics = generateICalFeed(contracts, settings);
+                    downloadFile(ics, `kalendar-obsazenosti-${settings.plateNumber || 'obytnak'}.ics`, 'text/calendar;charset=utf-8;');
+                  }}
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all"
+                  title="Exportovat obsazenost jako iCal / ICS soubor pro Google Kalendář, Apple Kalendář nebo Outlook"
+                >
+                  <CalendarDays className="w-3.5 h-3.5 text-primary" /> Exportovat iCal (.ics kalendář)
+                </button>
+              </div>
 
-                            {/* Copy link button */}
-                            <button
-                              onClick={() => copyToClipboard(link, contract.id)}
-                              className="p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-all"
-                              title="Kopírovat přímý odkaz"
-                            >
-                              {copiedId === contract.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                            </button>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wider font-semibold text-slate-500">
+                      <th className="py-4 px-6">Nájemce</th>
+                      <th className="py-4 px-6">Termín</th>
+                      <th className="py-4 px-6">Celkem (Kauce)</th>
+                      <th className="py-4 px-6">Předání & Protokoly</th>
+                      <th className="py-4 px-6">Stav</th>
+                      <th className="py-4 px-6 text-right">Akce</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-sm">
+                    {contracts.filter(Boolean).map(contract => {
+                      const price = calculateContractPrice(
+                        contract.startDate, 
+                        contract.endDate, 
+                        contract.dailyPrice, 
+                        contract.cleaningFee,
+                        contract.startTime || '10:00',
+                        contract.endTime || '10:00',
+                        settings.offSeasonPrice,
+                        settings.peakSeasonPrice
+                      );
+                      const link = getContractLink(contract);
+                      
+                      return (
+                        <tr key={contract.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="py-4 px-6">
+                            <div className="font-semibold text-slate-900">{contract.tenantName}</div>
+                            <div className="text-xs text-slate-400">{contract.tenantEmail || 'Bez e-mailu'}</div>
+                            {contract.tenantPhone && <div className="text-xs text-slate-400">{contract.tenantPhone}</div>}
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                              <Calendar className="w-4 h-4 text-slate-400" />
+                              <span>{formatDateText(contract.startDate)} ({contract.startTime || '10:00'}) - {formatDateText(contract.endDate)} ({contract.endTime || '10:00'})</span>
+                            </div>
+                            <div className="text-xs text-slate-400 mt-0.5">{price.days} dní</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="font-bold text-slate-900">{((contract.addonsTotal || 0) + price.grandTotal).toLocaleString('cs-CZ')} Kč</div>
+                            {contract.addonsTotal ? (
+                              <div className="text-[11px] text-primary font-medium">vč. příslušenství (+{contract.addonsTotal.toLocaleString('cs-CZ')} Kč)</div>
+                            ) : null}
+                            <div className="text-xs text-slate-400">Kauce: {contract.deposit.toLocaleString('cs-CZ')} Kč</div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex flex-col gap-1.5">
+                              {/* Check-in protocol button */}
+                              <button
+                                type="button"
+                                onClick={() => setProtocolModalData({ contract, type: 'check_in' })}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                  contract.checkInProtocol
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                <ClipboardCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                {contract.checkInProtocol ? 'Předání (vyplněno)' : 'Předávací protokol'}
+                              </button>
 
-                            {/* Share on WhatsApp */}
-                            <button
-                              onClick={() => shareViaWhatsApp(contract)}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
-                              title="Odeslat na WhatsApp"
-                            >
-                              <Share2 className="w-4 h-4" />
-                            </button>
+                              {/* Check-out protocol button */}
+                              <button
+                                type="button"
+                                onClick={() => setProtocolModalData({ contract, type: 'check_out' })}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                  contract.checkOutProtocol
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                <ClipboardCheck className="w-3.5 h-3.5 text-blue-600" />
+                                {contract.checkOutProtocol ? 'Vrácení (vyplněno)' : 'Přebírací protokol'}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            {contract.isSigned ? (
+                              <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold border border-green-200">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                Podepsáno
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold border border-yellow-200">
+                                <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+                                Čeká na podpis
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <div className="flex justify-end gap-1.5 items-center">
+                              {/* Smart Communication Templates Modal */}
+                              <button
+                                onClick={() => setCommModalContract(contract)}
+                                className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                title="Šablony zpráv (WhatsApp / SMS / E-mail)"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </button>
 
-                            {/* View / Print */}
-                            <button
-                              onClick={() => onViewContract(contract)}
-                              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-all flex items-center gap-1"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" /> Zobrazit
-                            </button>
+                              {/* Copy link button */}
+                              <button
+                                onClick={() => copyToClipboard(link, contract.id)}
+                                className="p-2 text-slate-500 hover:text-primary hover:bg-slate-100 rounded-lg transition-all"
+                                title="Kopírovat přímý odkaz do schránky"
+                              >
+                                {copiedId === contract.id ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                              </button>
 
-                            {/* Delete */}
-                            <button
-                              onClick={() => handleDeleteContract(contract.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                              title="Smazat"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                              {/* View / Print */}
+                              <button
+                                onClick={() => onViewContract(contract)}
+                                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-all flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> Zobrazit
+                              </button>
+
+                              {/* Delete */}
+                              <button
+                                onClick={() => handleDeleteContract(contract.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                title="Smazat"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
@@ -965,7 +1049,14 @@ E-mail: ${settings.ownerEmail}`;
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
                   {inquiries.filter(Boolean).map(inquiry => {
-                    const price = calculateContractPrice(inquiry.startDate, inquiry.endDate, settings.dailyPrice, settings.cleaningFee);
+                    const price = calculateContractPrice(
+                      inquiry.startDate, 
+                      inquiry.endDate, 
+                      settings.dailyPrice, 
+                      settings.cleaningFee,
+                      inquiry.startTime || '10:00',
+                      inquiry.endTime || '10:00'
+                    );
                     
                     return (
                       <tr key={inquiry.id} className="hover:bg-slate-50/50 transition-colors">
@@ -1208,6 +1299,37 @@ E-mail: ${settings.ownerEmail}`;
                 />
               </div>
             </div>
+
+            {/* Live calculation for new contract */}
+            {startDate && endDate && (() => {
+              const est = calculateContractPrice(
+                startDate, 
+                endDate, 
+                customDailyPrice !== '' ? Number(customDailyPrice) : settings.dailyPrice, 
+                customCleaningFee !== '' ? Number(customCleaningFee) : settings.cleaningFee,
+                startTime || '10:00',
+                endTime || '10:00'
+              );
+              if (est.days <= 0) return null;
+              return (
+                <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-500">Kalkulace: </span>
+                    <strong className="text-slate-800 text-sm">{est.days} {est.days === 1 ? 'den' : (est.days >= 2 && est.days <= 4 ? 'dny' : 'dní')}</strong>
+                    {est.hasExtraDay && (
+                      <span className="ml-2 text-[11px] text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        +1 den za odpolední/večerní vrácení
+                      </span>
+                    )}
+                    <span className="text-slate-400 block sm:inline sm:ml-2">({(customDailyPrice !== '' ? Number(customDailyPrice) : settings.dailyPrice).toLocaleString('cs-CZ')} Kč/den)</span>
+                  </div>
+                  <div className="text-right sm:border-l sm:border-slate-200 sm:pl-4">
+                    <span className="text-slate-500 block text-[11px]">Celkem k úhradě ve smlouvě:</span>
+                    <span className="text-base font-bold text-primary">{est.grandTotal.toLocaleString('cs-CZ')} Kč</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Section 3: Extra clauses / Special arrangements */}
@@ -1381,12 +1503,32 @@ E-mail: ${settings.ownerEmail}`;
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Denní nájemné *</label>
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Denní nájemné (výchozí) *</label>
                 <input 
                   type="number" 
                   required 
                   value={dailyPrice}
                   onChange={e => setDailyPrice(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mimo sezónu (Kč/den)</label>
+                <input 
+                  type="number" 
+                  placeholder={`např. ${Math.round(dailyPrice * 0.85)}`}
+                  value={offSeasonPrice}
+                  onChange={e => setOffSeasonPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Hlavní letní sezóna (Kč/den)</label>
+                <input 
+                  type="number" 
+                  placeholder={`např. ${Math.round(dailyPrice * 1.25)}`}
+                  value={peakSeasonPrice}
+                  onChange={e => setPeakSeasonPrice(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
                 />
               </div>
@@ -1599,6 +1741,49 @@ E-mail: ${settings.ownerEmail}`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* Smart Communication Templates Modal */}
+      {commModalContract && (
+        <CommunicationModal
+          contract={commModalContract}
+          settings={settings}
+          contractUrl={getContractLink(commModalContract)}
+          onClose={() => setCommModalContract(null)}
+        />
+      )}
+
+      {/* Handover Protocol Modal (Check-in / Check-out) */}
+      {protocolModalData && (
+        <HandoverProtocolModal
+          contract={protocolModalData.contract}
+          settings={settings}
+          type={protocolModalData.type}
+          initialProtocol={
+            protocolModalData.type === 'check_in' 
+              ? protocolModalData.contract.checkInProtocol 
+              : protocolModalData.contract.checkOutProtocol
+          }
+          onSave={async (protocol: HandoverProtocol) => {
+            try {
+              const updatedContract: ContractData = {
+                ...protocolModalData.contract,
+                ...(protocolModalData.type === 'check_in'
+                  ? { checkInProtocol: protocol }
+                  : { checkOutProtocol: protocol })
+              };
+              
+              await dbService.saveContract(updatedContract);
+              const refreshedContracts = await dbService.getContracts();
+              setContracts(refreshedContracts);
+              setProtocolModalData(null);
+            } catch (err) {
+              console.error('Error saving handover protocol:', err);
+              alert('Chyba při ukládání předávacího protokolu.');
+            }
+          }}
+          onClose={() => setProtocolModalData(null)}
+        />
       )}
 
     </div>

@@ -1,4 +1,5 @@
 import { ContractData, CampervanSettings } from '../types';
+import { calculateRentalDays } from '../utils/contractUtils';
 import { format } from 'date-fns';
 import { cs } from 'date-fns/locale';
 
@@ -18,19 +19,12 @@ export default function ContractDocument({ contract, settings }: ContractDocumen
     }
   };
 
-  const calculateDays = () => {
-    if (!contract.startDate || !contract.endDate) return 0;
-    try {
-      const start = new Date(contract.startDate);
-      const end = new Date(contract.endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    } catch {
-      return 0;
-    }
-  };
-
-  const daysCount = calculateDays();
+  const { days: daysCount } = calculateRentalDays(
+    contract.startDate || '',
+    contract.endDate || '',
+    contract.startTime || '10:00',
+    contract.endTime || '10:00'
+  );
   const dailyPrice = contract.dailyPrice ?? settings.dailyPrice;
   const cleaningFee = contract.cleaningFee ?? settings.cleaningFee;
   const deposit = contract.deposit ?? settings.deposit;
@@ -124,10 +118,21 @@ export default function ContractDocument({ contract, settings }: ContractDocumen
             <p><span className="font-sans font-semibold text-slate-600">Denní nájemné:</span> {dailyPrice.toLocaleString('cs-CZ')} Kč</p>
             <p><span className="font-sans font-semibold text-slate-600">Počet dní nájmu:</span> {daysCount} x</p>
             <p><span className="font-sans font-semibold text-slate-600">Celkové nájemné:</span> {rentalTotal.toLocaleString('cs-CZ')} Kč</p>
+            {contract.selectedAddons && contract.selectedAddons.length > 0 && (
+              <div className="py-1 border-t border-b border-slate-200/60 my-1 space-y-0.5">
+                <span className="font-sans font-semibold text-slate-700 block text-[11px]">Objednaná doplňková výbava:</span>
+                {contract.selectedAddons.map((addon, idx) => (
+                  <div key={idx} className="flex justify-between text-[11px] text-slate-600">
+                    <span>• {addon.name}</span>
+                    <span>{addon.priceType === 'per_day' ? `${(addon.price * daysCount).toLocaleString('cs-CZ')} Kč (${addon.price} Kč/den)` : `${addon.price.toLocaleString('cs-CZ')} Kč`}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <p><span className="font-sans font-semibold text-slate-600">Servisní / úklidový poplatek:</span> {cleaningFee.toLocaleString('cs-CZ')} Kč</p>
             <div className="border-t border-slate-300 pt-1.5 my-1.5 flex justify-between font-bold text-slate-900 text-sm print:text-xs">
               <span className="font-sans">CELKEM K ÚHRADĚ:</span>
-              <span>{grandTotal.toLocaleString('cs-CZ')} Kč</span>
+              <span>{(grandTotal + (contract.addonsTotal || 0)).toLocaleString('cs-CZ')} Kč</span>
             </div>
             <p className="text-slate-900 font-bold"><span className="font-sans font-semibold text-slate-600 text-slate-700">Vratná kauce (depozit):</span> {deposit.toLocaleString('cs-CZ')} Kč</p>
             <p><span className="font-sans font-semibold text-slate-600">Limit ujetých kilometrů:</span> {kmLimitText}</p>

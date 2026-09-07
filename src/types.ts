@@ -1,9 +1,31 @@
+export interface ExtraAddon {
+  id: string;
+  name: string;
+  description: string;
+  price: number; // Flat fee or per day
+  priceType: 'flat' | 'per_day';
+  icon?: string;
+}
+
+export interface SeasonRate {
+  id: string;
+  name: string;
+  startMonth: number; // 1-12
+  startDay: number;
+  endMonth: number; // 1-12
+  endDay: number;
+  dailyPrice: number;
+  minDays?: number;
+}
+
 export interface CampervanSettings {
   brand: string;
   model: string;
   plateNumber: string;
   year: number;
   dailyPrice: number;
+  offSeasonPrice?: number;
+  peakSeasonPrice?: number;
   deposit: number;
   cleaningFee: number;
   kmLimitPerDay: number; // 0 for unlimited
@@ -16,6 +38,34 @@ export interface CampervanSettings {
   ownerEmail: string;
   ownerBank: string;
   adminPassword?: string;
+  availableAddons?: ExtraAddon[];
+}
+
+export interface HandoverProtocol {
+  id: string;
+  contractId: string;
+  type: 'check_in' | 'check_out';
+  date: string;
+  time: string;
+  odometer: number;
+  fuelLevel: 'empty' | '1/4' | '1/2' | '3/4' | 'full';
+  gasBottlesCount: number;
+  cleanliness: 'clean' | 'acceptable' | 'dirty';
+  existingDamages: string;
+  notes: string;
+  depositHandled: boolean;
+  depositAmount: number;
+  depositNote?: string;
+  photos?: string[]; // base64 images
+  tenantSignature?: string;
+  ownerSignature?: string;
+}
+
+export interface SelectedAddon {
+  id: string;
+  name: string;
+  price: number;
+  priceType: 'flat' | 'per_day';
 }
 
 export interface ContractData {
@@ -43,9 +93,15 @@ export interface ContractData {
   cleaningFee: number;
   kmLimitPerDay: number;
   kmOverLimitPrice: number;
+  selectedAddons?: SelectedAddon[];
+  addonsTotal?: number;
   
   // Additional terms
   additionalTerms: string;
+  
+  // Handover protocols
+  checkInProtocol?: HandoverProtocol;
+  checkOutProtocol?: HandoverProtocol;
   
   // Signatures
   ownerSignature?: string; // base64 PNG image or svg path
@@ -65,6 +121,7 @@ export interface ReservationInquiry {
   startTime?: string; // HH:MM, e.g. "10:00"
   endDate: string;
   endTime?: string; // HH:MM, e.g. "10:00"
+  selectedAddonIds?: string[];
   message?: string;
   status: 'pending' | 'converted' | 'cancelled';
 }

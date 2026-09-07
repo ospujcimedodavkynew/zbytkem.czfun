@@ -1,4 +1,4 @@
-import { ContractData, CampervanSettings } from '../types';
+import { ContractData, CampervanSettings, ExtraAddon, SelectedAddon } from '../types';
 
 /**
  * Encodes a contract object into a URL-safe base64 string
@@ -48,44 +48,211 @@ export function decodeContract(encoded: string): Partial<ContractData> | null {
 }
 
 /**
- * Helper to calculate total rental price
+ * Calculates rental days count taking into account calendar days and return time.
+ * In campervan rentals:
+ * - Base days are inclusive calendar days (e.g., 9.9. to 11.9. = 3 days).
+ * - If the return time on the final day is significantly later than the pickup time
+ *   (e.g., pickup at 10:00 but return at 20:00), an additional rental day (+1 day) is charged.
+ */
+export function calculateRentalDays(
+  startDateStr: string,
+  endDateStr: string,
+  startTimeStr: string = '10:00',
+  endTimeStr: string = '10:00'
+): { days: number; baseDays: number; hasExtraDay: boolean } {
+  if (!startDateStr || !endDateStr) {
+    return { days: 0, baseDays: 0, hasExtraDay: false };
+  }
+
+  try {
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
+      return { days: 0, baseDays: 0, hasExtraDay: false };
+    }
+
+    // Inclusive calendar days (e.g. 9.9. to 11.9. = 3 days)
+    const diffTime = end.getTime() - start.getTime();
+    const baseDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+    // Parse start and end time (format HH:MM)
+    const [startH, startM] = (startTimeStr || '10:00').split(':').map(v => parseInt(v, 10) || 0);
+    const [endH, endM] = (endTimeStr || '10:00').split(':').map(v => parseInt(v, 10) || 0);
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    // If return time is later than pickup time by more than 60 minutes, an extra day is charged
+    let hasExtraDay = false;
+    if (baseDays > 1 && (endMinutes - startMinutes) > 60) {
+      hasExtraDay = true;
+    }
+
+    const totalDays = Math.max(1, baseDays + (hasExtraDay ? 1 : 0));
+
+    return {
+      days: totalDays,
+      baseDays,
+      hasExtraDay
+    };
+  } catch {
+    return { days: 0, baseDays: 0, hasExtraDay: false };
+  }
+}
+
+export const DEFAULT_ADDONS: ExtraAddon[] = [
+  {
+    id: 'bike-rack',
+    name: 'Nosič kol (pro 4 jízdní kola)',
+    description: 'Uzamykatelný nosič na zadní stěnu vozu pro bezpečnou přepravu až 4 kol',
+    price: 500,
+    priceType: 'flat',
+    icon: 'bike'
+  },
+  {
+    id: 'camping-bbq',
+    name: 'Kempingový plynový gril Cadac',
+    description: 'Kompaktní gril včetně plynové kartuše pro venkovní grilování',
+    price: 400,
+    priceType: 'flat',
+    icon: 'flame'
+  },
+  {
+    id: 'paddleboard',
+    name: 'Nafukovací Paddleboard (SUP) + pádlo',
+    description: 'Kompletní set včetně pumpy a vaku pro vodní radovánky',
+    price: 250,
+    priceType: 'per_day',
+    icon: 'waves'
+  },
+  {
+    id: 'bedding-set',
+    name: 'Set lůžkovin a ručníků pro celou posádku',
+    description: 'Vypraná a voňavá prostěradla, povlečení, polštáře a osušky',
+    price: 600,
+    priceType: 'flat',
+    icon: 'bed'
+  },
+  {
+    id: 'camping-set-extra',
+    name: 'Rozšířený kempingový set (stůl + 4 křesla)',
+    description: 'Polohovatelná křesla a stabilní velký stůl pod markýzu',
+    price: 300,
+    priceType: 'flat',
+    icon: 'armchair'
+  }
+];
+
+/**
+ * Determines seasonal daily price based on start date
+ * Peak season: June 15 - September 15
+ * Off season: October - April
+ * Standard season: May - June 14, September 16 - September 30
+ */
+export function getSeasonalDailyPrice(dateStr: string, settings: CampervanSettings): number {
+  if (!dateStr) return settings.dailyPrice;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return settings.dailyPrice;
+    const month = d.getMonth() + 1; // 1-12
+    const day = d.getDate();
+
+    // Peak season: 15.6. - 15.9.
+    if ((month === 6 && day >= 15) || month === 7 || month === 8 || (month === 9 && day <= 15)) {
+      return settings.peakSeasonPrice || (settings.dailyPrice + 600);
+    }
+    // Off season: 1.10. - 30.4.
+    if (month >= 10 || month <= 4) {
+      return settings.offSeasonPrice || Math.max(2200, settings.dailyPrice - 500);
+    }
+    // Standard / Mid season
+    return settings.dailyPrice;
+  } catch {
+    return settings.dailyPrice;
+  }
+}
+
+/**
+ * Calculates total rental price taking into account dates, times, seasonal pricing and addons
  */
 export function calculateContractPrice(
   startDateStr: string,
   endDateStr: string,
   dailyPrice: number = 3200,
-  cleaningFee: number = 1500
-): { days: number; rentalTotal: number; grandTotal: number } {
-  const safeDailyPrice = typeof dailyPrice === 'number' && !isNaN(dailyPrice) ? dailyPrice : (DEFAULT_SETTINGS?.dailyPrice || 3200);
+  cleaningFee: number = 1500,
+  startTimeStr: string = '10:00',
+  endTimeStr: string = '10:00',
+  offSeasonPrice?: number,
+  peakSeasonPrice?: number,
+  selectedAddons: (ExtraAddon | SelectedAddon)[] = []
+): { 
+  days: number; 
+  baseDays: number; 
+  hasExtraDay: boolean; 
+  effectiveDailyPrice: number;
+  rentalTotal: number; 
+  addonsTotal: number;
+  grandTotal: number;
+} {
+  let effectiveDailyPrice = typeof dailyPrice === 'number' && !isNaN(dailyPrice) ? dailyPrice : (DEFAULT_SETTINGS?.dailyPrice || 3200);
+
+  // Apply seasonal pricing if date provided and seasonal rates configured
+  if (startDateStr) {
+    try {
+      const d = new Date(startDateStr);
+      if (!isNaN(d.getTime())) {
+        const month = d.getMonth() + 1; // 1-12
+        const day = d.getDate();
+        // Peak: 15.6. - 15.9.
+        if ((month === 6 && day >= 15) || month === 7 || month === 8 || (month === 9 && day <= 15)) {
+          if (peakSeasonPrice && !isNaN(peakSeasonPrice) && peakSeasonPrice > 0) {
+            effectiveDailyPrice = peakSeasonPrice;
+          }
+        } 
+        // Off-season: 1.10. - 30.4.
+        else if (month >= 10 || month <= 4) {
+          if (offSeasonPrice && !isNaN(offSeasonPrice) && offSeasonPrice > 0) {
+            effectiveDailyPrice = offSeasonPrice;
+          }
+        }
+      }
+    } catch {
+      // Keep standard daily price
+    }
+  }
+
   const safeCleaningFee = typeof cleaningFee === 'number' && !isNaN(cleaningFee) ? cleaningFee : (DEFAULT_SETTINGS?.cleaningFee || 1500);
 
-  if (!startDateStr || !endDateStr) {
-    return { days: 0, rentalTotal: 0, grandTotal: 0 };
-  }
-  
-  try {
-    const start = new Date(startDateStr);
-    const end = new Date(endDateStr);
-    
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return { days: 0, rentalTotal: 0, grandTotal: 0 };
-    }
+  const { days, baseDays, hasExtraDay } = calculateRentalDays(startDateStr, endDateStr, startTimeStr, endTimeStr);
 
-    // Calculate difference in days (inclusive, i.e., at least 1 day)
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    
-    const rentalTotal = diffDays * safeDailyPrice;
-    const grandTotal = rentalTotal + safeCleaningFee;
-    
-    return {
-      days: diffDays,
-      rentalTotal,
-      grandTotal
-    };
-  } catch {
-    return { days: 0, rentalTotal: 0, grandTotal: 0 };
+  if (days <= 0) {
+    return { days: 0, baseDays: 0, hasExtraDay: false, effectiveDailyPrice, rentalTotal: 0, addonsTotal: 0, grandTotal: 0 };
   }
+
+  const rentalTotal = days * effectiveDailyPrice;
+  
+  let addonsTotal = 0;
+  if (Array.isArray(selectedAddons)) {
+    selectedAddons.forEach(addon => {
+      if (addon.priceType === 'per_day') {
+        addonsTotal += (addon.price || 0) * days;
+      } else {
+        addonsTotal += (addon.price || 0);
+      }
+    });
+  }
+
+  const grandTotal = rentalTotal + safeCleaningFee + addonsTotal;
+
+  return {
+    days,
+    baseDays,
+    hasExtraDay,
+    effectiveDailyPrice,
+    rentalTotal,
+    addonsTotal,
+    grandTotal
+  };
 }
 
 /**

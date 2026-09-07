@@ -72,6 +72,8 @@ function mapSettingsToDb(settings: CampervanSettings) {
     plate_number: settings.plateNumber,
     year: settings.year,
     daily_price: settings.dailyPrice,
+    off_season_price: settings.offSeasonPrice || null,
+    peak_season_price: settings.peakSeasonPrice || null,
     deposit: settings.deposit,
     cleaning_fee: settings.cleaningFee,
     km_limit_per_day: settings.kmLimitPerDay,
@@ -83,7 +85,8 @@ function mapSettingsToDb(settings: CampervanSettings) {
     owner_phone: settings.ownerPhone,
     owner_email: settings.ownerEmail,
     owner_bank: settings.ownerBank,
-    admin_password: settings.adminPassword || getAdminPassword() || DEFAULT_ADMIN_PASSWORD
+    admin_password: settings.adminPassword || getAdminPassword() || DEFAULT_ADMIN_PASSWORD,
+    available_addons: settings.availableAddons || null
   };
 }
 
@@ -98,6 +101,8 @@ function mapSettingsFromDb(db: any): CampervanSettings {
     plateNumber: db.plate_number || DEFAULT_SETTINGS.plateNumber,
     year: Number(db.year) || DEFAULT_SETTINGS.year,
     dailyPrice: Number(db.daily_price) || DEFAULT_SETTINGS.dailyPrice,
+    offSeasonPrice: db.off_season_price ? Number(db.off_season_price) : undefined,
+    peakSeasonPrice: db.peak_season_price ? Number(db.peak_season_price) : undefined,
     deposit: Number(db.deposit) || DEFAULT_SETTINGS.deposit,
     cleaningFee: Number(db.cleaning_fee) || DEFAULT_SETTINGS.cleaningFee,
     kmLimitPerDay: Number(db.km_limit_per_day) ?? DEFAULT_SETTINGS.kmLimitPerDay,
@@ -109,7 +114,8 @@ function mapSettingsFromDb(db: any): CampervanSettings {
     ownerPhone: db.owner_phone || DEFAULT_SETTINGS.ownerPhone,
     ownerEmail: db.owner_email || DEFAULT_SETTINGS.ownerEmail,
     ownerBank: db.owner_bank || DEFAULT_SETTINGS.ownerBank,
-    adminPassword: adminPassword
+    adminPassword: adminPassword,
+    availableAddons: db.available_addons || DEFAULT_SETTINGS.availableAddons
   };
 }
 
@@ -169,6 +175,10 @@ function mapContractToDb(contract: Partial<ContractData>) {
     cleaning_fee: Number(contract.cleaningFee) || 1500,
     km_limit_per_day: Number(contract.kmLimitPerDay) || 300,
     km_over_limit_price: Number(contract.kmOverLimitPrice) || 6,
+    selected_addons: contract.selectedAddons || null,
+    addons_total: contract.addonsTotal || 0,
+    check_in_protocol: contract.checkInProtocol || null,
+    check_out_protocol: contract.checkOutProtocol || null,
     additional_terms: contract.additionalTerms || '',
     owner_signature: contract.ownerSignature || null,
     tenant_signature: contract.tenantSignature || null,
@@ -204,6 +214,10 @@ function mapContractFromDb(db: any): ContractData {
     cleaningFee: Number(db.cleaning_fee) || 1500,
     kmLimitPerDay: Number(db.km_limit_per_day) || 300,
     kmOverLimitPrice: Number(db.km_over_limit_price) || 6,
+    selectedAddons: db.selected_addons || undefined,
+    addonsTotal: Number(db.addons_total) || 0,
+    checkInProtocol: db.check_in_protocol || undefined,
+    checkOutProtocol: db.check_out_protocol || undefined,
     additionalTerms: db.additional_terms || '',
     ownerSignature: db.owner_signature || '',
     tenantSignature: db.tenant_signature || '',
@@ -487,13 +501,25 @@ export const dbService = {
     // 1. Save to Supabase first if configured
     if (isSupabaseConfigured && supabase) {
       try {
-        const dbPayload = mapInquiryToDb(safeInquiry);
+        let dbPayload = mapInquiryToDb(safeInquiry);
         
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('reservation_inquiries')
           .upsert(dbPayload)
           .select();
         
+        // Automatic backward-compatibility fallback if 'start_time' or 'end_time' columns do not exist yet in DB schema
+        if (error && error.message && (error.message.includes('end_time') || error.message.includes('start_time'))) {
+          console.warn('Supabase reservation_inquiries table is missing start_time/end_time columns, retrying without them...');
+          const { start_time, end_time, ...payloadWithoutTime } = dbPayload;
+          const retryRes = await supabase
+            .from('reservation_inquiries')
+            .upsert(payloadWithoutTime)
+            .select();
+          data = retryRes.data;
+          error = retryRes.error;
+        }
+
         if (error) {
           console.error('Supabase save inquiry error:', error);
           throw new Error(`Chyba databáze Supabase: ${error.message} (kód: ${error.code || 'neznámý'})`);
@@ -678,13 +704,25 @@ export const dbService = {
     // 1. Save to Supabase first if configured
     if (isSupabaseConfigured && supabase) {
       try {
-        const dbPayload = mapContractToDb(safeContract);
+        let dbPayload = mapContractToDb(safeContract);
         
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('contracts')
           .upsert(dbPayload)
           .select();
         
+        // Automatic backward-compatibility fallback if 'start_time' or 'end_time' columns do not exist yet in DB schema
+        if (error && error.message && (error.message.includes('end_time') || error.message.includes('start_time'))) {
+          console.warn('Supabase contracts table is missing start_time/end_time columns, retrying without them...');
+          const { start_time, end_time, ...payloadWithoutTime } = dbPayload;
+          const retryRes = await supabase
+            .from('contracts')
+            .upsert(payloadWithoutTime)
+            .select();
+          data = retryRes.data;
+          error = retryRes.error;
+        }
+
         if (error) {
           console.error('Supabase save contract error:', error);
           throw new Error(`Chyba databáze Supabase (smlouva): ${error.message} (kód: ${error.code || 'neznámý'})`);

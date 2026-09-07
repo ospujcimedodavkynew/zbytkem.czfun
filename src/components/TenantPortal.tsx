@@ -12,10 +12,13 @@ import {
   Info,
   Car,
   Calendar,
-  DollarSign
+  DollarSign,
+  PackageCheck,
+  Check
 } from 'lucide-react';
-import { ContractData, CampervanSettings } from '../types';
+import { ContractData, CampervanSettings, SelectedAddon, ExtraAddon } from '../types';
 import { calculateContractPrice, encodeContract, DEFAULT_SETTINGS } from '../utils/contractUtils';
+import { EXTRA_ADDONS_CATALOG } from '../utils/featureHelpers';
 import { dbService, isSupabaseConfigured, generateUUID } from '../lib/supabase';
 import SignaturePad from './SignaturePad';
 import ContractDocument from './ContractDocument';
@@ -46,6 +49,11 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
   const [tenantPhone, setTenantPhone] = useState(contract.tenantPhone || '');
   const [tenantEmail, setTenantEmail] = useState(contract.tenantEmail || '');
 
+  // Addons selection
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>(() => {
+    return (contract.selectedAddons || []).map(a => a.id);
+  });
+
   const [signatureImage, setSignatureImage] = useState(contract.tenantSignature || '');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [signedLink, setSignedLink] = useState('');
@@ -62,8 +70,34 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
     contract.startDate || '',
     contract.endDate || '',
     contract.dailyPrice || settings.dailyPrice,
-    contract.cleaningFee || settings.cleaningFee
+    contract.cleaningFee || settings.cleaningFee,
+    contract.startTime || '10:00',
+    contract.endTime || '10:00',
+    settings.offSeasonPrice,
+    settings.peakSeasonPrice
   );
+
+  // Calculate selected addons total
+  const selectedAddonsList: SelectedAddon[] = EXTRA_ADDONS_CATALOG
+    .filter(a => selectedAddonIds.includes(a.id))
+    .map(a => ({
+      id: a.id,
+      name: a.name,
+      price: a.price,
+      priceType: a.priceType
+    }));
+
+  const addonsTotal = selectedAddonsList.reduce((acc, a) => {
+    return acc + (a.priceType === 'per_day' ? a.price * price.days : a.price);
+  }, 0);
+
+  const grandTotalWithAddons = price.grandTotal + addonsTotal;
+
+  const toggleAddon = (addonId: string) => {
+    setSelectedAddonIds(prev => 
+      prev.includes(addonId) ? prev.filter(id => id !== addonId) : [...prev, addonId]
+    );
+  };
 
   const formatDateText = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -88,7 +122,9 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       tenantDlNumber,
       tenantAddress,
       tenantPhone,
-      tenantEmail
+      tenantEmail,
+      selectedAddons: selectedAddonsList,
+      addonsTotal
     };
     
     setContract(updatedContract);
@@ -130,6 +166,10 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
       kmLimitPerDay: contract.kmLimitPerDay || settings.kmLimitPerDay,
       kmOverLimitPrice: contract.kmOverLimitPrice || settings.kmOverLimitPrice,
       additionalTerms: contract.additionalTerms || '',
+      selectedAddons: selectedAddonsList,
+      addonsTotal,
+      checkInProtocol: contract.checkInProtocol,
+      checkOutProtocol: contract.checkOutProtocol,
       ownerSignature: contract.ownerSignature || '',
       tenantSignature: signatureImage,
       isSigned: true,
@@ -249,7 +289,7 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
               <DollarSign className="w-5 h-5 text-primary flex-shrink-0" />
               <div>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Celková cena</p>
-                <p className="text-xs font-bold text-slate-800">{price.grandTotal.toLocaleString('cs-CZ')} Kč</p>
+                <p className="text-xs font-bold text-slate-800">{grandTotalWithAddons.toLocaleString('cs-CZ')} Kč</p>
               </div>
             </div>
           </div>
@@ -337,6 +377,59 @@ export default function TenantPortal({ initialContract, onBackToMain }: TenantPo
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:border-primary outline-none transition-all"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Optional Add-ons Selection */}
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <PackageCheck className="w-5 h-5 text-primary" /> Doplňková výbava a příslušenství
+                </h2>
+                <p className="text-xs text-slate-400">Vyberte si volitelnou výbavu na svou cestu (připočte se ke smlouvě).</p>
+              </div>
+              {addonsTotal > 0 && (
+                <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-xl">
+                  Příslušenství: +{addonsTotal.toLocaleString('cs-CZ')} Kč
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {EXTRA_ADDONS_CATALOG.map(addon => {
+                const isSelected = selectedAddonIds.includes(addon.id);
+                const addonItemTotal = addon.priceType === 'per_day' ? addon.price * price.days : addon.price;
+                return (
+                  <button
+                    key={addon.id}
+                    type="button"
+                    onClick={() => toggleAddon(addon.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary'
+                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100/70'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs font-bold text-slate-900 leading-snug">{addon.name}</span>
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center text-xs shrink-0 transition-colors ${
+                        isSelected ? 'bg-primary text-white' : 'border border-slate-300 bg-white text-transparent'
+                      }`}>
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-slate-200/60 flex items-baseline justify-between text-xs">
+                      <span className="text-[11px] text-slate-500">
+                        {addon.priceType === 'per_day' ? `${addon.price} Kč / den` : 'jednorázově'}
+                      </span>
+                      <span className="font-bold text-slate-900">
+                        {addonItemTotal.toLocaleString('cs-CZ')} Kč
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
