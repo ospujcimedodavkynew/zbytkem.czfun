@@ -484,7 +484,45 @@ export const dbService = {
       status: inquiry.status || 'pending'
     };
 
-    // Save to localStorage immediately
+    // 1. Save to Supabase first if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const dbPayload = mapInquiryToDb(safeInquiry);
+        
+        const { data, error } = await supabase
+          .from('reservation_inquiries')
+          .upsert(dbPayload)
+          .select();
+        
+        if (error) {
+          console.error('Supabase save inquiry error:', error);
+          throw new Error(`Chyba databáze Supabase: ${error.message} (kód: ${error.code || 'neznámý'})`);
+        } else if (data && data.length > 0) {
+          const savedInquiry = mapInquiryFromDb(data[0]);
+          // Sync to localStorage
+          try {
+            const stored = localStorage.getItem('obytkem_inquiries');
+            const list: ReservationInquiry[] = stored ? JSON.parse(stored) : [];
+            const idx = list.findIndex(item => item.id === savedInquiry.id);
+            if (idx !== -1) {
+              list[idx] = savedInquiry;
+            } else {
+              list.unshift(savedInquiry);
+            }
+            localStorage.setItem('obytkem_inquiries', JSON.stringify(list));
+          } catch (e) {
+            console.error('LocalStorage sync error:', e);
+          }
+          return savedInquiry;
+        }
+      } catch (err: any) {
+        console.error('Supabase write failed for inquiry:', err);
+        // If Supabase failed, rethrow so caller and UI know what happened
+        throw err;
+      }
+    }
+
+    // 2. Fallback to localStorage only if Supabase is unconfigured
     try {
       const stored = localStorage.getItem('obytkem_inquiries');
       const list: ReservationInquiry[] = stored ? JSON.parse(stored) : [];
@@ -497,26 +535,6 @@ export const dbService = {
       localStorage.setItem('obytkem_inquiries', JSON.stringify(list));
     } catch (err) {
       console.error('LocalStorage write failed:', err);
-    }
-
-    // Save to Supabase
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const dbPayload = mapInquiryToDb(safeInquiry);
-        
-        const { data, error } = await supabase
-          .from('reservation_inquiries')
-          .upsert(dbPayload)
-          .select();
-        
-        if (error) {
-          console.error('Supabase save inquiry error:', error.message);
-        } else if (data && data.length > 0) {
-          return mapInquiryFromDb(data[0]);
-        }
-      } catch (err) {
-        console.error('Supabase write failed for inquiry, kept in local storage:', err);
-      }
     }
 
     return safeInquiry;
@@ -630,7 +648,6 @@ export const dbService = {
   },
 
   async saveContract(contract: Partial<ContractData>): Promise<ContractData> {
-    const isNew = !contract.id || !contract.id.includes('-');
     const safeContract: ContractData = {
       id: contract.id && contract.id.includes('-') ? contract.id : generateUUID(),
       createdAt: contract.createdAt || new Date().toISOString(),
@@ -642,7 +659,9 @@ export const dbService = {
       tenantPhone: contract.tenantPhone || '',
       tenantEmail: contract.tenantEmail || '',
       startDate: contract.startDate || '',
+      startTime: contract.startTime || '10:00',
       endDate: contract.endDate || '',
+      endTime: contract.endTime || '10:00',
       dailyPrice: Number(contract.dailyPrice) || 3200,
       deposit: Number(contract.deposit) || 30000,
       cleaningFee: Number(contract.cleaningFee) || 1500,
@@ -656,7 +675,44 @@ export const dbService = {
       isSigned: !!contract.isSigned
     };
 
-    // Save local
+    // 1. Save to Supabase first if configured
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const dbPayload = mapContractToDb(safeContract);
+        
+        const { data, error } = await supabase
+          .from('contracts')
+          .upsert(dbPayload)
+          .select();
+        
+        if (error) {
+          console.error('Supabase save contract error:', error);
+          throw new Error(`Chyba databáze Supabase (smlouva): ${error.message} (kód: ${error.code || 'neznámý'})`);
+        } else if (data && data.length > 0) {
+          const savedContract = mapContractFromDb(data[0]);
+          // Sync to localStorage
+          try {
+            const stored = localStorage.getItem('obytkem_contracts');
+            const list: ContractData[] = stored ? JSON.parse(stored) : [];
+            const idx = list.findIndex(item => item.id === savedContract.id);
+            if (idx !== -1) {
+              list[idx] = savedContract;
+            } else {
+              list.unshift(savedContract);
+            }
+            localStorage.setItem('obytkem_contracts', JSON.stringify(list));
+          } catch (e) {
+            console.error('LocalStorage sync error:', e);
+          }
+          return savedContract;
+        }
+      } catch (err: any) {
+        console.error('Supabase write failed for contract:', err);
+        throw err;
+      }
+    }
+
+    // 2. Fallback to localStorage only if Supabase is unconfigured
     try {
       const stored = localStorage.getItem('obytkem_contracts');
       const list: ContractData[] = stored ? JSON.parse(stored) : [];
@@ -669,26 +725,6 @@ export const dbService = {
       localStorage.setItem('obytkem_contracts', JSON.stringify(list));
     } catch (err) {
       console.error('LocalStorage write failed:', err);
-    }
-
-    // Save Supabase
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const dbPayload = mapContractToDb(safeContract);
-        
-        const { data, error } = await supabase
-          .from('contracts')
-          .upsert(dbPayload)
-          .select();
-        
-        if (error) {
-          console.error('Supabase save contract error:', error.message);
-        } else if (data && data.length > 0) {
-          return mapContractFromDb(data[0]);
-        }
-      } catch (err) {
-        console.error('Supabase write failed for contract, kept in local storage:', err);
-      }
     }
 
     return safeContract;

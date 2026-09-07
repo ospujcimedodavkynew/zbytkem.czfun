@@ -552,10 +552,11 @@ CREATE POLICY "Povolit plný přístup ke smlouvám pro kohokoliv" ON public.con
 
   const getContractLink = (contract: ContractData) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    if (contract.id && contract.id.includes('-')) {
-      return `${baseUrl}?id=${contract.id}`;
-    }
     const encoded = encodeContract(contract);
+    if (contract.id && contract.id.includes('-')) {
+      // Include both id and backup contract payload so the link works seamlessly in any scenario
+      return `${baseUrl}?id=${contract.id}&contract=${encoded}`;
+    }
     return `${baseUrl}?contract=${encoded}`;
   };
 
